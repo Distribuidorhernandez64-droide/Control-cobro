@@ -290,31 +290,53 @@ function combinarViajes(mios, nube){
 // GUARDADO PRINCIPAL (simple y confiable): escribe en la nube exactamente lo
 // que hay en pantalla. Sin combinar. Lo que guardás, queda.
 // Se llama SOLO al tocar: Cerrar pedidos, Enviar ruta, Recibir dinero.
+// GUARDADO SEGURO: nunca borra lo que no está en esta pantalla.
+// 1) Lee lo que hay en la nube. 2) Combina (gana la versión más reciente de cada viaje).
+// 3) Escribe el resultado. Así dos aparatos NO se pisan el trabajo.
 async function guardarAhora(){
   if(modoLectura)return true;
   dotSync('save');
   try{
+    // 1) Traer lo último de la nube ANTES de escribir
+    let nube=null;
+    try{
+      const{data,error}=await sb.from('dias').select('estado').eq('fecha',HOY).maybeSingle();
+      if(error)throw error;
+      nube=data?data.estado:null;
+    }catch(le){
+      // Si no se pudo leer, NO escribimos: escribir a ciegas podría borrar trabajo ajeno
+      dotSync('off');console.log('guardar: no se pudo leer la nube:',le.message||le);
+      return false;
+    }
+    // 2) Combinar con lo local (sin perder nada de ningún lado)
+    let viajesFinal=viajes;
+    let ruterosFinal=ruteros.slice();
+    let auditFinal=auditoria.slice();
+    if(nube){
+      (nube.ruteros||[]).forEach(r=>{if(!ruterosFinal.includes(r))ruterosFinal.push(r);});
+      viajesFinal=combinarViajes(viajes, nube.viajes||[]);
+      const claves=new Set(auditFinal.map(a=>a.hora+'|'+a.accion+'|'+(a.detalle||'')));
+      (nube.auditoria||[]).forEach(a=>{const k=a.hora+'|'+a.accion+'|'+(a.detalle||'');if(!claves.has(k))auditFinal.push(a);});
+      auditFinal.sort((a,b)=>new Date(b.hora)-new Date(a.hora));
+    }
+    // Dejar la memoria local igual a lo combinado (para que la pantalla no quede desfasada)
+    viajes=viajesFinal;ruteros=ruterosFinal;auditoria=auditFinal;
     // Subir solo viajes con contenido (los vacíos no se guardan)
-    const viajesValidos=viajes.filter(v=>v && ((v.pedidos&&v.pedidos.length>0)||v.entradaLista||v.cerrado));
-    // Limpiar TODO con JSON para evitar DataCloneError (convierte fechas u objetos raros en texto plano)
+    const viajesValidos=viajesFinal.filter(v=>v && ((v.pedidos&&v.pedidos.length>0)||v.entradaLista||v.cerrado));
+    // Limpiar TODO con JSON para evitar DataCloneError
     let estado;
     try{
-      estado=JSON.parse(JSON.stringify({ruteros,viajes:viajesValidos,auditoria,idv,idp}));
+      estado=JSON.parse(JSON.stringify({ruteros:ruterosFinal,viajes:viajesValidos,auditoria:auditFinal,idv,idp}));
     }catch(je){
       dotSync('off');console.log('guardar err (limpieza):',je.message);
       toast('⚠ Error en datos, avisá a soporte',true);return false;
     }
     const marca=new Date().toISOString();
-    const fila={fecha:HOY,estado:estado,actualizado_en:marca};
-    let{error}=await sb.from('dias').upsert(fila,{onConflict:'fecha'});
-    if(error){
-      // Reintento: algunos entornos fallan al clonar; reintentar con copia fresca
-      const fila2={fecha:HOY,estado:JSON.parse(JSON.stringify(estado)),actualizado_en:new Date().toISOString()};
-      const r2=await sb.from('dias').upsert(fila2,{onConflict:'fecha'});
-      error=r2.error;
-    }
+    const{error}=await sb.from('dias').upsert({fecha:HOY,estado:estado,actualizado_en:marca},{onConflict:'fecha'});
     if(error){dotSync('off');console.log('guardar error:',error.message||JSON.stringify(error));return false;}
-    miUltimoGuardado=marca;dotSync('ok');return true;
+    miUltimoGuardado=marca;dotSync('ok');
+    renderZona();recalc();
+    return true;
   }catch(e){
     dotSync('off');
     const msg=e&&e.message?e.message:JSON.stringify(e);
@@ -813,7 +835,7 @@ function abrirAuditoria(){
   if(totVuelto>0)h+=`<div class="rcard"><div class="ric" style="background:#fdf2e2">${ICO_RET}</div><div class="rlbl">Vuelto pendiente</div><div class="rval" style="color:#c9821f">${q(totVuelto)}</div>${miniLista(detVuelto,'#c9821f')}</div>`;
   h+=`</div>`;
   // Tabla de detalle
-  h+=`<div class="rm"><div class="mh"><div class="mn" style="font-size:15px">Detalle de pedidos</div></div><div style="font-size:11px;color:var(--mut);margin:2px 0 6px">Bajo cada cliente: repartidor que entregó y <b>↓ quién recibió el dinero</b>.</div><div class="rtable"><div class="rthead"><span style="flex:1.4">Cliente</span><span style="flex:1;text-align:right">Original</span><span style="flex:1;text-align:right">Recibido</span><span style="flex:1.3;text-align:right">Ajuste</span></div>`;
+  h+=`<div class="rm"><div class="mh"><div class="mn" style="font-size:15px">Detalle de pedidos</div></div><div style="font-size:11px;color:var(--mut);margin:2px 0 6px">Bajo cada cliente: quién <b>entregó</b> (repartidor) y quién <b>recibió</b> el dinero.</div><div class="rtable"><div class="rthead"><span style="flex:1.4">Cliente</span><span style="flex:1;text-align:right">Original</span><span style="flex:1;text-align:right">Recibido</span><span style="flex:1.3;text-align:right">Ajuste</span></div>`;
   let sumOrig=0,sumRecib=0;
   ruteros.forEach(r=>{
     const col=colorRutero(r);
@@ -839,8 +861,10 @@ function abrirAuditoria(){
           if((p.vuelto||0)>0)pp.push('Vuelto '+q(p.vuelto));
           if(pp.length)ajuste=`<span style="color:#c9821f">${pp.join('<br>')}</span>`;
         }
-        const rec=v.recibidoPor?`<br><span style="font-size:10.5px;color:${v.recibidoPor==='Lesli'?'#3a7bd5':'#2fae74'};font-weight:700">↓ ${v.recibidoPor}</span>`:'';
-        h+=`<div class="rrow"><span style="flex:1.4;display:flex;align-items:center;gap:8px"><span class="rava" style="background:${col}">${ini}</span><span style="line-height:1.25"><b style="font-size:13.5px">${p.nombre}</b><br><span style="font-size:10.5px;color:#9aa1ad">${r}</span>${rec}</span></span><span style="flex:1;text-align:right;font-size:13px">${q(p.total)}</span><span style="flex:1;text-align:right;font-size:13px;font-weight:700">${recStr}</span><span style="flex:1.3;text-align:right;font-size:11.5px;line-height:1.3">${ajuste}</span></div>`;
+        const rec=v.recibidoPor
+          ? `<br><span style="font-size:10.5px;color:${v.recibidoPor==='Lesli'?'#3a7bd5':'#2fae74'};font-weight:800">Recibió: ${v.recibidoPor}</span>`
+          : (v.cerrado?`<br><span style="font-size:10.5px;color:#c9821f;font-weight:700">Recibió: sin registrar</span>`:'');
+        h+=`<div class="rrow"><span style="flex:1.4;display:flex;align-items:center;gap:8px"><span class="rava" style="background:${col}">${ini}</span><span style="line-height:1.25"><b style="font-size:13.5px">${p.nombre}</b><br><span style="font-size:10.5px;color:#9aa1ad">Entregó: ${r}</span>${rec}</span></span><span style="flex:1;text-align:right;font-size:13px">${q(p.total)}</span><span style="flex:1;text-align:right;font-size:13px;font-weight:700">${recStr}</span><span style="flex:1.3;text-align:right;font-size:11.5px;line-height:1.3">${ajuste}</span></div>`;
       });
     });
   });

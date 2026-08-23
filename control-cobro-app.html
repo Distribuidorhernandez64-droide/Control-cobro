@@ -403,7 +403,7 @@ function recalc(){
     const nombres=pendientes.map(v=>{
       const et=v.rutero+' (V'+(viajes.filter(x=>x.rutero===v.rutero).indexOf(v)+1)+')';
       const r=v.rutero.replace(/'/g,"\\'");
-      return `<b onclick="irA('${r}')" style="text-decoration:underline;cursor:pointer">${et}</b>`;
+      return `<b onclick="irA('${r}',${v.id})" style="text-decoration:underline;cursor:pointer">${et}</b>`;
     }).join(', ');
     al.innerHTML=`⚠ Pendiente de recibir dinero de: ${nombres}`;al.style.display='block';
   } else {al.style.display='none';}
@@ -422,7 +422,15 @@ function renderRuteros(){
 }
 function addRutero(){if(modoLectura)return;const el=document.getElementById('newRutero');const n=(el.value||'').trim();if(n){ruteros.push(n);selRutero=n;renderRuteros();renderZona();}}
 function selR(r){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();}
-function irA(r){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();window.scrollTo({top:0,behavior:'smooth'});}
+function irA(r,vid){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();
+  setTimeout(()=>{
+    const card=(vid!==undefined&&vid!==null)?document.getElementById('viaje-'+vid):null;
+    if(!card){window.scrollTo({top:0,behavior:'smooth'});return;}
+    const hd=document.querySelector('header');
+    const off=(hd?hd.getBoundingClientRect().height:0)+12;
+    const y=card.getBoundingClientRect().top+window.pageYOffset-off;
+    window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+  },70);}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 function nuevoViaje(){if(modoLectura)return;if(!selRutero)return;const v={id:idv++,uid:uid(),rutero:selRutero,pedidos:[],cerrado:false,envases:'',envOk:false,entradaLista:false,pedidosListos:false};viajes.push(v);renderZona();

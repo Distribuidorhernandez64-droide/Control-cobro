@@ -314,7 +314,22 @@ function combinarViajes(mios, nube){
 // GUARDADO SEGURO: nunca borra lo que no está en esta pantalla.
 // 1) Lee lo que hay en la nube. 2) Combina (gana la versión más reciente de cada viaje).
 // 3) Escribe el resultado. Así dos aparatos NO se pisan el trabajo.
-async function guardarAhora(){
+// ===== BITÁCORA DE RESPALDOS =====
+// La tabla 'dias' guarda UNA fila por día y se sobrescribe: si algo se pisa,
+// no hay de dónde sacarlo. Por eso cada guardado bueno deja además una copia
+// con fecha y hora en la tabla 'respaldos', que sólo crece y nunca se borra.
+// Es "a prueba de fallos": si la tabla no existe o no hay internet, se anota
+// en consola y ya. NUNCA interrumpe ni hace fallar el guardado normal.
+async function respaldar(estado,marca,motivo){
+  try{
+    const{error}=await sb.from('respaldos').insert({
+      fecha:HOY, creado_en:marca, motivo:motivo||'guardado',
+      quien:sesion?sesion.nombre:'?', estado:estado});
+    if(error)console.log('respaldo no guardado:',error.message||error);
+  }catch(e){console.log('respaldo no guardado:',e&&e.message);}
+}
+
+async function guardarAhora(motivo){
   if(modoLectura)return true;
   dotSync('save');
   try{
@@ -351,9 +366,13 @@ async function guardarAhora(){
     // borrar trabajo cobrado. (Los que se quitan a propósito con "Quitar
     // viaje" van en 'borrados' y sí pueden desaparecer.)
     if(nube){
-      const quedan=new Set(viajesValidos.map(v=>v.uid).filter(Boolean));
+      const quedan=new Set(viajesFinal.map(v=>v&&v.uid).filter(Boolean));
+      // Ojo: acá NO se perdona ni siquiera lo que yo mandé a borrar. "Quitar
+      // viaje" sólo aparece en viajes vacíos; si en la nube ese viaje ya tiene
+      // pedidos o ya se cobró, es que otro aparato lo llenó mientras tanto y
+      // no se borra por nada del mundo.
       const perdidos=(nube.viajes||[]).filter(v=>
-        v && v.uid && !quedan.has(v.uid) && !borrados.includes(v.uid) &&
+        v && v.uid && !quedan.has(v.uid) &&
         ((v.pedidos&&v.pedidos.length>0)||v.cerrado));
       if(perdidos.length){
         dotSync('off');
@@ -374,6 +393,7 @@ async function guardarAhora(){
     const{error}=await sb.from('dias').upsert({fecha:HOY,estado:estado,actualizado_en:marca},{onConflict:'fecha'});
     if(error){dotSync('off');console.log('guardar error:',error.message||JSON.stringify(error));return false;}
     miUltimoGuardado=marca;dotSync('ok');
+    respaldar(estado,marca,motivo); // copia de seguridad, sin esperarla
     renderZona();recalc();
     return true;
   }catch(e){
@@ -501,7 +521,7 @@ async function terminarPedidos(vid){if(modoLectura)return;const v=viajes.find(x=
   const elE=document.getElementById('env-'+vid);if(elE)v.envases=elE.value;
   v.entradaLista=true;v.horaSalida=new Date().toISOString();v.mod=Date.now();
   renderZona();
-  const ok=await guardarAhora();
+  const ok=await guardarAhora('ruta enviada');
   toast(ok?'Ruta enviada y guardada ✓':'⚠ No se pudo guardar. Revisá internet',!ok);
   _enviando=false;}
 async function terminarAnotar(vid){if(modoLectura)return;const v=viajes.find(x=>x.id===vid);if(!v)return;
@@ -511,7 +531,7 @@ async function terminarAnotar(vid){if(modoLectura)return;const v=viajes.find(x=>
   }
   if(v.pedidos.length===0){toast('Agregá al menos un pedido',true);return;}
   v.pedidosListos=true;v.mod=Date.now();renderZona();
-  const ok=await guardarAhora();
+  const ok=await guardarAhora('pedidos cerrados');
   toast(ok?'Pedidos guardados ✓':'⚠ No se pudo guardar. Revisá internet',!ok);}
 function volverAnotar(vid){const v=viajes.find(x=>x.id===vid);if(v){v.pedidosListos=false;renderZona();}}
 function reabrirEntrada(vid){const v=viajes.find(x=>x.id===vid);if(v){v.entradaLista=false;v.pedidosListos=true;renderZona();}}
@@ -567,8 +587,8 @@ async function confirmarRecibido(vid,quien){
   v.pedidos.forEach(p=>{if(p.snapEf===undefined)p.snapEf=efectivoDe(p);});
   v.cerrado=true;v.horaRecibido=new Date().toISOString();v.recibidoPor=quien;v.mod=Date.now();viajeAbierto=null;renderZona();
   toast('Guardando…');
-  let ok=await guardarAhora();
-  if(!ok){ok=await guardarAhora();} // un reintento automático
+  let ok=await guardarAhora('DINERO RECIBIDO de '+quien);
+  if(!ok){ok=await guardarAhora('DINERO RECIBIDO de '+quien);} // un reintento automático
   if(ok){toast('Recibido por '+quien+' y guardado ✓');}
   else{v.cerrado=false;v.horaRecibido=null;v.recibidoPor=null;renderZona();toast('⚠ NO se guardó. Revisá internet y volvé a tocar Recibido',true);}
 }
@@ -576,14 +596,14 @@ function logAudit(accion,detalle){auditoria.unshift({hora:new Date().toISOString
 
 async function reabrir(vid){if(!esMaestro())return;const v=viajes.find(x=>x.id===vid);if(v){
   logAudit('REABRIÓ','Viaje '+(viajes.filter(x=>x.rutero===v.rutero).indexOf(v)+1)+' de '+v.rutero+' (recibido '+hhmm(v.horaRecibido)+')');
-  v.cerrado=false;v.entradaLista=true;viajeAbierto=null;v.modificado=true;v.mod=Date.now();renderZona();await guardarAhora();toast('⚠ Viaje reabierto — quedó registrado');}}
+  v.cerrado=false;v.entradaLista=true;viajeAbierto=null;v.modificado=true;v.mod=Date.now();renderZona();await guardarAhora('REABRIÓ viaje');toast('⚠ Viaje reabierto — quedó registrado');}}
 async function borrarViaje(vid){
   if(modoLectura)return;
   const v=viajes.find(x=>x.id===vid);
   if(v&&v.uid)borrados.push(v.uid);
   viajes=viajes.filter(x=>x.id!==vid);
   renderZona();
-  await guardarAhora();
+  await guardarAhora('QUITÓ un viaje');
 }
 function borrarPedido(vid,pid){
   if(modoLectura)return;
@@ -596,7 +616,7 @@ function borrarPedido(vid,pid){
   (v.pedBorrados=v.pedBorrados||[]).push(pid);
   v.mod=Date.now();
   const sy=window.scrollY;renderZona();window.scrollTo(0,sy);
-  if(v.entradaLista||v.cerrado)guardarAhora();
+  if(v.entradaLista||v.cerrado)guardarAhora('borró un pedido');
 }
 // Deslizar una fila hacia la izquierda revela el botón "Eliminar" (estilo iOS).
 // No borra de una; hay que tocar el botón rojo.
@@ -856,6 +876,93 @@ function abrirReporte(){
   document.getElementById('overlay').classList.add('open');
 }
 function cerrarReporte(){document.getElementById('overlay').classList.remove('open');}
+
+// ===== RECUPERACIÓN: ver los respaldos y volver a un momento anterior =====
+let _respFecha=null;
+function efectivoDeSnap(e){
+  let s=0;(e&&e.viajes||[]).forEach(v=>(v.pedidos||[]).forEach(p=>{
+    if(p.estado==='credito'||p.estado==='cancelado')return;
+    s+=Math.max(0,(p.total||0)-(p.devolucion||0)-(p.descuento||0)+(p.vuelto||0));}));
+  return s;
+}
+async function abrirRespaldos(fecha){
+  if(!esMaestro()){toast('Sólo el maestro',true);return;}
+  _respFecha=fecha||_respFecha||HOY;
+  const sh=document.getElementById('sheet');
+  sh.innerHTML=`<div class="shHead"><h2>Respaldos</h2><button class="x" onclick="cerrarReporte()">×</button></div>
+    <div style="padding:4px 0 14px;color:var(--mut);font-size:13px">Buscando…</div>`;
+  document.getElementById('overlay').classList.add('open');
+  let filas=null,err=null;
+  try{
+    const{data,error}=await sb.from('respaldos').select('id,creado_en,motivo,quien,estado')
+      .eq('fecha',_respFecha).order('creado_en',{ascending:false}).limit(40);
+    if(error)err=error.message||String(error); else filas=data||[];
+  }catch(e){err=(e&&e.message)||String(e);}
+
+  let h=`<div class="shHead"><h2>Respaldos</h2><button class="x" onclick="cerrarReporte()">×</button></div>
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
+      <label class="fld" style="margin:0">Día</label>
+      <input type="date" value="${_respFecha}" onchange="abrirRespaldos(this.value)" style="width:auto;padding:9px 11px">
+    </div>`;
+  if(err){
+    h+=`<div style="background:#fbe9e4;color:var(--bad);border-radius:12px;padding:14px;font-size:13px;font-weight:600;line-height:1.5">
+      No se pudo leer la bitácora.<br><span style="font-weight:400">${err}</span><br><br>
+      Si dice que la tabla <b>respaldos</b> no existe, hay que crearla una sola vez en Supabase.</div>`;
+  } else if(!filas.length){
+    h+=`<div class="empty" style="padding:30px 10px">Todavía no hay respaldos de este día.<br><span style="font-size:12.5px">Se van creando solos cada vez que se guarda algo.</span></div>`;
+  } else {
+    h+=`<div style="font-size:12.5px;color:var(--mut);margin-bottom:12px;line-height:1.5">
+      Cada línea es una foto completa del día en ese momento. Tocá <b>Restaurar</b> para volver a ella.<br>
+      Antes de restaurar se guarda una foto de cómo está ahora, así que siempre se puede deshacer.</div>`;
+    filas.forEach(f=>{
+      const e=f.estado||{};
+      const nv=(e.viajes||[]).length, np=(e.viajes||[]).reduce((s,v)=>s+((v.pedidos||[]).length),0);
+      h+=`<div class="vcard" style="margin-bottom:9px"><div style="padding:13px 15px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <div style="font-weight:800;font-size:15px">${hhmm(f.creado_en)}</div>
+          <div style="font-weight:800;color:var(--green);font-variant-numeric:tabular-nums">${q(efectivoDeSnap(e))}</div></div>
+        <div style="font-size:12.5px;color:var(--mut);margin-top:3px">${f.motivo||'guardado'} · ${f.quien||'?'}</div>
+        <div style="font-size:12px;color:var(--mut);margin-top:2px">${nv} viaje(s) · ${np} pedido(s)</div>
+        <button class="btn sec" style="width:100%;margin-top:11px;font-size:13px;padding:10px"
+          onclick="restaurarRespaldo(${f.id},'${hhmm(f.creado_en)}')">Restaurar este momento</button>
+      </div></div>`;
+    });
+  }
+  sh.innerHTML=h;
+}
+async function restaurarRespaldo(rid,hora){
+  if(!esMaestro())return;
+  if(!confirm('¿Volver el día '+_respFecha+' a como estaba a las '+hora+'?\n\nLo de ahora se guarda como respaldo, se puede deshacer.'))return;
+  toast('Restaurando…');
+  try{
+    // 1) Foto del estado ACTUAL antes de pisarlo, para poder arrepentirse
+    const{data:act}=await sb.from('dias').select('estado').eq('fecha',_respFecha).maybeSingle();
+    if(act&&act.estado){
+      await sb.from('respaldos').insert({fecha:_respFecha,creado_en:new Date().toISOString(),
+        motivo:'ANTES DE RESTAURAR a las '+hora,quien:sesion?sesion.nombre:'?',estado:act.estado});
+    }
+    // 2) Traer el respaldo elegido
+    const{data:snap,error:e1}=await sb.from('respaldos').select('estado').eq('id',rid).maybeSingle();
+    if(e1||!snap||!snap.estado){toast('⚠ No se pudo leer el respaldo',true);return;}
+    // 3) Escribir tal cual, SIN fusionar (para eso es una restauración)
+    const marca=new Date().toISOString();
+    const{error:e2}=await sb.from('dias').upsert({fecha:_respFecha,estado:snap.estado,actualizado_en:marca},{onConflict:'fecha'});
+    if(e2){toast('⚠ No se pudo restaurar: '+(e2.message||''),true);return;}
+    miUltimoGuardado=marca;
+    // 4) Dejar la pantalla igual a lo restaurado
+    if(_respFecha===HOY){
+      const e=snap.estado;
+      borrados=[];
+      ruteros=e.ruteros||[];viajes=e.viajes||[];auditoria=e.auditoria||[];
+      viajes.forEach(v=>{if(v&&!v.uid)v.uid=uid();});
+      selRutero=(selRutero&&ruteros.includes(selRutero))?selRutero:(ruteros[0]||null);
+      viajeAbierto=null;renderRuteros();renderZona();
+      cerrarReporte();toast('Restaurado a las '+hora+' ✓');
+    } else {
+      cerrarReporte();toast('Restaurado. Miralo con el calendario 📅');
+    }
+  }catch(err){toast('⚠ Error al restaurar',true);console.log('restaurar:',err);}
+}
 function abrirAuditoria(){
   let h=`<div class="shHead"><h2>Reporte del día</h2><button class="x" onclick="cerrarReporte()">×</button></div>`;
   // ===== REPORTE PROFESIONAL =====
@@ -972,6 +1079,7 @@ function abrirAuditoria(){
     h+=`<div class="rm"><div class="mh"><div class="mn" style="font-size:15px;color:var(--bad)">⚠ Movimientos después de cerrar (${auditoria.length})</div></div><div style="margin-top:8px">${aud}</div></div>`;
   }
   h+=`<button class="btn copyb" style="margin:10px 0 0" onclick="copiarReporteUnico()">Copiar reporte para WhatsApp</button>`;
+  if(esMaestro())h+=`<button class="btn sec" style="width:100%;margin-top:9px" onclick="abrirRespaldos()">🛟 Respaldos y recuperación</button>`;
   document.getElementById('sheet').innerHTML=h;
   document.getElementById('overlay').classList.add('open');
 }

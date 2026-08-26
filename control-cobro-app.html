@@ -270,6 +270,18 @@ function escribiendoAhora(){
   const a=document.activeElement;
   return a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA');
 }
+// Une los pedidos de las dos versiones de un mismo viaje: manda la versión
+// ganadora, pero se rescatan los pedidos que sólo tenía la perdedora (los que
+// se borraron a propósito quedan anotados en pedBorrados y NO vuelven).
+function rescatarPedidos(gana, pierde){
+  const del=new Set([...(gana.pedBorrados||[]),...(pierde.pedBorrados||[])]);
+  const tengo=new Set((gana.pedidos||[]).map(p=>p&&p.id));
+  const extra=(pierde.pedidos||[]).filter(p=>p&&!tengo.has(p.id)&&!del.has(p.id));
+  if(extra.length)gana.pedidos=(gana.pedidos||[]).concat(extra);
+  if(gana.pedidos&&del.size)gana.pedidos=gana.pedidos.filter(p=>p&&!del.has(p.id));
+  if(del.size)gana.pedBorrados=[...del];
+  return gana;
+}
 // Combina los viajes de la nube con los míos (solo para ACTUALIZAR, no para guardar).
 function combinarViajes(mios, nube){
   const mapa={};
@@ -279,10 +291,19 @@ function combinarViajes(mios, nube){
     if(!v.uid){mapa['local_'+v.id+'_'+v.rutero]=v;return;}
     const ex=mapa[v.uid];
     if(!ex){mapa[v.uid]=v;return;}
-    // Gana la versión con la marca de tiempo más reciente. Sin excepciones:
-    // recibir o reabrir actualizan 'mod', así que la última acción real manda.
+    // REGLA 1 (candado del dinero): si en la nube el viaje ya está RECIBIDO y
+    // mi copia no lo tiene recibido, gana la nube. Un viaje cobrado sólo se
+    // "des-cobra" con el botón Reabrir, que marca 'modificado'.
+    if(ex.cerrado && !v.cerrado && !v.modificado){mapa[v.uid]=ex;return;}
+    // REGLA 2: gana la marca de tiempo más reciente. En EMPATE gana la nube
+    // (antes ganaba lo local, aunque estuviera desactualizado).
     const tm=v.mod||0, te=ex.mod||0;
-    mapa[v.uid]= tm>=te ? v : ex;
+    const gana = tm>te ? v : ex, pierde = tm>te ? ex : v;
+    // REGLA 3 (candado de pedidos): el que gana se queda con sus pedidos, PERO
+    // rescata los que el otro tenía y él no. Así ningún pedido se pierde por
+    // culpa de un reloj adelantado o de una copia vieja. Los borrados a
+    // propósito quedan anotados en 'pedBorrados' y no se rescatan.
+    mapa[v.uid]=rescatarPedidos(gana,pierde);
   });
   if(typeof borrados!=='undefined')borrados.forEach(u=>{delete mapa[u];});
   return Object.values(mapa);
@@ -323,6 +344,24 @@ async function guardarAhora(){
     viajes=viajesFinal;ruteros=ruterosFinal;auditoria=auditFinal;
     // Subir solo viajes con contenido (los vacíos no se guardan)
     const viajesValidos=viajesFinal.filter(v=>v && ((v.pedidos&&v.pedidos.length>0)||v.entradaLista||v.cerrado));
+    // ===== RED DE SEGURIDAD: NO GUARDAR SI SE PIERDE UNA RUTA =====
+    // Último control antes de escribir: comparo lo que voy a subir contra lo
+    // que hay en la nube. Si algún viaje con pedidos o ya recibido dejaría de
+    // existir, CANCELO el guardado. Prefiero avisar y no guardar, antes que
+    // borrar trabajo cobrado. (Los que se quitan a propósito con "Quitar
+    // viaje" van en 'borrados' y sí pueden desaparecer.)
+    if(nube){
+      const quedan=new Set(viajesValidos.map(v=>v.uid).filter(Boolean));
+      const perdidos=(nube.viajes||[]).filter(v=>
+        v && v.uid && !quedan.has(v.uid) && !borrados.includes(v.uid) &&
+        ((v.pedidos&&v.pedidos.length>0)||v.cerrado));
+      if(perdidos.length){
+        dotSync('off');
+        console.log('guardar CANCELADO, se perderían viajes:',perdidos.map(v=>v.rutero+'/'+v.uid).join(', '));
+        toast('⚠ NO se guardó: se perdería una ruta. Tocá 🔄 Actualizar',true);
+        return false;
+      }
+    }
     // Limpiar TODO con JSON para evitar DataCloneError
     let estado;
     try{
@@ -433,7 +472,19 @@ function irA(r,vid){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();
   },70);}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
-function nuevoViaje(){if(modoLectura)return;if(!selRutero)return;const v={id:idv++,uid:uid(),rutero:selRutero,pedidos:[],cerrado:false,envases:'',envOk:false,entradaLista:false,pedidosListos:false};viajes.push(v);renderZona();
+// ===== IDs ÚNICOS ENTRE APARATOS =====
+// Antes los id salían de un contador (idv/idp) que cada aparato cargaba de la
+// nube. Con dos celulares y la PC abiertos, los tres iban en el mismo número y
+// creaban viajes/pedidos DISTINTOS con el MISMO id. Como todo el código busca
+// por id (find, filter, getElementById), se cruzaban: recibías un viaje y se
+// cerraba otro, anotabas en la PC y el pedido caía en otra tarjeta, y "Quitar
+// viaje" borraba los dos de un solo golpe.
+// Ahora el id lleva la hora exacta + una marca al azar propia de este aparato,
+// así dos aparatos NUNCA generan el mismo número.
+const DEV=Math.floor(Math.random()*1000);
+let _lastId=0;
+function nuevoId(){let n=Date.now()*1000+DEV;if(n<=_lastId)n=_lastId+1;_lastId=n;return n;}
+function nuevoViaje(){if(modoLectura)return;if(!selRutero)return;const v={id:nuevoId(),uid:uid(),rutero:selRutero,pedidos:[],cerrado:false,envases:'',envOk:false,entradaLista:false,pedidosListos:false};viajes.push(v);renderZona();
   setTimeout(()=>{
     const card=document.getElementById('viaje-'+v.id);
     if(card)card.scrollIntoView({behavior:'smooth',block:'center'});
@@ -444,7 +495,7 @@ async function terminarPedidos(vid){if(modoLectura)return;const v=viajes.find(x=
   if(_enviando)return; _enviando=true;
   const elN=document.getElementById('in-nom-'+vid), elM=document.getElementById('in-mon-'+vid);
   if(elN&&elM&&(elN.value||'').trim()&&!isNaN(parseFloat(elM.value))){
-    v.pedidos.push({id:idp++,nombre:elN.value.trim(),total:parseFloat(elM.value),estado:'pagado',devolucion:0,descuento:0,vuelto:0});
+    v.pedidos.push({id:nuevoId(),nombre:elN.value.trim(),total:parseFloat(elM.value),estado:'pagado',devolucion:0,descuento:0,vuelto:0});
   }
   if(v.pedidos.length===0){toast('Agregá al menos un pedido',true);_enviando=false;return;}
   const elE=document.getElementById('env-'+vid);if(elE)v.envases=elE.value;
@@ -456,7 +507,7 @@ async function terminarPedidos(vid){if(modoLectura)return;const v=viajes.find(x=
 async function terminarAnotar(vid){if(modoLectura)return;const v=viajes.find(x=>x.id===vid);if(!v)return;
   const elN=document.getElementById('in-nom-'+vid), elM=document.getElementById('in-mon-'+vid);
   if(elN&&elM&&(elN.value||'').trim()&&!isNaN(parseFloat(elM.value))){
-    v.pedidos.push({id:idp++,nombre:elN.value.trim(),total:parseFloat(elM.value),estado:'pagado',devolucion:0,descuento:0,vuelto:0});
+    v.pedidos.push({id:nuevoId(),nombre:elN.value.trim(),total:parseFloat(elM.value),estado:'pagado',devolucion:0,descuento:0,vuelto:0});
   }
   if(v.pedidos.length===0){toast('Agregá al menos un pedido',true);return;}
   v.pedidosListos=true;v.mod=Date.now();renderZona();
@@ -473,7 +524,7 @@ function addPedido(vid){
   const elN=document.getElementById('in-nom-'+vid), elM=document.getElementById('in-mon-'+vid);
   const nom=(elN.value||'').trim();const tot=parseFloat(elM.value);
   if(!nom||isNaN(tot)){toast('Falta nombre o cantidad',true);return;}
-  v.pedidos.push({id:idp++,nombre:nom,total:tot,estado:'pagado',devolucion:0,descuento:0,vuelto:0});
+  v.pedidos.push({id:nuevoId(),nombre:nom,total:tot,estado:'pagado',devolucion:0,descuento:0,vuelto:0});
   v.mod=Date.now();
   renderZona();
   // Reponer foco en el campo de nombre (que está fijo abajo)
@@ -540,6 +591,9 @@ function borrarPedido(vid,pid){
   const v=viajes.find(x=>x.id===vid);if(!v)return;
   if(v.cerrado)return;
   v.pedidos=v.pedidos.filter(p=>p.id!==pid);
+  // Dejar constancia de que este pedido se borró A PROPÓSITO. Sin esto, la
+  // fusión lo rescataría de la nube y volvería a aparecer.
+  (v.pedBorrados=v.pedBorrados||[]).push(pid);
   v.mod=Date.now();
   const sy=window.scrollY;renderZona();window.scrollTo(0,sy);
   if(v.entradaLista||v.cerrado)guardarAhora();

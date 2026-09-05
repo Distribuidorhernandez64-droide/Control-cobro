@@ -41,7 +41,9 @@
   .daysub b{color:#1c2433}.daysub i{color:#8a5a12;font-style:normal}
   main{padding:16px;max-width:720px;margin:0 auto;padding-bottom:90px}
   .ruteros{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-  .rchip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:24px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+  .rchip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:24px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);
+    -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+  .rchip input{-webkit-user-select:text;user-select:text}
   .rchip.on{background:var(--green);border-color:var(--green);color:#fff}
   .rchip .tot{font-size:11px;opacity:.85;font-weight:600;margin-left:6px}
   .empty{color:var(--mut);text-align:center;padding:44px 16px;font-size:14px}
@@ -262,6 +264,13 @@ const sb=supabase.createClient(SB_URL,SB_KEY);
 const HOY=new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
 let modoLectura=false; // true cuando se ve un día anterior (solo mirar)
 let borrados=[]; // uids de viajes eliminados (para que el merge no los reviva)
+let ruterosBorrados=[]; // vendedores eliminados (misma razón: que no revivan al sincronizar)
+// Suma los vendedores que vienen de la nube y a mí me faltan, sin revivir los
+// que se eliminaron a propósito en este aparato.
+function unirRuteros(mios, otros){
+  (otros||[]).forEach(r=>{if(r&&!mios.includes(r)&&!ruterosBorrados.includes(r))mios.push(r);});
+  return mios;
+}
 let guardando=false, guardarPend=false, _cargando=true;
 let miUltimoGuardado=null, _timerGuardar=null, _autoOcupado=false, _ultimoVisto=null;
 
@@ -365,12 +374,20 @@ async function guardarAhora(motivo){
     let ruterosFinal=ruteros.slice();
     let auditFinal=auditoria.slice();
     if(nube){
-      (nube.ruteros||[]).forEach(r=>{if(!ruterosFinal.includes(r))ruterosFinal.push(r);});
+      unirRuteros(ruterosFinal, nube.ruteros);
       viajesFinal=combinarViajes(viajes, nube.viajes||[]);
       const claves=new Set(auditFinal.map(a=>a.hora+'|'+a.accion+'|'+(a.detalle||'')));
       (nube.auditoria||[]).forEach(a=>{const k=a.hora+'|'+a.accion+'|'+(a.detalle||'');if(!claves.has(k))auditFinal.push(a);});
       auditFinal.sort((a,b)=>new Date(b.hora)-new Date(a.hora));
     }
+    // Si un vendedor que mandé a eliminar aparece con viajes (otro aparato se
+    // los anotó mientras tanto), NO se elimina: se devuelve a la lista.
+    ruterosBorrados.slice().forEach(r=>{
+      if(viajesFinal.some(v=>v&&v.rutero===r)){
+        ruterosBorrados=ruterosBorrados.filter(x=>x!==r);
+        if(!ruterosFinal.includes(r))ruterosFinal.push(r);
+      }
+    });
     // Dejar la memoria local igual a lo combinado (para que la pantalla no quede desfasada)
     viajes=viajesFinal;ruteros=ruterosFinal;auditoria=auditFinal;
     // Subir solo viajes con contenido (los vacíos no se guardan)
@@ -506,13 +523,83 @@ function renderRuteros(){
   const icoP=col=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="8" r="3.4" stroke="${col}" stroke-width="2"/><path d="M5.5 19c0-3.2 3-5.2 6.5-5.2s6.5 2 6.5 5.2" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg>`;
   c.innerHTML=ruteros.map(r=>{const t=totalRutero(r);const col=colorRutero(r);
     const on=selRutero===r;
-    return `<div class="rchip ${on?'on':''}" style="${on?'background:'+col+';border-color:'+col:''};display:inline-flex;align-items:center" onclick="selR('${r}')">
-      ${icoP(on?'#fff':col)}${r}${t>0?'<span class="tot">'+q(t)+'</span>':''}</div>`;
+    const j=r.replace(/'/g,"\\'");
+    return `<div class="rchip ${on?'on':''}" style="${on?'background:'+col+';border-color:'+col:''};display:inline-flex;align-items:center"
+      onclick="if(!_lpFue)selR('${j}')"
+      onpointerdown="lpInicio(event,'${j}')" onpointerup="lpFin()" onpointerleave="lpFin()"
+      onpointercancel="lpFin()" onpointermove="lpMueve(event)" oncontextmenu="return false">
+      ${icoP(on?'#fff':col)}${esc(r)}${t>0?'<span class="tot">'+q(t)+'</span>':''}</div>`;
   }).join('')+`<div class="rchip" style="border-style:dashed;color:var(--mut);display:inline-flex;align-items:center;padding:0" onclick="document.getElementById('newRutero').focus()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="margin:0 4px 0 14px"><path d="M12 6v12M6 12h12" stroke="#9aa1ad" stroke-width="2.2" stroke-linecap="round"/></svg>
       <input id="newRutero" placeholder="Agregar vendedor" style="width:135px;border:none;background:none;padding:10px 14px 10px 2px" onkeydown="if(event.key==='Enter')addRutero()"></div>`;
 }
-function addRutero(){if(modoLectura)return;const el=document.getElementById('newRutero');const n=(el.value||'').trim();if(n){ruteros.push(n);selRutero=n;renderRuteros();renderZona();}}
+function addRutero(){if(modoLectura)return;const el=document.getElementById('newRutero');const n=(el.value||'').trim();if(n){
+  ruterosBorrados=ruterosBorrados.filter(x=>x!==n); // si se había eliminado antes, vuelve a valer
+  if(!ruteros.includes(n))ruteros.push(n);
+  selRutero=n;renderRuteros();renderZona();}}
+
+// ===== ELIMINAR VENDEDOR: mantener presionado el chip =====
+// Sólo se puede eliminar si NO tiene ningún viaje del día. Si tiene rutas en
+// curso o ya recibidas, se avisa y no se toca nada.
+let _lpTimer=null, _lpFue=false, _lpXY=null;
+function lpInicio(ev,r){
+  if(modoLectura)return;
+  _lpFue=false; _lpXY={x:ev.clientX,y:ev.clientY};
+  clearTimeout(_lpTimer);
+  _lpTimer=setTimeout(()=>{
+    _lpFue=true;
+    if(navigator.vibrate)try{navigator.vibrate(35);}catch(e){}
+    pedirBorrarRutero(r);
+  },600);
+}
+function lpMueve(ev){ // si el dedo se desliza (está haciendo scroll), no es pulsación larga
+  if(!_lpXY)return;
+  if(Math.abs(ev.clientX-_lpXY.x)>10||Math.abs(ev.clientY-_lpXY.y)>10)lpFin();
+}
+function lpFin(){clearTimeout(_lpTimer);_lpXY=null;setTimeout(()=>{_lpFue=false;},350);}
+
+function pedirBorrarRutero(r){
+  const vs=viajes.filter(v=>v&&v.rutero===r);
+  const m=document.getElementById('modalRecibe');
+  const body=document.getElementById('modalRecibeBody');
+  if(!esMaestro()){
+    body.innerHTML=`<div style="font-size:17px;font-weight:900;margin-bottom:6px">Sólo el maestro</div>
+      <div style="font-size:13.5px;color:var(--mut);margin-bottom:16px;line-height:1.5">Para eliminar a <b>${esc(r)}</b> hay que entrar con el usuario maestro.</div>
+      <button class="btn sec" style="width:100%;padding:13px" onclick="cerrarModalRecibe()">Entendido</button>`;
+    m.classList.add('open');return;
+  }
+  if(vs.length){
+    const enRuta=vs.filter(v=>!v.cerrado).length, recib=vs.filter(v=>v.cerrado).length;
+    const det=[];
+    if(enRuta)det.push('<b>'+enRuta+'</b> en curso');
+    if(recib)det.push('<b>'+recib+'</b> ya recibida'+(recib===1?'':'s'));
+    body.innerHTML=`<div style="font-size:17px;font-weight:900;margin-bottom:6px">No se puede eliminar</div>
+      <div style="font-size:13.5px;color:var(--mut);margin-bottom:16px;line-height:1.5">
+        <b>${esc(r)}</b> tiene ${vs.length} ruta${vs.length===1?'':'s'} de hoy (${det.join(' · ')}).<br>
+        Primero hay que quitarle las rutas.</div>
+      <button class="btn sec" style="width:100%;padding:13px" onclick="cerrarModalRecibe()">Entendido</button>`;
+    m.classList.add('open');return;
+  }
+  body.innerHTML=`<div style="font-size:17px;font-weight:900;margin-bottom:6px">¿Eliminar a ${esc(r)}?</div>
+    <div style="font-size:13.5px;color:var(--mut);margin-bottom:16px;line-height:1.5">No tiene ninguna ruta hoy, así que no se pierde nada.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn" style="background:var(--bad);padding:15px" onclick="borrarRutero('${r.replace(/'/g,"\\'")}')">Eliminar</button>
+      <button class="btn sec" style="padding:13px" onclick="cerrarModalRecibe()">Cancelar</button>
+    </div>`;
+  m.classList.add('open');
+}
+async function borrarRutero(r){
+  if(!esMaestro()||modoLectura)return;
+  cerrarModalRecibe();
+  if(viajes.some(v=>v&&v.rutero===r)){toast('Tiene rutas, no se puede',true);return;}
+  ruteros=ruteros.filter(x=>x!==r);
+  if(!ruterosBorrados.includes(r))ruterosBorrados.push(r);
+  if(selRutero===r){selRutero=ruteros[0]||null;viajeAbierto=null;}
+  logAudit('ELIMINÓ VENDEDOR',r);
+  renderRuteros();renderZona();
+  const ok=await guardarAhora('eliminó al vendedor '+r);
+  toast(ok?'Vendedor eliminado ✓':'⚠ No se pudo guardar. Revisá internet',!ok);
+}
 function selR(r){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();}
 function irA(r,vid){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();
   setTimeout(()=>{
@@ -1215,7 +1302,7 @@ async function recargarSiHaceFalta(){
     const{data}=await sb.from('dias').select('estado').eq('fecha',HOY).maybeSingle();
     if(data&&data.estado){
       const e=data.estado;
-      (e.ruteros||[]).forEach(r=>{if(!ruteros.includes(r))ruteros.push(r);});
+      unirRuteros(ruteros, e.ruteros);
       viajes=combinarViajes(viajes, e.viajes);
       const claves=new Set(auditoria.map(a=>a.hora+'|'+a.accion+'|'+(a.detalle||'')));
       (e.auditoria||[]).forEach(a=>{const k=a.hora+'|'+a.accion+'|'+(a.detalle||'');if(!claves.has(k))auditoria.push(a);});
@@ -1238,7 +1325,7 @@ async function actualizarYa(){
     const{data}=await sb.from('dias').select('estado').eq('fecha',HOY).maybeSingle();
     if(data&&data.estado){
       const e=data.estado;
-      (e.ruteros||[]).forEach(r=>{if(!ruteros.includes(r))ruteros.push(r);});
+      unirRuteros(ruteros, e.ruteros);
       viajes=combinarViajes(viajes, e.viajes);
       const claves=new Set(auditoria.map(a=>a.hora+'|'+a.accion+'|'+(a.detalle||'')));
       (e.auditoria||[]).forEach(a=>{const k=a.hora+'|'+a.accion+'|'+(a.detalle||'');if(!claves.has(k))auditoria.push(a);});

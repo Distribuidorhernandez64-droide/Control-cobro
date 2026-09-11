@@ -730,13 +730,15 @@ function borrarPedido(vid,pid){
   if(!esMaestro())return; // solo el maestro borra
   const v=viajes.find(x=>x.id===vid);if(!v)return;
   if(v.cerrado)return;
+  if(v.entradaLista)return; // ruta ya enviada: primero "Corregir pedidos o envases"
   v.pedidos=v.pedidos.filter(p=>p.id!==pid);
   // Dejar constancia de que este pedido se borró A PROPÓSITO. Sin esto, la
   // fusión lo rescataría de la nube y volvería a aparecer.
   (v.pedBorrados=v.pedBorrados||[]).push(pid);
   v.mod=Date.now();
   const sy=window.scrollY;renderZona();window.scrollTo(0,sy);
-  if(v.entradaLista||v.cerrado)guardarAhora('borró un pedido');
+  // Si la ruta ya había salido (se está corrigiendo), guardar de una vez.
+  if(v.horaSalida||v.cerrado)guardarAhora('borró un pedido');
 }
 // Deslizar una fila hacia la izquierda revela el botón "Eliminar" (estilo iOS).
 // No borra de una; hay que tocar el botón rojo.
@@ -808,9 +810,11 @@ function pedTag(p){
 
 function renderPedidos(v,editable){
   if(!esMaestro())editable=false; // anotador no edita ni ajusta
-  // Solo el maestro puede borrar clientes (antes o después de enviar).
-  // El anotador no puede eliminar nada.
-  const puedeBorrar = esMaestro() && !v.cerrado;
+  // Sólo se pueden borrar clientes MIENTRAS se arma la ruta. Una vez enviada,
+  // el botón desaparece: para corregir hay que tocar "Corregir pedidos o
+  // envases", que devuelve el viaje a modo edición y lo habilita de nuevo.
+  // El anotador nunca puede eliminar.
+  const puedeBorrar = esMaestro() && !v.cerrado && !v.entradaLista;
   return v.pedidos.map(p=>{
     const prob=p.estado!=='pagado'||ajusteDe(p)>0;
     const ef=efectivoDe(p);

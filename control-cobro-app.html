@@ -1219,7 +1219,47 @@ function copiarRecibido(){
   t+=`TOTAL EFECTIVO: ${q(tot)}`;
   navigator.clipboard.writeText(t).then(()=>toast('Copiado ✓')).catch(()=>toast('No se pudo',true));
 }
+// Viajes que ya salieron y de los que todavía NO se recibió el dinero.
+function rutasPendientes(){
+  return viajes.filter(v=>v && !v.cerrado && v.entradaLista);
+}
+// El reporte no se puede pasar a WhatsApp con dinero en la calle: los totales
+// saldrían incompletos. Avisa quién falta y lleva directo a esa ruta.
+function avisarPendientes(){
+  const ps=rutasPendientes();
+  if(!ps.length)return false;
+  const filas=ps.map(v=>{
+    const r=v.rutero||'';
+    const col=colorRutero(r);
+    const nv=viajes.filter(x=>x.rutero===r).indexOf(v)+1;
+    const ini=(r.trim()[0]||'?').toUpperCase();
+    return `<button class="btn sec" style="width:100%;padding:12px 13px;display:flex;align-items:center;gap:11px;text-align:left"
+      onclick="irAPendiente('${r.replace(/'/g,"\\'")}',${v.id})">
+      <span style="width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;background:${col}22;color:${col}">${esc(ini)}</span>
+      <span style="flex:1;min-width:0">
+        <span style="display:block;font-weight:800;font-size:14px">${esc(r)}</span>
+        <span style="display:block;font-size:12px;color:var(--mut);font-weight:600">Viaje ${nv} · salió ${hhmm(v.horaSalida)}</span>
+      </span>
+      <span style="font-weight:800;color:var(--green);font-variant-numeric:tabular-nums;font-size:13.5px">${q(efectivoViaje(v))}</span>
+    </button>`;
+  }).join('');
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="font-size:17px;font-weight:900;margin-bottom:5px">${ps.length===1?'Ruta pendiente de recibir':'Rutas pendientes de recibir'}</div>
+    <div style="font-size:13.5px;color:var(--mut);margin-bottom:15px;line-height:1.5">
+      Todavía hay dinero en la calle, así que el reporte quedaría incompleto.
+      Tocá la ruta para ir a cobrarla o preguntar qué pasó.</div>
+    <div style="display:flex;flex-direction:column;gap:9px">${filas}</div>
+    <button class="btn sec" style="width:100%;padding:13px;margin-top:14px" onclick="cerrarModalRecibe()">Cerrar</button>`;
+  document.getElementById('modalRecibe').classList.add('open');
+  return true;
+}
+function irAPendiente(r,vid){
+  cerrarModalRecibe();
+  cerrarReporte();
+  irA(r,vid);
+}
 function copiarReporteUnico(){
+  if(avisarPendientes())return;
   let t='*REPORTE DEL DÍA*\n\n';
   let totO=0,totR=0,totC=0,nC=0,n=0;
   ruteros.forEach(r=>{const vs=viajes.filter(v=>v.rutero===r);let l='';
@@ -1265,6 +1305,7 @@ function copiarOriginales(){
   navigator.clipboard.writeText(t).then(()=>toast('Copiado ✓')).catch(()=>toast('No se pudo',true));
 }
 function copiarReporte(){
+  if(avisarPendientes())return;
   let efvDia=0,credDia=0,lineas=[];
   ruteros.forEach(r=>{const vs=viajes.filter(v=>v.rutero===r);if(!vs.length)return;
     const tot=totalRutero(r);let det=[];

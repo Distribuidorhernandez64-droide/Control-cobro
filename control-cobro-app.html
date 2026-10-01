@@ -158,6 +158,17 @@
     font-family:inherit;font-size:15px;font-weight:800;transition:transform .1s ease,background .15s ease}
   .btn-quitar svg{width:20px;height:20px;flex-shrink:0}
   .btn-quitar:active{transform:scale(.97);background:#fbdcd2}
+  /* Resumen del vendedor (viajes · pedidos · entregado) */
+  .resR{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:0 0 14px;box-shadow:var(--shadow)}
+  .resR .t{display:grid;grid-template-columns:1fr 1fr 1.55fr}
+  .resR .c{padding:14px 8px 13px;text-align:center;min-width:0}
+  .resR .c+.c{border-left:1px solid var(--line)}
+  .resR .n{font-size:22px;font-weight:900;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .resR .c:last-child .n{font-size:clamp(17px,5.4vw,22px)}
+  .resR .l{font-size:10.5px;color:var(--mut);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+  .resR .x{font-size:11px;color:var(--warn);font-weight:800;margin-top:3px}
+  .resR .pie{border-top:1px solid var(--line);padding:10px 12px;display:flex;justify-content:center;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;font-weight:700;color:#5c6470;font-variant-numeric:tabular-nums}
+  .resR .pt{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
   .modalR{position:fixed;inset:0;background:rgba(20,25,35,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
   .modalR.open{display:flex}
   .modalRcard{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .2s}
@@ -1109,15 +1120,40 @@ function reajustarVarias(){
   [0,80,180,320,500].forEach(ms=>setTimeout(ajustarBarraTeclado,ms));
 }
 
+// ===== RESUMEN DEL VENDEDOR =====
+// Viajes que ya salieron (y cuántos siguen en la calle), sus pedidos, y lo
+// entregado = efectivo + crédito de las rutas ya recibidas. No cuenta lo
+// marcado "no se entregó" ni rutas en la calle, que aún no se confirman.
+function resumenRutero(r,vs){
+  const salidos=vs.filter(v=>v&&(v.entradaLista||v.cerrado));
+  if(!salidos.length)return '';
+  const enRuta=vs.filter(v=>v&&v.entradaLista&&!v.cerrado).length;
+  const nPed=salidos.reduce((s,v)=>s+(v.pedidos||[]).length,0);
+  let efv=0,cred=0;
+  vs.filter(v=>v&&v.cerrado).forEach(v=>(v.pedidos||[]).forEach(p=>{
+    if(p.estado==='credito')cred+=p.total||0;
+    else if(p.estado!=='cancelado')efv+=efectivoDe(p);
+  }));
+  return `<div class="resR">
+    <div class="t">
+      <div class="c"><div class="n">${salidos.length}</div><div class="l">Viajes</div>${enRuta?`<div class="x">${enRuta} en ruta</div>`:''}</div>
+      <div class="c"><div class="n">${nPed}</div><div class="l">Pedidos</div></div>
+      <div class="c"><div class="n">${q(efv+cred)}</div><div class="l">Entregado</div></div>
+    </div>
+    <div class="pie"><span><i class="pt" style="background:var(--mint)"></i>Efectivo ${q(efv)}</span><span><i class="pt" style="background:var(--credit)"></i>Crédito ${q(cred)}</span></div>
+  </div>`;
+}
+
 function renderZona(){
   recalc();renderRuteros();
   const cont=document.getElementById('zona');
   if(!selRutero){cont.innerHTML='<div class="empty">Agregá un repartidor para empezar.</div>';return;}
   const vs=viajes.filter(v=>v.rutero===selRutero);
   const totR=totalRutero(selRutero);
-  let html=`<div class="panelR"><div class="prHead"><div><div class="nm">${selRutero}</div>${totR>0?`<div class="sub">Total del día: ${q(totR)}</div>`:''}</div>
-    <button class="nb" onclick="nuevoViaje()">+ Nuevo viaje</button></div>`;
-  if(vs.length===0){html+='<div class="empty">Sin viajes todavía.</div>';}
+  // Resumen del vendedor en vez de su nombre (ya está en el chip) y del botón
+  // "+ Nuevo viaje" (ahora se crea con el botón flotante).
+  let html=`<div class="panelR">${resumenRutero(selRutero,vs)}`;
+  if(vs.length===0){html+=`<div class="empty">Sin viajes todavía.<br><span style="font-size:13px">Tocá <b style="color:#e8902a">+</b> para empezar uno.</span></div>`;}
 
   vs.forEach((v,i)=>{
     const efv=efectivoViaje(v);

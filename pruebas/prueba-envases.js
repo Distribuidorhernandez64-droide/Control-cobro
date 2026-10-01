@@ -25,7 +25,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.fill('#loginUser','cesar');await p.fill('#loginPin','19881987');
  await p.tap('#loginScreen button');await p.waitForTimeout(400);
  await p.fill('#newRutero','gerson');await p.press('#newRutero','Enter');await p.waitForTimeout(200);
- const nuevo=async(cli,monto)=>{await p.tap('button.nb');await p.waitForTimeout(300);
+ const nuevo=async(cli,monto)=>{await p.evaluate(()=>nuevoViaje());await p.waitForTimeout(300);
    const vid=await p.evaluate(()=>viajes[viajes.length-1].id);
    await p.fill('#in-nom-'+vid,cli);await p.fill('#in-mon-'+vid,monto);await p.tap('.anotaadd');await p.waitForTimeout(200);
    return vid;};

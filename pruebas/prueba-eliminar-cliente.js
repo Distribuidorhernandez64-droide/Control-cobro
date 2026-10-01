@@ -19,7 +19,7 @@ insert(o){const c=_cp(o);c.id=window.__DB.seq++;window.__DB.respaldos.push(c);re
  await p.fill('#loginUser','cesar');await p.fill('#loginPin','19881987');
  await p.click('#loginScreen button');await p.waitForTimeout(300);
  await p.fill('#newRutero','Gerson');await p.press('#newRutero','Enter');await p.waitForTimeout(250);
- await p.click('button.nb');await p.waitForTimeout(250);
+ await p.evaluate(()=>nuevoViaje());await p.waitForTimeout(250);
  const vid=await p.evaluate(()=>viajes[0].id);
  for(const [n,m] of [['Naty Ramírez','292'],['Otro cliente','150']]){
    await p.fill('#in-nom-'+vid,n);await p.fill('#in-mon-'+vid,m);

@@ -25,7 +25,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.fill('#loginUser','cesar');await p.fill('#loginPin','19881987');
  await p.tap('#loginScreen button');await p.waitForTimeout(400);
  await p.fill('#newRutero','Prueba cesar');await p.press('#newRutero','Enter');await p.waitForTimeout(200);
- await p.tap('button.nb');await p.waitForTimeout(300);
+ await p.evaluate(()=>nuevoViaje());await p.waitForTimeout(300);
  const vid=await p.evaluate(()=>viajes[0].id);
  // vacío desde el principio (fase 1)
  ok('Viaje vacío: botón Quitar viaje con ícono', await p.isVisible('#viaje-'+vid+' .btn-quitar svg'));

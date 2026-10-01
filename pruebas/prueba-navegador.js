@@ -51,7 +51,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{},ord:null,lim:null};
   ok('Agrega vendedor', (await T('#ruteros')).includes('Rolvin'));
 
   // viaje + pedidos
-  await p.click('button.nb'); await p.waitForTimeout(300);
+  await p.evaluate(()=>nuevoViaje()); await p.waitForTimeout(300);
   const vid=await p.evaluate(()=>viajes[0].id);
   ok('IDs unicos (grandes, no 1)', vid>1e12);
   for(const [n,m] of [['Tadeo','4672'],['Milton','110'],['Sonia','533']]){

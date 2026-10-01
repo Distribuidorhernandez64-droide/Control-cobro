@@ -76,7 +76,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  ok('La ruta sale con sus envases', env && env.entradaLista===true);
  // y para recibir el dinero hay que marcar el check de envases (como siempre)
  await p.tap('#rec-'+vid);await p.waitForTimeout(400);
- ok('Para recibir el dinero pide revisar envases (igual que antes)', !(await abierto()));
+ ok('Para recibir el dinero pregunta si los envases vinieron completos', (await abierto()) && (await p.textContent('#modalRecibeBody')).includes('vinieron completos'));
 
  console.log(errs.length?'\n⚠ '+errs.join(' | '):'\nSin errores de JavaScript');
  console.log(fail?fail+' FALLARON':'Todas pasaron');

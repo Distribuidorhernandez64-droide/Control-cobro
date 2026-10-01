@@ -259,7 +259,8 @@
     <p id="loginErr" style="color:#d4583e;font-size:13px;font-weight:700;margin:12px 0 0;min-height:18px"></p>
   </div>
 </div>
-<div class="demo" style="background:#e8f4ec;color:#1f6b4e">☁ <span id="quienSoy"></span> · <span id="btnSalir" onclick="cerrarSesion()" style="text-decoration:underline;cursor:pointer">salir</span></div>
+<div class="demo" style="background:#e8f4ec;color:#1f6b4e">☁ <span id="quienSoy"></span> · <span id="btnSalir" onclick="cerrarSesion()" style="text-decoration:underline;cursor:pointer">salir</span> <span id="verApp" style="opacity:.55;font-weight:600;margin-left:4px"></span></div>
+<div id="avisoVersion" onclick="recargarApp()" style="display:none;background:#e8902a;color:#fff;text-align:center;font-size:13px;font-weight:800;padding:9px 12px;cursor:pointer">Hay una versión nueva de la app · <u>Tocá para actualizar</u></div>
 <header>
   <div class="htop"><h1>Control de Cobro <span id="syncDot" class="dot ok" title="guardado"></span> <button id="btnActualizar" onclick="actualizarYa()" title="Actualizar" style="background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button> <span class="solo-maestro" style="position:relative;display:inline-block;vertical-align:middle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#1c2433" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><input type="date" id="fechaHist" max="" onchange="verDia(this.value)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer"></span></h1><div style="display:flex;gap:7px">
     <button class="rep solo-maestro" style="display:flex;align-items:center;gap:6px" onclick="abrirAuditoria()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 18V10M12 18V5M18 18v-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>Reporte</button>
@@ -1734,6 +1735,40 @@ function mostrarBannerHistorial(fecha){
   b.style.display='block';
 }
 
+// ===== VERSIÓN Y ACTUALIZACIÓN AUTOMÁTICA =====
+// Cambiar VERSION en cada cambio que se publique. La app compara la suya con
+// la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
+// no hay nada a medias) o muestra un aviso para tocar y actualizar.
+// Importante con varios aparatos: todos deben correr la misma versión.
+const VERSION='2026-10-01.2';
+async function versionPublicada(){
+  try{
+    const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return null;
+    const m=(await r.text()).match(/const VERSION='([^']+)'/);
+    return m?m[1]:null;
+  }catch(e){return null;}
+}
+function hayAlgoAMedias(){
+  const abierto=id=>{const e=document.getElementById(id);return !!(e&&e.classList.contains('open'));};
+  return document.body.classList.contains('anotando')||abierto('modalRecibe')||abierto('overlay')
+    ||escribiendoAhora()||_fabAbierto
+    ||viajes.some(v=>v&&!v.entradaLista&&!v.cerrado&&(v.pedidos||[]).length>0);
+}
+function recargarApp(){location.replace(location.pathname+'?v='+Date.now());}
+async function revisarVersion(puedeRecargar){
+  const nv=await versionPublicada();
+  if(!nv||nv===VERSION)return;
+  // Para no quedar en un ciclo: se intenta recargar solo una vez por versión
+  const k='cc_intento_'+nv;let ya=false;
+  try{ya=!!sessionStorage.getItem(k);}catch(e){}
+  if(puedeRecargar&&!ya&&!hayAlgoAMedias()){
+    try{sessionStorage.setItem(k,'1');}catch(e){}
+    recargarApp();return;
+  }
+  const a=document.getElementById('avisoVersion');if(a)a.style.display='block';
+}
+
 let _initDone=false;
 async function iniciar(){
   try{ await cargarNube(); }catch(e){ console.log('init carga falló',e); }
@@ -1749,6 +1784,12 @@ async function iniciar(){
     window.visualViewport.addEventListener('resize',ajustarBarraTeclado);
     window.visualViewport.addEventListener('scroll',ajustarBarraTeclado);
   }
+  // Versión: mostrarla, y revisar si hay una nueva al abrir, al volver a la
+  // app (por ejemplo al regresar del cambiador de apps) y cada 3 minutos.
+  const ve=document.getElementById('verApp');if(ve)ve.textContent='v'+VERSION;
+  setTimeout(()=>revisarVersion(true),4000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')revisarVersion(true);});
+  setInterval(()=>revisarVersion(false),180000);
 }
 
 // ===== Arranque: login primero =====

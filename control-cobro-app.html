@@ -128,13 +128,13 @@
   .fabwrap{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:60;
     display:flex;flex-direction:column;align-items:flex-end;gap:12px}
   body.anotando .fabwrap{display:none}
-  .fab{width:60px;height:60px;border-radius:50%;border:none;background:var(--mint);color:#fff;flex-shrink:0;
+  .fab{width:60px;height:60px;border-radius:50%;border:none;background:var(--yellow);color:var(--ink);flex-shrink:0;
     display:flex;align-items:center;justify-content:center;cursor:pointer;
-    box-shadow:0 7px 20px rgba(47,174,116,.45);
-    transition:background .22s ease,box-shadow .22s ease,transform .12s ease}
+    box-shadow:0 7px 20px rgba(201,160,31,.45);
+    transition:background .22s ease,color .22s ease,box-shadow .22s ease,transform .12s ease}
   .fab svg{transition:transform .34s cubic-bezier(.34,1.56,.64,1)}
   .fab:active{transform:scale(.9)}
-  .fab.abierto{background:var(--ink);box-shadow:0 7px 20px rgba(28,36,51,.45)}
+  .fab.abierto{background:var(--ink);color:#fff;box-shadow:0 7px 20px rgba(28,36,51,.45)}
   .fab.abierto svg{transform:rotate(135deg)}
   .fabmenu{display:flex;flex-direction:column;align-items:flex-end;gap:9px;
     max-height:58vh;overflow-y:auto;padding:2px;pointer-events:none;scrollbar-width:none}
@@ -265,7 +265,7 @@
 <div class="fabwrap" id="fabWrap">
   <div class="fabmenu" id="fabMenu"></div>
   <button class="fab" id="fab" onclick="toggleFab()" aria-label="Nuevo viaje">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
   </button>
 </div>
 

@@ -115,7 +115,7 @@
   .rutasbar .rb-sub{font-size:12px;font-weight:700;color:var(--blue);margin-top:3px;white-space:nowrap}
   .rutasbar .rb-sub .pt{font-size:9px;vertical-align:2px;margin-right:2px}
   .rutasbar .rb-div{width:1px;align-self:stretch;background:var(--line);flex-shrink:0}
-  .rutasbar .rb-av{display:flex;gap:7px;overflow-x:auto;padding:1px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .rutasbar .rb-av{display:flex;gap:7px;overflow-x:auto;padding:1px 0;scrollbar-width:none}
   .rutasbar .rb-av::-webkit-scrollbar{display:none}
   .rb-p{flex-shrink:0;width:46px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit;display:block}
   .rb-p .c{width:36px;height:36px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;transition:transform .1s}
@@ -593,15 +593,19 @@ function recalc(){
     const mas=resto>0?`<button class="rb-p" onclick="_verTodasRutas=true;recalc()" title="Ver las ${n}">
         <div class="c" style="background:#eef0f3;color:#7b8391">+${resto}</div>
         <div class="n">ver más</div></button>`:'';
-    al.innerHTML=`<div class="rutasbar">
+    // Sólo se redibuja si cambió. Si se redibujara siempre, al tocar una carita
+    // se borraría el botón que el dedo está tocando, y en iPhone eso puede
+    // dejar trabados los toques siguientes hasta salir y volver a la app.
+    const h=`<div class="rutasbar">
       <div class="rb-ico"><svg width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#3a7bd5" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#3a7bd5" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#3a7bd5" stroke-width="1.8"/></svg></div>
       <div class="rb-tx"><div class="rb-tit">Rutas en curso</div>
         <div class="rb-sub"><span class="pt">●</span>${n} activa${n===1?'':'s'}</div></div>
       <div class="rb-div"></div>
       <div class="rb-av">${caritas}${mas}</div>
     </div>`;
+    if(al.__h!==h){al.innerHTML=h;al.__h=h;}
     al.style.display='block';
-  } else {al.style.display='none';_verTodasRutas=false;}
+  } else {al.style.display='none';al.__h='';_verTodasRutas=false;}
 }
 
 function renderRuteros(){
@@ -687,15 +691,35 @@ async function borrarRutero(r){
   toast(ok?'Vendedor eliminado ✓':'⚠ No se pudo guardar. Revisá internet',!ok);
 }
 function selR(r){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();}
-function irA(r,vid){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();
+// Desplazamiento animado propio (en vez del "smooth" de Safari, que en iPhone
+// a veces deja la página sin responder a los toques). Si el usuario toca la
+// pantalla mientras se mueve, se detiene para no pelearle el dedo.
+let _scrollAnim=0;
+function scrollSuave(y,ms){
+  const y0=window.pageYOffset, dy=y-y0, t0=performance.now(), id=++_scrollAnim;ms=ms||320;
+  if(Math.abs(dy)<2)return;
+  const paso=t=>{if(id!==_scrollAnim)return;
+    const k=Math.min(1,(t-t0)/ms), e=1-Math.pow(1-k,3);
+    window.scrollTo(0,y0+dy*e); if(k<1)requestAnimationFrame(paso);};
+  requestAnimationFrame(paso);
+}
+['touchstart','wheel'].forEach(ev=>document.addEventListener(ev,()=>{_scrollAnim++;},{passive:true}));
+
+// Ir a la ruta de un vendedor (caritas de "Rutas en curso" y aviso de pendientes).
+// Se hace DESPUÉS de que termine el toque, para no redibujar debajo del dedo.
+function irA(r,vid){
   setTimeout(()=>{
-    const card=(vid!==undefined&&vid!==null)?document.getElementById('viaje-'+vid):null;
-    if(!card){window.scrollTo({top:0,behavior:'smooth'});return;}
-    const hd=document.querySelector('header');
-    const off=(hd?hd.getBoundingClientRect().height:0)+12;
-    const y=card.getBoundingClientRect().top+window.pageYOffset-off;
-    window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
-  },70);}
+    selRutero=r;viajeAbierto=null;renderRuteros();renderZona();
+    setTimeout(()=>{
+      const card=(vid!==undefined&&vid!==null)?document.getElementById('viaje-'+vid):null;
+      if(!card){scrollSuave(0);return;}
+      const hd=document.querySelector('header');
+      const off=(hd?hd.getBoundingClientRect().height:0)+12;
+      const y=card.getBoundingClientRect().top+window.pageYOffset-off;
+      scrollSuave(Math.max(0,y));
+    },70);
+  },0);
+}
 
 // ===== BOTÓN FLOTANTE (+): nuevo viaje eligiendo vendedor =====
 // La cruz gira hasta volverse una X y despliega los vendedores del día,
@@ -1740,7 +1764,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-01.2';
+const VERSION='2026-10-01.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

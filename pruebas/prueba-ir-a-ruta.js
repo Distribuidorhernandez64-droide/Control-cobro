@@ -33,6 +33,9 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
    const V={id:nuevoId(),uid:'g12',rutero:'gerson',pedidos:ped('Monica xicay',231.75),cerrado:false,entradaLista:true,pedidosListos:true,horaSalida:t,envases:'1 caja',envOk:false,mod:Date.now()-60000};
    viajes.push(V);selRutero='Cesar';await guardarAhora('inicio');renderRuteros();renderZona();return V.id;});
  await p.waitForTimeout(400);
+ // Antes, como en el día real: abrir el + y cerrarlo (tocando afuera)
+ await p.tap('#fab');await p.waitForTimeout(600);
+ await p.tap('#fabBg',{position:{x:40,y:300}});await p.waitForTimeout(500);
  // tocar "gerson" en Rutas en curso
  const nodoAntes=await p.evaluateHandle(()=>document.querySelector('#alerta .rb-p'));
  await p.tap('#alerta .rb-p');await p.waitForTimeout(900);
@@ -42,6 +45,9 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  ok('Bajó hasta la ruta: "Dinero recibido" queda a la vista', vis);
  await p.screenshot({path:'ira-1.png'});
  // tocar Dinero recibido
+ const quien=await p.evaluate(id=>{const r=document.getElementById('rec-'+id).getBoundingClientRect();
+   const e=document.elementFromPoint(r.left+r.width*0.85,r.top+r.height/2);return e?(e.id||e.className):'nada';},vid);
+ ok('Nada tapa "Dinero recibido" (el toque cae en: '+quien+')', quien==='rec-'+vid);
  await p.tap('#rec-'+vid);await p.waitForTimeout(500);
  ok('"Dinero recibido" responde (pregunta por los envases)', (await p.textContent('#modalRecibeBody')).includes('vinieron completos'));
  await p.tap('#modalRecibeBody button:has-text("Sí, completos")');await p.waitForTimeout(400);

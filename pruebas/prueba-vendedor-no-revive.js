@@ -74,7 +74,7 @@ srv.on('request',(q,r)=>{
    borrados.push('en-ruta-x');
    const r=await guardarAhora('prueba'); borrados.pop(); window.__r=r;
  });
- ok('Ruta EN CALLE: sigue protegida (no se borra)', (await p.evaluate(()=>window.__r))===false
+ ok('Ruta EN CALLE: se guarda igual y sigue protegida (no se borra)', (await p.evaluate(()=>window.__r))===true
     && NUBE[Object.keys(NUBE)[0]].estado.viajes.some(v=>v.uid==='en-ruta-x'));
 
  await p.evaluate(async()=>{
@@ -86,7 +86,7 @@ srv.on('request',(q,r)=>{
    borrados.push('cobrada-x');
    const r=await guardarAhora('prueba'); borrados.pop(); window.__r=r;
  });
- ok('Ruta YA COBRADA: sigue protegida (no se borra)', (await p.evaluate(()=>window.__r))===false
+ ok('Ruta YA COBRADA: se guarda igual y sigue protegida (no se borra)', (await p.evaluate(()=>window.__r))===true
     && NUBE[Object.keys(NUBE)[0]].estado.viajes.some(v=>v.uid==='cobrada-x'));
 
  console.log(errs.length?'\n⚠ '+errs.join(' | '):'\nSin errores de JavaScript');

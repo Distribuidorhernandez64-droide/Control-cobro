@@ -93,7 +93,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{},ord:null,lim:null};
     const r=await guardarAhora('prueba'); borrados.pop();
     return r;
   });
-  ok('CANCELA el guardado si se perderia una ruta ya cobrada', caso2===false);
+  ok('Ruta ya cobrada: se guarda igual y la ruta NO se pierde (se devuelve)', caso2===true);
   ok('La ruta cobrada sigue en la nube',
      (await p.evaluate(()=>window.__DB.dias[HOY].estado.viajes.some(v=>v.uid==='de-lesli'))));
 

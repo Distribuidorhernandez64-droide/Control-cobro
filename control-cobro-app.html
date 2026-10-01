@@ -324,6 +324,7 @@ function unirRuteros(mios, otros){
   return mios;
 }
 let guardando=false, guardarPend=false, _cargando=true;
+let _errGuardar=''; // por qué falló el último guardado (para avisar la verdad)
 let miUltimoGuardado=null, _timerGuardar=null, _autoOcupado=false, _ultimoVisto=null;
 
 let ruteros=[];
@@ -409,6 +410,7 @@ async function respaldar(estado,marca,motivo){
 async function guardarAhora(motivo){
   if(modoLectura)return true;
   dotSync('save');
+  _errGuardar='';
   try{
     // 1) Traer lo último de la nube ANTES de escribir
     let nube=null;
@@ -418,6 +420,7 @@ async function guardarAhora(motivo){
       nube=data?data.estado:null;
     }catch(le){
       // Si no se pudo leer, NO escribimos: escribir a ciegas podría borrar trabajo ajeno
+      _errGuardar='sin conexión con la nube';
       dotSync('off');console.log('guardar: no se pudo leer la nube:',le.message||le);
       return false;
     }
@@ -444,12 +447,10 @@ async function guardarAhora(motivo){
     viajes=viajesFinal;ruteros=ruterosFinal;auditoria=auditFinal;
     // Subir solo viajes con contenido (los vacíos no se guardan)
     const viajesValidos=viajesFinal.filter(v=>v && ((v.pedidos&&v.pedidos.length>0)||v.entradaLista||v.cerrado));
-    // ===== RED DE SEGURIDAD: NO GUARDAR SI SE PIERDE UNA RUTA =====
+    // ===== RED DE SEGURIDAD: NUNCA PERDER UNA RUTA CON DINERO =====
     // Último control antes de escribir: comparo lo que voy a subir contra lo
-    // que hay en la nube. Si algún viaje con pedidos o ya recibido dejaría de
-    // existir, CANCELO el guardado. Prefiero avisar y no guardar, antes que
-    // borrar trabajo cobrado. (Los que se quitan a propósito con "Quitar
-    // viaje" van en 'borrados' y sí pueden desaparecer.)
+    // que hay en la nube. Si algún viaje que ya salió o ya se cobró dejaría
+    // de existir, lo devuelvo tal cual está en la nube y sigo guardando.
     if(nube){
       const quedan=new Set(viajesFinal.map(v=>v&&v.uid).filter(Boolean));
       // Se protege todo viaje con dinero de por medio: ya salió a ruta o ya se
@@ -463,10 +464,19 @@ async function guardarAhora(motivo){
         ((v.pedidos&&v.pedidos.length>0)||v.cerrado) &&
         !(borrados.includes(v.uid) && !v.cerrado && !v.entradaLista));
       if(perdidos.length){
-        dotSync('off');
-        console.log('guardar CANCELADO, se perderían viajes:',perdidos.map(v=>v.rutero+'/'+v.uid).join(', '));
-        toast('⚠ NO se guardó: se perdería una ruta. Tocá 🔄 Actualizar',true);
-        return false;
+        // Antes esto CANCELABA el guardado entero: una sola ruta protegida
+        // trababa todo lo demás en este aparato, hasta recibir el dinero de
+        // otra ruta. Ahora la ruta protegida se DEVUELVE tal cual está en la
+        // nube y el resto se guarda normal. No se pierde nada y nada se traba.
+        perdidos.forEach(v=>{
+          borrados=borrados.filter(u=>u!==v.uid);
+          viajesFinal.push(v); viajesValidos.push(v);   // viajesFinal es 'viajes'
+          if(v.rutero){
+            ruterosBorrados=ruterosBorrados.filter(r=>r!==v.rutero);
+            if(!ruterosFinal.includes(v.rutero))ruterosFinal.push(v.rutero);
+          }
+        });
+        console.log('guardar: ruta protegida devuelta:',perdidos.map(v=>v.rutero+'/'+v.uid).join(', '));
       }
     }
     // Limpiar TODO con JSON para evitar DataCloneError
@@ -474,12 +484,13 @@ async function guardarAhora(motivo){
     try{
       estado=JSON.parse(JSON.stringify({ruteros:ruterosFinal,viajes:viajesValidos,auditoria:auditFinal,idv,idp}));
     }catch(je){
+      _errGuardar='error en los datos';
       dotSync('off');console.log('guardar err (limpieza):',je.message);
       toast('⚠ Error en datos, avisá a soporte',true);return false;
     }
     const marca=new Date().toISOString();
     const{error}=await sb.from('dias').upsert({fecha:HOY,estado:estado,actualizado_en:marca},{onConflict:'fecha'});
-    if(error){dotSync('off');console.log('guardar error:',error.message||JSON.stringify(error));return false;}
+    if(error){_errGuardar='la nube no aceptó el guardado';dotSync('off');console.log('guardar error:',error.message||JSON.stringify(error));return false;}
     miUltimoGuardado=marca;dotSync('ok');
     respaldar(estado,marca,motivo); // copia de seguridad, sin esperarla
     renderZona();recalc();
@@ -487,6 +498,7 @@ async function guardarAhora(motivo){
   }catch(e){
     dotSync('off');
     const msg=e&&e.message?e.message:JSON.stringify(e);
+    _errGuardar='sin conexión con la nube';
     console.log('guardar err:',msg);
     return false;
   }
@@ -875,9 +887,15 @@ function addPedido(vid){
 function setEnvases(vid,val){const v=viajes.find(x=>x.id===vid);if(!v)return;const tenia=!!(v.envases||'').trim();v.envases=val;const tiene=!!val.trim();if(tenia!==tiene){renderZona();setTimeout(()=>{const el=document.getElementById('env-'+vid);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}},20);}}
 function setEnvasesSilent(vid,val){const v=viajes.find(x=>x.id===vid);if(v)v.envases=val;}
 function toggleEnvOk(vid){const v=viajes.find(x=>x.id===vid);if(v){v.envOk=!v.envOk;renderZona();}}
-async function recibirTodo(vid){if(!esMaestro())return;const v=viajes.find(x=>x.id===vid);if(!v||v.pedidos.length===0){toast('Sin pedidos',true);return;}
-  // Evitar toque accidental: si el viaje salió hace menos de 1.5s, ignorar
-  if(v.horaSalida && (Date.now()-new Date(v.horaSalida).getTime())<1500){return;}
+async function recibirTodo(vid){
+  if(!esMaestro()){toast('Sólo el maestro puede recibir dinero',true);return;}
+  const v=viajes.find(x=>x.id===vid);
+  if(!v){toast('No encontré esa ruta. Tocá 🔄 y probá de nuevo',true);return;}
+  if(v.pedidos.length===0){toast('Sin pedidos',true);return;}
+  // Evitar toque accidental: si el viaje salió hace menos de 1.5s, ignorar.
+  // Sólo cuenta si la salida es de HACE poco. Si la ruta la mandó otro aparato
+  // con el reloj adelantado, la resta da negativa: eso NO debe bloquear.
+  if(v.horaSalida){const d=Date.now()-new Date(v.horaSalida).getTime();if(d>=0&&d<1500)return;}
   if((v.envases||'').trim()&&!v.envOk){toast('Marcá el check de envases',true);return;}
   // Preguntar quién recibió el dinero (Lesli o César)
   mostrarQuienRecibio(vid);
@@ -905,7 +923,7 @@ async function confirmarRecibido(vid,quien){
   let ok=await guardarAhora('DINERO RECIBIDO de '+quien);
   if(!ok){ok=await guardarAhora('DINERO RECIBIDO de '+quien);} // un reintento automático
   if(ok){toast('Recibido por '+quien+' y guardado ✓');}
-  else{v.cerrado=false;v.horaRecibido=null;v.recibidoPor=null;renderZona();toast('⚠ NO se guardó. Revisá internet y volvé a tocar Recibido',true);}
+  else{v.cerrado=false;v.horaRecibido=null;v.recibidoPor=null;renderZona();toast('⚠ NO se guardó ('+(_errGuardar||'sin conexión')+'). Volvé a tocar Recibido',true);}
 }
 function logAudit(accion,detalle){auditoria.unshift({hora:new Date().toISOString(),accion,detalle,quien:sesion?sesion.nombre:'?'});}
 

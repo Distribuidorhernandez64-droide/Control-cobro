@@ -121,6 +121,38 @@
   .rb-p .c{width:36px;height:36px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;transition:transform .1s}
   .rb-p .n{font-size:10.5px;color:var(--mut);font-weight:700;margin-top:4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rb-p:active .c{transform:scale(.9)}
+  /* ===== Botón flotante (+) para crear viaje eligiendo vendedor ===== */
+  .fabbg{position:fixed;inset:0;background:rgba(20,25,35,.38);backdrop-filter:blur(1.5px);
+    opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:55}
+  .fabbg.abierto{opacity:1;pointer-events:auto}
+  .fabwrap{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:60;
+    display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+  body.anotando .fabwrap{display:none}
+  .fab{width:60px;height:60px;border-radius:50%;border:none;background:var(--mint);color:#fff;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:0 7px 20px rgba(47,174,116,.45);
+    transition:background .22s ease,box-shadow .22s ease,transform .12s ease}
+  .fab svg{transition:transform .34s cubic-bezier(.34,1.56,.64,1)}
+  .fab:active{transform:scale(.9)}
+  .fab.abierto{background:var(--ink);box-shadow:0 7px 20px rgba(28,36,51,.45)}
+  .fab.abierto svg{transform:rotate(135deg)}
+  .fabmenu{display:flex;flex-direction:column;align-items:flex-end;gap:9px;
+    max-height:58vh;overflow-y:auto;padding:2px;pointer-events:none;scrollbar-width:none}
+  .fabmenu::-webkit-scrollbar{display:none}
+  .fabmenu .it{opacity:0;transform:translateY(16px) scale(.86);pointer-events:none;
+    transition:opacity .16s ease,transform .26s cubic-bezier(.34,1.56,.64,1)}
+  .fabmenu.abierto .it{opacity:1;transform:none;pointer-events:auto}
+  .fabit{display:flex;align-items:center;gap:10px;background:var(--card);border:none;cursor:pointer;
+    border-radius:30px;padding:7px 7px 7px 17px;font-family:inherit;box-shadow:0 4px 14px rgba(20,25,35,.22)}
+  .fabit .nm{font-size:14.5px;font-weight:800;color:var(--ink);white-space:nowrap;max-width:46vw;
+    overflow:hidden;text-overflow:ellipsis}
+  .fabit .av{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+    justify-content:center;font-size:15px;font-weight:800;color:#fff}
+  .fabit:active{transform:scale(.96)}
+  .fabit.nuevo{background:rgba(255,255,255,.93);border:1.5px dashed var(--mut)}
+  .fabit.nuevo .av{background:#eef0f3;color:var(--mut);font-size:21px;font-weight:700}
+  .fabtit{font-size:11.5px;font-weight:800;color:#fff;letter-spacing:.5px;text-transform:uppercase;
+    text-shadow:0 1px 6px rgba(0,0,0,.5);padding-right:6px;margin-bottom:1px}
   .modalR{position:fixed;inset:0;background:rgba(20,25,35,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
   .modalR.open{display:flex}
   .modalRcard{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .2s}
@@ -229,6 +261,13 @@
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 <div class="modalR" id="modalRecibe"><div class="modalRcard" id="modalRecibeBody"></div></div>
 <div id="toast" class="toast"></div>
+<div class="fabbg" id="fabBg" onclick="cerrarFab()"></div>
+<div class="fabwrap" id="fabWrap">
+  <div class="fabmenu" id="fabMenu"></div>
+  <button class="fab" id="fab" onclick="toggleFab()" aria-label="Nuevo viaje">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+  </button>
+</div>
 
 <script>
 // ===== USUARIOS Y PERMISOS =====
@@ -619,6 +658,82 @@ function irA(r,vid){selRutero=r;viajeAbierto=null;renderRuteros();renderZona();
     window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
   },70);}
 
+// ===== BOTÓN FLOTANTE (+): nuevo viaje eligiendo vendedor =====
+// La cruz gira hasta volverse una X y despliega los vendedores del día,
+// más la opción de crear uno nuevo. Al elegir uno, arranca el viaje ahí.
+let _fabAbierto=false;
+function toggleFab(){_fabAbierto?cerrarFab():abrirFab();}
+function abrirFab(){
+  if(modoLectura)return;
+  const menu=document.getElementById('fabMenu');
+  const lista=ruteros.slice();
+  // El de más abajo (pegado al botón) aparece primero
+  const items=lista.map(r=>{
+    const col=colorRutero(r);
+    const ini=(r.trim()[0]||'?').toUpperCase();
+    return `<div class="it"><button class="fabit" onclick="fabNuevoViaje('${r.replace(/'/g,"\\'")}')">
+      <span class="nm">${esc(r)}</span><span class="av" style="background:${col}">${esc(ini)}</span></button></div>`;
+  });
+  items.push(`<div class="it"><button class="fabit nuevo" onclick="fabNuevoVendedor()">
+    <span class="nm" style="color:var(--mut)">Nuevo vendedor</span><span class="av">+</span></button></div>`);
+  if(lista.length)items.unshift(`<div class="it"><div class="fabtit">¿Para quién es el viaje?</div></div>`);
+  menu.innerHTML=items.join('');
+  // escalonado: de abajo hacia arriba
+  const its=[...menu.querySelectorAll('.it')];
+  its.forEach((el,i)=>{el.style.transitionDelay=((its.length-1-i)*34)+'ms';});
+  menu.classList.add('abierto');
+  document.getElementById('fab').classList.add('abierto');
+  document.getElementById('fabBg').classList.add('abierto');
+  _fabAbierto=true;
+}
+function cerrarFab(){
+  const menu=document.getElementById('fabMenu');if(!menu)return;
+  [...menu.querySelectorAll('.it')].forEach(el=>{el.style.transitionDelay='0ms';});
+  menu.classList.remove('abierto');
+  document.getElementById('fab').classList.remove('abierto');
+  document.getElementById('fabBg').classList.remove('abierto');
+  _fabAbierto=false;
+}
+function fabNuevoViaje(r){
+  cerrarFab();
+  if(modoLectura)return;
+  if(!ruteros.includes(r))return;
+  if(selRutero!==r){selRutero=r;viajeAbierto=null;renderRuteros();}
+  nuevoViaje();
+}
+function fabNuevoVendedor(){
+  cerrarFab();
+  if(modoLectura)return;
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="font-size:17px;font-weight:900;margin-bottom:5px">Nuevo vendedor</div>
+    <div style="font-size:13.5px;color:var(--mut);margin-bottom:15px;line-height:1.5">Se crea y le arranca el viaje de una vez.</div>
+    <input id="fabNom" placeholder="Nombre del vendedor" autocomplete="off"
+      onkeydown="if(event.key==='Enter')fabCrearVendedor()">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+      <button class="btn" style="padding:14px" onclick="fabCrearVendedor()">Crear y empezar viaje</button>
+      <button class="btn sec" style="padding:12px" onclick="cerrarModalRecibe()">Cancelar</button></div>`;
+  document.getElementById('modalRecibe').classList.add('open');
+  setTimeout(()=>{const el=document.getElementById('fabNom');if(el)el.focus();},120);
+}
+function fabCrearVendedor(){
+  const el=document.getElementById('fabNom');if(!el)return;
+  const n=(el.value||'').trim();
+  if(!n){toast('Escribí el nombre',true);el.focus();return;}
+  cerrarModalRecibe();
+  ruterosBorrados=ruterosBorrados.filter(x=>x!==n);
+  if(!ruteros.includes(n))ruteros.push(n);
+  selRutero=n;viajeAbierto=null;renderRuteros();
+  nuevoViaje();
+}
+// El botón se esconde mientras se anotan pedidos (la barra de abajo ocupa
+// ese lugar) y cuando se está viendo un día anterior.
+function actualizarFab(){
+  const w=document.getElementById('fabWrap');if(!w)return;
+  const tapado=modoLectura||document.body.classList.contains('anotando');
+  w.style.display=tapado?'none':'flex';
+  if(tapado&&_fabAbierto)cerrarFab();
+}
+
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 // ===== IDs ÚNICOS ENTRE APARATOS =====
 // Antes los id salían de un contador (idv/idp) que cada aparato cargaba de la
@@ -967,6 +1082,7 @@ function renderZona(){
   // Si hay un viaje anotando (fase 1), dar espacio abajo para la barra fija
   const hayAnotando=viajes.some(v=>v.rutero===selRutero && !v.entradaLista && !v.pedidosListos && !v.cerrado);
   document.body.classList.toggle('anotando',hayAnotando);
+  actualizarFab();
   if(hayAnotando)reajustarVarias();
 }
 

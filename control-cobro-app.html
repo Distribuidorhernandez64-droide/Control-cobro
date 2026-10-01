@@ -125,10 +125,14 @@
   .fabbg{position:fixed;inset:0;background:rgba(20,25,35,.38);backdrop-filter:blur(1.5px);
     opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:55}
   .fabbg.abierto{opacity:1;pointer-events:auto}
+  /* El contenedor NO recibe toques: cerrado, el menú sigue ocupando espacio
+     (invisible) encima del (+) y tapaba "Dinero recibido" y otros botones de
+     la esquina derecha. Sólo el (+) y el menú abierto reciben toques. */
   .fabwrap{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:60;
-    display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+    display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:none}
+  .fabmenu.abierto{pointer-events:auto}
   body.anotando .fabwrap{display:none}
-  .fab{width:60px;height:60px;border-radius:50%;border:none;background:#e8902a;color:#fff;flex-shrink:0;
+  .fab{width:60px;height:60px;border-radius:50%;border:none;background:#e8902a;color:#fff;flex-shrink:0;pointer-events:auto;
     display:flex;align-items:center;justify-content:center;cursor:pointer;
     box-shadow:0 7px 20px rgba(232,144,42,.45);
     transition:background .22s ease,color .22s ease,box-shadow .22s ease,transform .12s ease}
@@ -1740,7 +1744,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-01.2';
+const VERSION='2026-10-01.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

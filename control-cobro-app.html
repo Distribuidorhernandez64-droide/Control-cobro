@@ -385,6 +385,11 @@ function combinarViajes(mios, nube){
     // mi copia no lo tiene recibido, gana la nube. Un viaje cobrado sólo se
     // "des-cobra" con el botón Reabrir, que marca 'modificado'.
     if(ex.cerrado && !v.cerrado && !v.modificado){mapa[v.uid]=ex;return;}
+    // REGLA 1b (el mismo candado, al revés): si ESTE aparato recibió el dinero
+    // y en la nube sigue en la calle, gana el recibido. Antes decidía el reloj:
+    // con otro aparato adelantado, el "recibido" se perdía en silencio.
+    // Sólo si en la nube lo reabrieron a propósito ('modificado') decide la marca.
+    if(v.cerrado && !ex.cerrado && !ex.modificado){mapa[v.uid]=rescatarPedidos(v,ex);return;}
     // REGLA 2: gana la marca de tiempo más reciente. En EMPATE gana la nube
     // (antes ganaba lo local, aunque estuviera desactualizado).
     const tm=v.mod||0, te=ex.mod||0;
@@ -770,6 +775,10 @@ function actualizarFab(){
 }
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+// Marca un viaje como cambiado. La marca nunca retrocede: si otro aparato con
+// el reloj adelantado ya le puso una marca "del futuro", este cambio queda
+// igual por encima (+1). Así gana el último cambio de verdad, no el reloj.
+function tocar(v){if(v)v.mod=Math.max(Date.now(),(v.mod||0)+1);}
 // ===== IDs ÚNICOS ENTRE APARATOS =====
 // Antes los id salían de un contador (idv/idp) que cada aparato cargaba de la
 // nube. Con dos celulares y la PC abiertos, los tres iban en el mismo número y
@@ -797,7 +806,7 @@ async function terminarPedidos(vid){if(modoLectura)return;const v=viajes.find(x=
   }
   if(v.pedidos.length===0){toast('Agregá al menos un pedido',true);_enviando=false;return;}
   const elE=document.getElementById('env-'+vid);if(elE)v.envases=elE.value;
-  v.entradaLista=true;v.horaSalida=new Date().toISOString();v.mod=Date.now();
+  v.entradaLista=true;v.horaSalida=new Date().toISOString();tocar(v);
   renderZona();
   const ok=await guardarAhora('ruta enviada');
   toast(ok?'Ruta enviada y guardada ✓':'⚠ No se pudo guardar. Revisá internet',!ok);
@@ -808,7 +817,7 @@ async function terminarAnotar(vid){if(modoLectura)return;const v=viajes.find(x=>
     v.pedidos.push({id:nuevoId(),nombre:elN.value.trim(),total:parseFloat(elM.value),estado:'pagado',devolucion:0,descuento:0,vuelto:0});
   }
   if(v.pedidos.length===0){toast('Agregá al menos un pedido',true);return;}
-  v.pedidosListos=true;v.mod=Date.now();renderZona();
+  v.pedidosListos=true;tocar(v);renderZona();
   // Preguntar por envases en el mismo toque (si ya se anotaron, no se repite)
   if(!(v.envases||'').trim())preguntarEnvases(vid);
   const ok=await guardarAhora('pedidos cerrados');
@@ -855,7 +864,7 @@ function guardarEnvases(vid){
   const el=document.getElementById('envModal');
   const txt=el?(el.value||'').trim():'';
   if(!txt){if(el)el.focus();toast('Escribí qué envases lleva',true);return;}
-  v.envases=txt;v.envOk=false;v.mod=Date.now();
+  v.envases=txt;v.envOk=false;tocar(v);
   cerrarModalRecibe();
   if(document.activeElement)document.activeElement.blur();
   renderZona();
@@ -873,8 +882,8 @@ function irAEnviar(vid){
     if(b)b.scrollIntoView({behavior:'smooth',block:'center'});
   },120);
 }
-function volverAnotar(vid){const v=viajes.find(x=>x.id===vid);if(v){v.pedidosListos=false;v.mod=Date.now();renderZona();}}
-function reabrirEntrada(vid){const v=viajes.find(x=>x.id===vid);if(v){v.entradaLista=false;v.pedidosListos=true;v.mod=Date.now();renderZona();}}
+function volverAnotar(vid){const v=viajes.find(x=>x.id===vid);if(v){v.pedidosListos=false;tocar(v);renderZona();}}
+function reabrirEntrada(vid){const v=viajes.find(x=>x.id===vid);if(v){v.entradaLista=false;v.pedidosListos=true;tocar(v);renderZona();}}
 
 function keyNom(e,vid){if(e.key==='Enter'){e.preventDefault();const m=document.getElementById('in-mon-'+vid);if(m)m.focus();}}
 function keyMon(e,vid){if(e.key==='Enter'){e.preventDefault();e.stopPropagation();addPedido(vid);}}
@@ -885,7 +894,7 @@ function addPedido(vid){
   const nom=(elN.value||'').trim();const tot=parseFloat(elM.value);
   if(!nom||isNaN(tot)){toast('Falta nombre o cantidad',true);return;}
   v.pedidos.push({id:nuevoId(),nombre:nom,total:tot,estado:'pagado',devolucion:0,descuento:0,vuelto:0});
-  v.mod=Date.now();
+  tocar(v);
   renderZona();
   // Reponer foco en el campo de nombre (que está fijo abajo)
   const el=document.getElementById('in-nom-'+vid);
@@ -897,12 +906,12 @@ function addPedido(vid){
     if(filas.length){filas[filas.length-1].scrollIntoView({block:'center',behavior:'smooth'});}
   },30);
 }
-function setEnvases(vid,val){const v=viajes.find(x=>x.id===vid);if(!v)return;const tenia=!!(v.envases||'').trim();v.envases=val;v.mod=Date.now();const tiene=!!val.trim();if(tenia!==tiene){renderZona();setTimeout(()=>{const el=document.getElementById('env-'+vid);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}},20);}}
-function setEnvasesSilent(vid,val){const v=viajes.find(x=>x.id===vid);if(v){v.envases=val;v.mod=Date.now();}}
+function setEnvases(vid,val){const v=viajes.find(x=>x.id===vid);if(!v)return;const tenia=!!(v.envases||'').trim();v.envases=val;tocar(v);const tiene=!!val.trim();if(tenia!==tiene){renderZona();setTimeout(()=>{const el=document.getElementById('env-'+vid);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}},20);}}
+function setEnvasesSilent(vid,val){const v=viajes.find(x=>x.id===vid);if(v){v.envases=val;tocar(v);}}
 // El check de envases cuenta como cambio (mod) y se guarda de una vez. Antes
 // sólo quedaba en la pantalla: la siguiente sincronización lo desmarcaba sin
 // avisar y "Dinero recibido" se trababa pidiendo el check.
-function toggleEnvOk(vid){const v=viajes.find(x=>x.id===vid);if(v){v.envOk=!v.envOk;v.mod=Date.now();renderZona();guardarAhora(v.envOk?'envases revisados':'envases sin revisar');}}
+function toggleEnvOk(vid){const v=viajes.find(x=>x.id===vid);if(v){v.envOk=!v.envOk;tocar(v);renderZona();guardarAhora(v.envOk?'envases revisados':'envases sin revisar');}}
 async function recibirTodo(vid){
   if(!esMaestro()){toast('Sólo el maestro puede recibir dinero',true);return;}
   const v=viajes.find(x=>x.id===vid);
@@ -935,12 +944,12 @@ function preguntarEnvOk(vid){
 }
 function envOkYRecibir(vid){
   const v=viajes.find(x=>x.id===vid);if(!v)return;
-  v.envOk=true;v.mod=Date.now();
+  v.envOk=true;tocar(v);
   renderZona();
   mostrarQuienRecibio(vid);   // reemplaza el contenido del mismo cuadro
 }
 function mostrarQuienRecibio(vid){
-  const v=viajes.find(x=>x.id===vid);if(!v)return;
+  const v=viajes.find(x=>x.id===vid);if(!v){cerrarModalRecibe();toast('No encontré esa ruta. Tocá 🔄 y probá de nuevo',true);return;}
   const m=document.getElementById('modalRecibe');
   document.getElementById('modalRecibeBody').innerHTML=`
     <div style="font-size:17px;font-weight:900;margin-bottom:4px">Recibió el dinero:</div>
@@ -954,21 +963,34 @@ function mostrarQuienRecibio(vid){
 }
 function cerrarModalRecibe(){document.getElementById('modalRecibe').classList.remove('open');}
 async function confirmarRecibido(vid,quien){
-  const v=viajes.find(x=>x.id===vid);if(!v)return;
+  const v0=viajes.find(x=>x.id===vid);
+  if(!v0){cerrarModalRecibe();toast('No encontré esa ruta. Tocá 🔄 y probá de nuevo',true);return;}
+  const u=v0.uid;               // tras sincronizar el objeto puede cambiar: se sigue por uid
+  const hora=new Date().toISOString();
+  const marcar=v=>{
+    (v.pedidos||[]).forEach(p=>{if(p.snapEf===undefined)p.snapEf=efectivoDe(p);});
+    v.cerrado=true;v.horaRecibido=v.horaRecibido||hora;v.recibidoPor=quien;tocar(v);
+  };
   cerrarModalRecibe();
-  v.pedidos.forEach(p=>{if(p.snapEf===undefined)p.snapEf=efectivoDe(p);});
-  v.cerrado=true;v.horaRecibido=new Date().toISOString();v.recibidoPor=quien;v.mod=Date.now();viajeAbierto=null;renderZona();
+  marcar(v0);viajeAbierto=null;renderZona();
   toast('Guardando…');
-  let ok=await guardarAhora('DINERO RECIBIDO de '+quien);
-  if(!ok){ok=await guardarAhora('DINERO RECIBIDO de '+quien);} // un reintento automático
-  if(ok){toast('Recibido por '+quien+' y guardado ✓');}
-  else{v.cerrado=false;v.horaRecibido=null;v.recibidoPor=null;renderZona();toast('⚠ NO se guardó ('+(_errGuardar||'sin conexión')+'). Volvé a tocar Recibido',true);}
+  const motivo='DINERO RECIBIDO de '+quien;
+  let ok=await guardarAhora(motivo);
+  if(!ok)ok=await guardarAhora(motivo);          // un reintento automático
+  // Comprobar que de verdad quedó recibido. Si la sincronización lo deshizo,
+  // se vuelve a marcar y se guarda otra vez antes de decir "✓".
+  let v=viajes.find(x=>x.uid===u);
+  if(ok && v && !v.cerrado){marcar(v);ok=await guardarAhora(motivo);v=viajes.find(x=>x.uid===u);}
+  if(ok && v && v.cerrado){toast('Recibido por '+quien+' y guardado ✓');return;}
+  if(v){v.cerrado=false;v.horaRecibido=null;v.recibidoPor=null;}
+  renderZona();
+  toast('⚠ NO se guardó ('+(_errGuardar||'no quedó recibido')+'). Volvé a tocar Recibido',true);
 }
 function logAudit(accion,detalle){auditoria.unshift({hora:new Date().toISOString(),accion,detalle,quien:sesion?sesion.nombre:'?'});}
 
 async function reabrir(vid){if(!esMaestro())return;const v=viajes.find(x=>x.id===vid);if(v){
   logAudit('REABRIÓ','Viaje '+(viajes.filter(x=>x.rutero===v.rutero).indexOf(v)+1)+' de '+v.rutero+' (recibido '+hhmm(v.horaRecibido)+')');
-  v.cerrado=false;v.entradaLista=true;viajeAbierto=null;v.modificado=true;v.mod=Date.now();renderZona();await guardarAhora('REABRIÓ viaje');toast('⚠ Viaje reabierto — quedó registrado');}}
+  v.cerrado=false;v.entradaLista=true;viajeAbierto=null;v.modificado=true;tocar(v);renderZona();await guardarAhora('REABRIÓ viaje');toast('⚠ Viaje reabierto — quedó registrado');}}
 async function borrarViaje(vid){
   if(modoLectura)return;
   const v=viajes.find(x=>x.id===vid);
@@ -987,7 +1009,7 @@ function borrarPedido(vid,pid){
   // Dejar constancia de que este pedido se borró A PROPÓSITO. Sin esto, la
   // fusión lo rescataría de la nube y volvería a aparecer.
   (v.pedBorrados=v.pedBorrados||[]).push(pid);
-  v.mod=Date.now();
+  tocar(v);
   const sy=window.scrollY;renderZona();window.scrollTo(0,sy);
   // Si el viaje ya estaba guardado en la nube (pedidos cerrados, o la ruta ya
   // había salido y se está corrigiendo), guardar de una vez. Si no, el borrado
@@ -1035,10 +1057,10 @@ function abrirPed(vid,pid){if(!esMaestro())return;const el=document.getElementBy
   document.querySelectorAll('.pbox').forEach(b=>{if(b!==el)b.classList.remove('open');});el.classList.toggle('open');}
 function cerrarPed(vid,pid){const el=document.getElementById('pb-'+vid+'-'+pid);if(el)el.classList.remove('open');renderZona();}
 function setEst(vid,pid,est){if(!esMaestro())return;const vv=viajes.find(x=>x.id===vid);const p=vv.pedidos.find(x=>x.id===pid);
-  p.estado=est;if(est!=='pagado'){p.devolucion=0;p.descuento=0;p.vuelto=0;}vv.mod=Date.now();renderZona();
+  p.estado=est;if(est!=='pagado'){p.devolucion=0;p.descuento=0;p.vuelto=0;}tocar(vv);renderZona();
   const el=document.getElementById('pb-'+vid+'-'+pid);if(el)el.classList.add('open');}
 function setAj(vid,pid,campo,val){if(!esMaestro())return;const v=viajes.find(x=>x.id===vid);const p=v.pedidos.find(x=>x.id===pid);
-  p[campo]=parseFloat(val)||0;v.mod=Date.now();
+  p[campo]=parseFloat(val)||0;tocar(v);
   if(p.snapEf!==undefined&&Math.abs(p.snapEf-efectivoDe(p))>0.001){
     logAudit('CAMBIÓ MONTO',`${p.nombre} (${v.rutero}): antes ${q(p.snapEf)} → ahora ${q(efectivoDe(p))}`);
     p.snapEf=efectivoDe(p);v.modificado=true;
@@ -1135,7 +1157,10 @@ function resumenRutero(r,vs){
     if(p.estado==='credito')cred+=p.total||0;
     else if(p.estado!=='cancelado')efv+=efectivoDe(p);
   }));
-  return `<div class="resR">
+  // Un tono suave del color del vendedor: combina con su chip y se distingue
+  // de un vistazo de quién son los números.
+  const c=colorRutero(r);
+  return `<div class="resR" style="--rb:${c}12;--rbd:${c}40;--rl:${c};--rdiv:${c}26;--rpie:#4a5260">
     <div class="t">
       <div class="c"><div class="n">${salidos.length}</div><div class="l">Viajes</div>${enRuta?`<div class="x">${enRuta} en ruta</div>`:''}</div>
       <div class="c"><div class="n">${nPed}</div><div class="l">Pedidos</div></div>

@@ -40,4 +40,12 @@ ok('Pedidos de ambos aparatos se conservan', r[0].pedidos.length===3);
 r=combinarViajes(C([{uid:'K',cerrado:false,mod:9e12,pedidos:P(1)}]),C([{uid:'K',cerrado:true,recibidoPor:'Cesar',mod:5,pedidos:P(1,2,3,4,5,6)}]));
 ok('ESCENARIO DE HOY: ruta cobrada intacta', r[0].cerrado===true && r[0].pedidos.length===6);
 
+// Reloj de otro aparato adelantado: mi "recibido" NO se pierde
+r=combinarViajes(C([{uid:'L',cerrado:true,recibidoPor:'Lesli',mod:100,pedidos:P(1)}]),C([{uid:'L',cerrado:false,mod:999999,pedidos:P(1)}]));
+ok('Recibido aqui gana aunque la nube tenga reloj adelantado', r[0].cerrado===true && r[0].recibidoPor==='Lesli');
+
+// Pero si en la nube lo REABRIERON a proposito (y es mas nuevo), gana la reapertura
+r=combinarViajes(C([{uid:'M',cerrado:true,mod:100,pedidos:P(1)}]),C([{uid:'M',cerrado:false,modificado:true,mod:999999,pedidos:P(1)}]));
+ok('Reabrir a proposito en otro aparato se respeta', r[0].cerrado===false);
+
 console.log(fail? '\n'+fail+' PRUEBAS FALLARON':'\nTodas las pruebas pasaron');

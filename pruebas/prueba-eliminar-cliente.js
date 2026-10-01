@@ -31,6 +31,7 @@ insert(o){const c=_cp(o);c.id=window.__DB.seq++;window.__DB.respaldos.push(c);re
  ok('Armando la ruta: SI deja eliminar', await hayEliminar());
 
  await p.click('text=Cerrar pedidos');await p.waitForTimeout(400);
+  if(await p.isVisible('#modalRecibe.open'))await p.click('#modalRecibeBody button:has-text("No lleva")');await p.waitForTimeout(300);
  ok('Cerrando pedidos (aun sin enviar): SI deja eliminar', await hayEliminar());
 
  // 2) RUTA ENVIADA -> no

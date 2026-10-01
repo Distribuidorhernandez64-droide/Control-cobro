@@ -728,11 +728,13 @@ function fabCrearVendedor(){
   selRutero=n;viajeAbierto=null;renderRuteros();
   nuevoViaje();
 }
-// El botón se esconde mientras se anotan pedidos (la barra de abajo ocupa
-// ese lugar) y cuando se está viendo un día anterior.
+// El botón se esconde mientras se arma una ruta (anotando pedidos o en el
+// paso de envases/enviar) para no tapar campos ni botones de abajo, y
+// cuando se está viendo un día anterior.
 function actualizarFab(){
   const w=document.getElementById('fabWrap');if(!w)return;
-  const tapado=modoLectura||document.body.classList.contains('anotando');
+  const armando=viajes.some(v=>v&&v.rutero===selRutero&&!v.entradaLista&&!v.cerrado);
+  const tapado=modoLectura||armando||document.body.classList.contains('anotando');
   w.style.display=tapado?'none':'flex';
   if(tapado&&_fabAbierto)cerrarFab();
 }
@@ -777,8 +779,70 @@ async function terminarAnotar(vid){if(modoLectura)return;const v=viajes.find(x=>
   }
   if(v.pedidos.length===0){toast('Agregá al menos un pedido',true);return;}
   v.pedidosListos=true;v.mod=Date.now();renderZona();
+  // Preguntar por envases en el mismo toque (si ya se anotaron, no se repite)
+  if(!(v.envases||'').trim())preguntarEnvases(vid);
   const ok=await guardarAhora('pedidos cerrados');
   toast(ok?'Pedidos guardados ✓':'⚠ No se pudo guardar. Revisá internet',!ok);}
+
+// ===== ¿LLEVA ENVASES? =====
+// Al cerrar pedidos se pregunta. "No" sigue directo a Enviar ruta.
+// "Sí" cambia el cuadro a un campo con el teclado ya abierto.
+// Ojo iPhone: Safari sólo abre el teclado si el campo se enfoca dentro del
+// mismo toque. Por eso el campo vive en el cuadro y se enfoca sin esperas.
+const ICO_CAJA=`<svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z" stroke="#e8902a" stroke-width="1.8" stroke-linejoin="round"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" stroke="#e8902a" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+function preguntarEnvases(vid){
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="text-align:center">
+      <div style="width:58px;height:58px;border-radius:17px;background:#fdf0e1;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">${ICO_CAJA}</div>
+      <div style="font-size:19px;font-weight:900;margin-bottom:5px">¿Lleva envases?</div>
+      <div style="font-size:13.5px;color:var(--mut);margin-bottom:18px;line-height:1.45">Anotalos ahora para revisarlos cuando regrese.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn" style="background:#e8902a;padding:15px;font-size:15px" onclick="anotarEnvases(${vid})">Sí, lleva envases</button>
+      <button class="btn sec" style="padding:13px;font-size:15px" onclick="sinEnvases(${vid})">No lleva</button>
+    </div>`;
+  document.getElementById('modalRecibe').classList.add('open');
+}
+function anotarEnvases(vid){
+  const v=viajes.find(x=>x.id===vid);if(!v)return;
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="width:40px;height:40px;border-radius:12px;background:#fdf0e1;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ICO_CAJA}</div>
+      <div style="font-size:17px;font-weight:900">¿Qué envases lleva?</div>
+    </div>
+    <input id="envModal" placeholder="ej. 2 cajas retornables" autocomplete="off" enterkeyhint="done"
+      value="${esc(v.envases||'')}" onkeydown="if(event.key==='Enter'){event.preventDefault();guardarEnvases(${vid});}">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+      <button class="btn" style="background:#e8902a;padding:15px;font-size:15px" onclick="guardarEnvases(${vid})">Listo</button>
+      <button class="btn sec" style="padding:12px" onclick="preguntarEnvases(${vid})">← Volver</button>
+    </div>`;
+  // Enfocar YA, dentro del mismo toque: así el iPhone abre el teclado
+  const el=document.getElementById('envModal');
+  if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}
+}
+function guardarEnvases(vid){
+  const v=viajes.find(x=>x.id===vid);if(!v)return;
+  const el=document.getElementById('envModal');
+  const txt=el?(el.value||'').trim():'';
+  if(!txt){if(el)el.focus();toast('Escribí qué envases lleva',true);return;}
+  v.envases=txt;v.envOk=false;v.mod=Date.now();
+  cerrarModalRecibe();
+  if(document.activeElement)document.activeElement.blur();
+  renderZona();
+  irAEnviar(vid);
+  guardarAhora('envases anotados');
+}
+function sinEnvases(vid){
+  cerrarModalRecibe();
+  irAEnviar(vid);
+}
+// Dejar a la vista el botón "Enviar ruta"
+function irAEnviar(vid){
+  setTimeout(()=>{
+    const b=document.querySelector('#viaje-'+vid+' .btn-enviar');
+    if(b)b.scrollIntoView({behavior:'smooth',block:'center'});
+  },120);
+}
 function volverAnotar(vid){const v=viajes.find(x=>x.id===vid);if(v){v.pedidosListos=false;renderZona();}}
 function reabrirEntrada(vid){const v=viajes.find(x=>x.id===vid);if(v){v.entradaLista=false;v.pedidosListos=true;renderZona();}}
 

@@ -62,6 +62,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{},ord:null,lim:null};
   ok('IDs de pedidos unicos', (await p.evaluate(()=>new Set(viajes[0].pedidos.map(p=>p.id)).size))===3);
 
   await p.click('text=Cerrar pedidos'); await p.waitForTimeout(500);
+  if(await p.isVisible('#modalRecibe.open'))await p.click('#modalRecibeBody button:has-text("No lleva")');await p.waitForTimeout(300);
   await p.click('.btn-enviar',{force:true}); await p.waitForTimeout(2200);
   ok('Envia la ruta', (await p.evaluate(()=>viajes[0].entradaLista))===true);
 

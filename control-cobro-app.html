@@ -128,9 +128,9 @@
   .fabwrap{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:60;
     display:flex;flex-direction:column;align-items:flex-end;gap:12px}
   body.anotando .fabwrap{display:none}
-  .fab{width:60px;height:60px;border-radius:50%;border:none;background:var(--yellow);color:var(--ink);flex-shrink:0;
+  .fab{width:60px;height:60px;border-radius:50%;border:none;background:#e8902a;color:#fff;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;cursor:pointer;
-    box-shadow:0 7px 20px rgba(201,160,31,.45);
+    box-shadow:0 7px 20px rgba(232,144,42,.45);
     transition:background .22s ease,color .22s ease,box-shadow .22s ease,transform .12s ease}
   .fab svg{transition:transform .34s cubic-bezier(.34,1.56,.64,1)}
   .fab:active{transform:scale(.9)}
@@ -447,13 +447,16 @@ async function guardarAhora(motivo){
     // viaje" van en 'borrados' y sí pueden desaparecer.)
     if(nube){
       const quedan=new Set(viajesFinal.map(v=>v&&v.uid).filter(Boolean));
-      // Ojo: acá NO se perdona ni siquiera lo que yo mandé a borrar. "Quitar
-      // viaje" sólo aparece en viajes vacíos; si en la nube ese viaje ya tiene
-      // pedidos o ya se cobró, es que otro aparato lo llenó mientras tanto y
-      // no se borra por nada del mundo.
+      // Se protege todo viaje con dinero de por medio: ya salió a ruta o ya se
+      // cobró. Ese NO se borra ni aunque yo lo haya mandado a quitar ("Quitar
+      // viaje" sólo aparece en viajes vacíos; si en la nube ya salió o ya se
+      // cobró, es que otro aparato lo movió mientras tanto).
+      // Un viaje que todavía se está armando y que quité a propósito SÍ puede
+      // irse aunque en la nube tenga clientes: no hay dinero en la calle.
       const perdidos=(nube.viajes||[]).filter(v=>
         v && v.uid && !quedan.has(v.uid) &&
-        ((v.pedidos&&v.pedidos.length>0)||v.cerrado));
+        ((v.pedidos&&v.pedidos.length>0)||v.cerrado) &&
+        !(borrados.includes(v.uid) && !v.cerrado && !v.entradaLista));
       if(perdidos.length){
         dotSync('off');
         console.log('guardar CANCELADO, se perderían viajes:',perdidos.map(v=>v.rutero+'/'+v.uid).join(', '));
@@ -860,8 +863,10 @@ function borrarPedido(vid,pid){
   (v.pedBorrados=v.pedBorrados||[]).push(pid);
   v.mod=Date.now();
   const sy=window.scrollY;renderZona();window.scrollTo(0,sy);
-  // Si la ruta ya había salido (se está corrigiendo), guardar de una vez.
-  if(v.horaSalida||v.cerrado)guardarAhora('borró un pedido');
+  // Si el viaje ya estaba guardado en la nube (pedidos cerrados, o la ruta ya
+  // había salido y se está corrigiendo), guardar de una vez. Si no, el borrado
+  // queda sólo en este aparato y la nube sigue teniendo al cliente.
+  if(v.pedidosListos||v.horaSalida)guardarAhora('borró un pedido');
 }
 // Deslizar una fila hacia la izquierda revela el botón "Eliminar" (estilo iOS).
 // No borra de una; hay que tocar el botón rojo.

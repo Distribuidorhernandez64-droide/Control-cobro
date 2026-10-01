@@ -153,6 +153,11 @@
   .fabit.nuevo .av{background:#eef0f3;color:var(--mut);font-size:21px;font-weight:700}
   .fabtit{font-size:11.5px;font-weight:800;color:#fff;letter-spacing:.5px;text-transform:uppercase;
     text-shadow:0 1px 6px rgba(0,0,0,.5);padding-right:6px;margin-bottom:1px}
+  .btn-quitar{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;
+    background:#fdeeea;color:#c2412b;border:1.5px solid #f1c3b6;border-radius:14px;padding:14px;
+    font-family:inherit;font-size:15px;font-weight:800;transition:transform .1s ease,background .15s ease}
+  .btn-quitar svg{width:20px;height:20px;flex-shrink:0}
+  .btn-quitar:active{transform:scale(.97);background:#fbdcd2}
   .modalR{position:fixed;inset:0;background:rgba(20,25,35,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
   .modalR.open{display:flex}
   .modalRcard{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .2s}
@@ -1115,6 +1120,12 @@ function renderZona(){
           </div>
           <button class="btn" style="width:100%;background:var(--ink);margin-top:9px" onclick="terminarAnotar(${v.id})">Cerrar pedidos</button>
         </div>`;
+      } else if(v.pedidos.length===0){
+        // FASE 2 sin clientes: no hay nada que enviar. Sólo agregar o quitar.
+        html+=`<div style="padding:14px 16px 4px;border-top:1px solid var(--line)">
+          <div style="font-size:13.5px;color:var(--mut);margin-bottom:12px">Este viaje se quedó sin clientes.</div>
+          <button class="btn sec" style="font-size:12px;padding:8px 13px;margin-bottom:12px" onclick="volverAnotar(${v.id})">← Agregar pedidos</button>
+        </div>`;
       } else {
         // FASE 2: envases y salir
         html+=`<div style="padding:14px 16px;border-top:1px solid var(--line)">
@@ -1142,7 +1153,9 @@ function renderZona(){
         ${esMaestro()?`<button class="btn ok" id="rec-${v.id}" onclick="recibirTodo(${v.id})">Dinero recibido ✓</button>`:`<button class="btn ok" style="opacity:.45;cursor:not-allowed" disabled>Dinero recibido ✓</button>`}</div>`;
     }
     if(v.pedidos.length===0 && !v.cerrado && (!v.entradaLista || esMaestro())){
-      html+=`<div style="padding:0 16px 14px"><button class="btn sec" style="width:100%" onclick="borrarViaje(${v.id})">Quitar viaje</button></div>`;
+      html+=`<div style="padding:0 16px 16px"><button class="btn-quitar" onclick="borrarViaje(${v.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6.5h17"/><path d="M9 6.5V4.8c0-.7.6-1.3 1.3-1.3h3.4c.7 0 1.3.6 1.3 1.3v1.7"/><path d="M18.5 6.5l-.8 12.2a2 2 0 0 1-2 1.8H8.3a2 2 0 0 1-2-1.8L5.5 6.5"/><path d="M10 10.5v6M14 10.5v6"/></svg>
+        Quitar viaje</button></div>`;
     }
     html+=`</div>`;
   });

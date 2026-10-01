@@ -32,6 +32,8 @@ upsert:()=>Promise.resolve({error:null}),insert:()=>Promise.resolve({error:null}
  ok('Entregado = efectivo + crédito (Q7,688.15)', txt.includes('Q7,688.15'));
  ok('Efectivo Q1,920.25 y Crédito Q5,767.90', txt.includes('Efectivo Q1,920.25')&&txt.includes('Crédito Q5,767.90'));
  ok('Ya no está el nombre grande ni "+ Nuevo viaje"', !(await p.isVisible('.prHead')) && !(await p.isVisible('button.nb')));
+ ok('Chips solo con el nombre (sin total)', !(await p.textContent('#ruteros')).includes('Q'));
+ ok('Ya no está "+ Agregar vendedor"', !(await p.isVisible('#newRutero')) && !(await p.textContent('#ruteros')).includes('Agregar'));
  await p.screenshot({path:'res-final.png'});
  // vendedor sin viajes
  await p.evaluate(()=>{selRutero='Milton';renderRuteros();renderZona();});await p.waitForTimeout(300);

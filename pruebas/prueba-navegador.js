@@ -47,7 +47,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{},ord:null,lim:null};
   ok('Entra con usuario maestro', await p.isHidden('#loginScreen'));
 
   // vendedor
-  await p.fill('#newRutero','Rolvin'); await p.press('#newRutero','Enter'); await p.waitForTimeout(300);
+  await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;viajeAbierto=null;renderRuteros();renderZona();},'Rolvin'); await p.waitForTimeout(300);
   ok('Agrega vendedor', (await T('#ruteros')).includes('Rolvin'));
 
   // viaje + pedidos

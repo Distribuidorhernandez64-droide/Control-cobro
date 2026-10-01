@@ -39,8 +39,8 @@ srv.on('request',(q,r)=>{
  await p.evaluate(()=>{const o=window.toast;window.__t=[];window.toast=(m,e)=>{window.__t.push(m);o(m,e);};});
 
  // 1) vendedor Cesar con un viaje de prueba que queda guardado en la nube
- await p.fill('#newRutero','gerson');await p.press('#newRutero','Enter');await p.waitForTimeout(200);
- await p.fill('#newRutero','Cesar');await p.press('#newRutero','Enter');await p.waitForTimeout(200);
+ await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;viajeAbierto=null;renderRuteros();renderZona();},'gerson');await p.waitForTimeout(200);
+ await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;viajeAbierto=null;renderRuteros();renderZona();},'Cesar');await p.waitForTimeout(200);
  await p.evaluate(()=>nuevoViaje());await p.waitForTimeout(250);
  const vid=await p.evaluate(()=>viajes.find(v=>v.rutero==='Cesar').id);
  await p.fill('#in-nom-'+vid,'Prueba');await p.fill('#in-mon-'+vid,'58');await p.click('.anotaadd');await p.waitForTimeout(200);

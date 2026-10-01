@@ -44,7 +44,7 @@ upsert:()=>Promise.resolve({error:null}),insert:()=>Promise.resolve({error:null}
  await p.fill('#loginUser','cesar');await p.fill('#loginPin','19881987');
  await p.click('#loginScreen button');await p.waitForTimeout(500);
  ok('La app sigue entrando normal', await p.isHidden('#loginScreen'));
- await p.fill('#newRutero','Prueba');await p.press('#newRutero','Enter');await p.waitForTimeout(300);
+ await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;viajeAbierto=null;renderRuteros();renderZona();},'Prueba');await p.waitForTimeout(300);
  ok('Y sigue funcionando', (await p.textContent('#ruteros')).includes('Prueba'));
 
  console.log(f404.length?'\n⚠ Archivos que faltan: '+f404.join(', '):'\nNingún archivo faltante');

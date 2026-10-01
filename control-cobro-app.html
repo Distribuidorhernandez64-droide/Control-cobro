@@ -158,17 +158,18 @@
     font-family:inherit;font-size:15px;font-weight:800;transition:transform .1s ease,background .15s ease}
   .btn-quitar svg{width:20px;height:20px;flex-shrink:0}
   .btn-quitar:active{transform:scale(.97);background:#fbdcd2}
-  /* Resumen del vendedor (viajes · pedidos · entregado) */
-  .resR{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:0 0 14px;box-shadow:var(--shadow)}
-  .resR .t{display:grid;grid-template-columns:1fr 1fr 1.55fr}
-  .resR .c{padding:14px 8px 13px;text-align:center;min-width:0}
-  .resR .c+.c{border-left:1px solid var(--line)}
-  .resR .n{font-size:22px;font-weight:900;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .resR .c:last-child .n{font-size:clamp(17px,5.4vw,22px)}
-  .resR .l{font-size:10.5px;color:var(--mut);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-  .resR .x{font-size:11px;color:var(--warn);font-weight:800;margin-top:3px}
-  .resR .pie{border-top:1px solid var(--line);padding:10px 12px;display:flex;justify-content:center;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;font-weight:700;color:#5c6470;font-variant-numeric:tabular-nums}
-  .resR .pt{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+  /* Resumen del vendedor (viajes · pedidos · entregado), compacto */
+  .resR{--rb:#fff;--rbd:var(--line);--rn:var(--ink);--rl:var(--mut);--rdiv:var(--line);--rpie:#5c6470;--rx:var(--warn);
+    background:var(--rb);border:1px solid var(--rbd);border-radius:14px;margin:0 0 12px;box-shadow:var(--shadow);overflow:hidden}
+  .resR .t{display:grid;grid-template-columns:1fr 1fr 1.6fr}
+  .resR .c{padding:10px 6px 9px;text-align:center;min-width:0}
+  .resR .c+.c{border-left:1px solid var(--rdiv)}
+  .resR .n{font-size:19px;font-weight:900;letter-spacing:-.3px;color:var(--rn);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+  .resR .c:last-child .n{font-size:clamp(16px,4.9vw,19px)}
+  .resR .l{font-size:9.5px;color:var(--rl);font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+  .resR .x{font-size:10.5px;color:var(--rx);font-weight:800;margin-top:2px}
+  .resR .pie{border-top:1px solid var(--rdiv);padding:7px 10px;display:flex;justify-content:center;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;font-weight:700;color:var(--rpie);font-variant-numeric:tabular-nums}
+  .resR .pt{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
   .modalR{position:fixed;inset:0;background:rgba(20,25,35,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
   .modalR.open{display:flex}
   .modalRcard{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .2s}
@@ -271,7 +272,7 @@
 
 <main>
   <div class="ruteros" id="ruteros"></div>
-  <div id="zona"><div class="empty">Agregá un repartidor para empezar.</div></div>
+  <div id="zona"><div class="empty">Tocá <b style="color:#e8902a">+</b> para agregar un vendedor y empezar.</div></div>
 </main>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -600,19 +601,19 @@ function recalc(){
 function renderRuteros(){
   const c=document.getElementById('ruteros');
   const icoP=col=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="8" r="3.4" stroke="${col}" stroke-width="2"/><path d="M5.5 19c0-3.2 3-5.2 6.5-5.2s6.5 2 6.5 5.2" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg>`;
-  c.innerHTML=ruteros.map(r=>{const t=totalRutero(r);const col=colorRutero(r);
+  c.innerHTML=ruteros.map(r=>{const col=colorRutero(r);
     const on=selRutero===r;
     const j=r.replace(/'/g,"\\'");
     return `<div class="rchip ${on?'on':''}" style="${on?'background:'+col+';border-color:'+col:''};display:inline-flex;align-items:center"
       onclick="if(!_lpFue)selR('${j}')"
       onpointerdown="lpInicio(event,'${j}')" onpointerup="lpFin()" onpointerleave="lpFin()"
       onpointercancel="lpFin()" onpointermove="lpMueve(event)" oncontextmenu="return false">
-      ${icoP(on?'#fff':col)}${esc(r)}${t>0?'<span class="tot">'+q(t)+'</span>':''}</div>`;
-  }).join('')+`<div class="rchip" style="border-style:dashed;color:var(--mut);display:inline-flex;align-items:center;padding:0" onclick="document.getElementById('newRutero').focus()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="margin:0 4px 0 14px"><path d="M12 6v12M6 12h12" stroke="#9aa1ad" stroke-width="2.2" stroke-linecap="round"/></svg>
-      <input id="newRutero" placeholder="Agregar vendedor" style="width:135px;border:none;background:none;padding:10px 14px 10px 2px" onkeydown="if(event.key==='Enter')addRutero()"></div>`;
+      ${icoP(on?'#fff':col)}${esc(r)}</div>`;
+  }).join('');
+  // El total ya está en el resumen de abajo, y "Agregar vendedor" vive ahora
+  // en el botón flotante (+ → Nuevo vendedor).
 }
-function addRutero(){if(modoLectura)return;const el=document.getElementById('newRutero');const n=(el.value||'').trim();if(n){
+function addRutero(){if(modoLectura)return;const el=document.getElementById('newRutero');if(!el)return;const n=(el.value||'').trim();if(n){
   ruterosBorrados=ruterosBorrados.filter(x=>x!==n); // si se había eliminado antes, vuelve a valer
   if(!ruteros.includes(n))ruteros.push(n);
   selRutero=n;renderRuteros();renderZona();}}
@@ -1147,7 +1148,7 @@ function resumenRutero(r,vs){
 function renderZona(){
   recalc();renderRuteros();
   const cont=document.getElementById('zona');
-  if(!selRutero){cont.innerHTML='<div class="empty">Agregá un repartidor para empezar.</div>';return;}
+  if(!selRutero){cont.innerHTML='<div class="empty">Tocá <b style="color:#e8902a">+</b> para agregar un vendedor y empezar.</div>';actualizarFab();return;}
   const vs=viajes.filter(v=>v.rutero===selRutero);
   const totR=totalRutero(selRutero);
   // Resumen del vendedor en vez de su nombre (ya está en el chip) y del botón

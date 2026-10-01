@@ -24,7 +24,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.goto('http://localhost:8886/control-cobro-app.html',{waitUntil:'networkidle'});
  await p.fill('#loginUser','cesar');await p.fill('#loginPin','19881987');
  await p.tap('#loginScreen button');await p.waitForTimeout(400);
- await p.fill('#newRutero','Prueba cesar');await p.press('#newRutero','Enter');await p.waitForTimeout(200);
+ await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;viajeAbierto=null;renderRuteros();renderZona();},'Prueba cesar');await p.waitForTimeout(200);
  await p.evaluate(()=>nuevoViaje());await p.waitForTimeout(300);
  const vid=await p.evaluate(()=>viajes[0].id);
  // vacío desde el principio (fase 1)

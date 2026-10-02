@@ -738,7 +738,15 @@ function bajarAlViaje(vid){
     if(!card){scrollSuave(0);return;}
     const hd=document.querySelector('header');
     const off=(hd?hd.getBoundingClientRect().height:0)+12;
-    const y=card.getBoundingClientRect().top+window.pageYOffset-off;
+    let y=card.getBoundingClientRect().top+window.pageYOffset-off;
+    // Si con ese desplazamiento "Dinero recibido" quedaría detrás del botón +,
+    // bajar un poco más para dejarlo por encima.
+    const rec=card.querySelector('[id^="rec-"]'), fab=document.getElementById('fab');
+    if(rec&&fab&&fab.getClientRects().length){
+      const tope=fab.getBoundingClientRect().top-14;
+      const fondo=rec.getBoundingClientRect().bottom-(y-window.pageYOffset);
+      if(fondo>tope)y+=fondo-tope;
+    }
     scrollSuave(Math.max(0,y));
   },70);
 }
@@ -824,9 +832,10 @@ function fabCrearVendedor(){
 // cuando se está viendo un día anterior.
 function actualizarFab(){
   const w=document.getElementById('fabWrap');if(!w)return;
-  // Dentro de un vendedor no se muestra: ahí está el + de su encabezado, y
-  // así nunca tapa "Dinero recibido".
-  const tapado=modoLectura||vistaDetalle||document.body.classList.contains('anotando');
+  // Igual en la lista y adentro de un vendedor. Adentro se esconde mientras se
+  // arma una ruta (anotando pedidos o en envases), para no tapar esos campos.
+  const armando=vistaDetalle&&viajes.some(v=>v&&v.rutero===selRutero&&!v.entradaLista&&!v.cerrado);
+  const tapado=modoLectura||armando||document.body.classList.contains('anotando');
   w.style.display=tapado?'none':'flex';
   if(tapado&&_fabAbierto)cerrarFab();
 }
@@ -1278,10 +1287,9 @@ function chatHeader(r){
   let sb='';
   if(e.enRuta.length)sb=`<div class="sb on">${e.enRuta.length} ruta${e.enRuta.length===1?'':'s'} en curso</div>`;
   else if(e.arm.length)sb=`<div class="sb arm">Armando ruta</div>`;
-  const mas=(!modoLectura&&!e.arm.length)?`<button class="cmas" onclick="nuevoViaje()" aria-label="Nuevo viaje"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg></button>`:'';
   return `<div class="chathd"><button class="bk" onclick="volverLista()" aria-label="Volver"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div class="av" style="background:${col}">${esc((r.trim()[0]||'?').toUpperCase())}</div>
-    <div class="tx"><div class="nm">${esc(r)}</div>${sb}</div>${mas}</div>`;
+    <div class="tx"><div class="nm">${esc(r)}</div>${sb}</div></div>`;
 }
 // Abrir / volver. Se usa el historial del navegador para que el botón atrás
 // (PC, Android) y el gesto de Safari también vuelvan a la lista.
@@ -1913,7 +1921,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-02.2';
+const VERSION='2026-10-02.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

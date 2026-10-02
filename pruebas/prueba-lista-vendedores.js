@@ -58,8 +58,8 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
    return {arriba:Math.round(c.top-hd), boton:r.top>hd&&r.bottom<innerHeight, sy:Math.round(scrollY)};},ids.R);
  ok('Con ruta pendiente: baja directo a ella ("Dinero recibido" a la vista) '+JSON.stringify(enVista), enVista.boton && enVista.arriba>=0 && enVista.sy>0);
  await p.screenshot({path:'v-directo.png'});
- ok('Adentro NO está el + flotante (no tapa nada)', await p.isHidden('#fab'));
- ok('Adentro está el + del encabezado', await p.isVisible('.chathd .cmas'));
+ ok('Adentro está el mismo + flotante', await p.isVisible('#fab'));
+ ok('Ya no hay + chico en el encabezado', (await p.locator('.chathd .cmas').count())===0);
  ok('Los viajes ya no repiten "(gerson)"', !(await p.textContent('#zona')).includes('(gerson)'));
  ok('"1 pedido" en singular', (await p.textContent('#zona')).includes('1 pedido ') || (await p.textContent('#zona')).includes('1 pedido·')|| /1 pedido(?!s)/.test(await p.textContent('#zona')));
  await p.screenshot({path:'v-detalle.png'});
@@ -95,9 +95,12 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  ok('Botón "atrás" del navegador vuelve a la lista', await p.isVisible('.vlista'));
  // ---- + del encabezado ----
  await p.tap('.vrow:has-text("Lesli")');await p.waitForTimeout(400);
- await p.tap('.chathd .cmas');await p.waitForTimeout(500);
- ok('El + del encabezado le crea un viaje a Lesli', await p.evaluate(()=>viajes.filter(v=>v.rutero==='Lesli').length)===1);
- ok('Mientras arma la ruta el + del encabezado se esconde', await p.isHidden('.chathd .cmas'));
+ await p.tap('#fab');await p.waitForTimeout(600);
+ ok('Adentro, el + muestra "¿Para quién es el viaje?" con todos los vendedores', (await p.textContent('#fabMenu')).includes('¿Para quién es el viaje?') && await p.evaluate(()=>['gerson','Cesar','Milton','Lesli'].every(n=>document.getElementById('fabMenu').textContent.includes(n))));
+ ok('  y la opción "Nuevo vendedor"', (await p.textContent('#fabMenu')).includes('Nuevo vendedor'));
+ await p.tap('#fabMenu .fabit:has-text("Lesli")');await p.waitForTimeout(600);
+ ok('Elegir Lesli le crea el viaje a Lesli', await p.evaluate(()=>viajes.filter(v=>v.rutero==='Lesli').length)===1);
+ ok('Mientras arma la ruta el + se esconde', await p.isHidden('#fab'));
  await p.evaluate(()=>{viajes=viajes.filter(v=>v.rutero!=='Lesli');});
  await p.tap('.chathd .bk');await p.waitForTimeout(400);
  // ---- + flotante desde la lista ----
@@ -124,6 +127,16 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.tap('.chathd .bk');await p.waitForTimeout(400);
  const g=(await p.$$eval('.vrow',e=>e.map(x=>x.textContent.replace(/\s+/g,' ').trim()))).find(t=>t.includes('gerson'));
  ok('En la lista gerson pasa a ✓ todo recibido ('+g+')', /15 viajes · Q/.test(g));
+ const idAlta=await p.evaluate(async()=>{
+   const ps=[];for(let i=0;i<7;i++)ps.push({id:nuevoId(),nombre:'Cliente '+i,total:50+i,estado:'pagado',devolucion:0,descuento:0,vuelto:0});
+   const V={id:nuevoId(),uid:uid(),rutero:'Cesar',pedidos:ps,cerrado:false,entradaLista:true,pedidosListos:true,horaSalida:new Date().toISOString(),envases:'',envOk:false,mod:Date.now()};
+   viajes.push(V);vistaDetalle=false;renderZona();return V.id;});
+ await p.waitForTimeout(300);
+ await p.tap('.vrow:has-text("Cesar")');await p.waitForTimeout(900);
+ const cae=await p.evaluate(id=>{const b=document.getElementById('rec-'+id).getBoundingClientRect();
+   const e=document.elementFromPoint(b.right-12,b.bottom-6);return e?(e.id||e.className):'nada';},idAlta);
+ ok('Ruta con 7 clientes: "Dinero recibido" queda por encima del + (toque cae en '+cae+')', cae==='rec-'+idAlta);
+ await p.screenshot({path:'v-alta.png'});
  console.log(errs.length?'\n⚠ '+errs.join(' | '):'\nSin errores de JavaScript');
  console.log(fail?fail+' FALLARON':'Todas pasaron');
  await b.close();srv.close();

@@ -36,13 +36,13 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.tap('text=Cerrar pedidos');await p.waitForTimeout(500);
  ok('Al cerrar pedidos pregunta "¿Lleva envases?"', (await abierto()) && (await p.textContent('#modalRecibeBody')).includes('¿Lleva envases?'));
  await p.screenshot({path:'env-1-pregunta.png'});
- ok('Mientras arma la ruta no hay ningún + que tape', await p.isHidden('#fab') && await p.isHidden('.chathd .cmas'));
+ ok('Mientras arma la ruta no hay ningún + que tape', await p.isHidden('#fab'));
  await p.tap('#modalRecibeBody button:has-text("No lleva")');await p.waitForTimeout(500);
  ok('"No lleva": se cierra el cuadro', !(await abierto()));
  ok('"No lleva": queda listo para Enviar ruta', await p.isVisible('#viaje-'+vid+' .btn-enviar'));
  ok('"No lleva": no anota envases', !(await p.evaluate(v=>viajes.find(x=>x.id===v).envases,vid)));
  await p.tap('#viaje-'+vid+' .btn-enviar',{force:true});await p.waitForTimeout(2200);
- ok('Ruta enviada: vuelve el + del encabezado para otro viaje', await p.isVisible('.chathd .cmas'));
+ ok('Ruta enviada: vuelve el + para otro viaje', await p.isVisible('#fab'));
 
  // ---- CASO B: "Sí" ----
  vid=await nuevo('Pedro','400');

@@ -27,7 +27,7 @@ insert(o){const c=_cp(o);c.id=window.__DB.seq++;window.__DB.respaldos.push(c);re
    const mk=(r,m,cer)=>({id:nuevoId(),uid:uid(),rutero:r,pedidos:[{id:nuevoId(),nombre:'Cliente',total:m,estado:'pagado',devolucion:0,descuento:0,vuelto:0}],
      cerrado:cer,entradaLista:true,pedidosListos:true,horaSalida:t,horaRecibido:cer?t:null,recibidoPor:cer?'César':null});
    viajes=[mk('Gerson',110,true),mk('Gerson',345,true),mk('Milton',519.5,true)];
-   selRutero='Gerson';renderRuteros();renderZona();
+   selRutero='Gerson';vistaDetalle=false;renderRuteros();renderZona();
  });
  await p.waitForTimeout(400);
  ok('El botón + se ve', await p.isVisible('#fab'));
@@ -50,7 +50,7 @@ insert(o){const c=_cp(o);c.id=window.__DB.seq++;window.__DB.respaldos.push(c);re
  await p.screenshot({path:'fab-3-viaje.png'});
 
  // cerrar con el fondo
- await p.evaluate(()=>{viajes=viajes.filter(v=>v.rutero!=='Keny');selRutero='Gerson';renderZona();});
+ await p.evaluate(()=>{viajes=viajes.filter(v=>v.rutero!=='Keny');selRutero='Gerson';vistaDetalle=false;renderZona();});
  await p.waitForTimeout(300);
  await p.click('#fab');await p.waitForTimeout(500);
  await p.click('#fabBg',{position:{x:60,y:120}});await p.waitForTimeout(500);

@@ -24,7 +24,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.goto('http://localhost:8887/control-cobro-app.html',{waitUntil:'networkidle'});
  await p.fill('#loginUser','cesar');await p.fill('#loginPin','19881987');
  await p.tap('#loginScreen button');await p.waitForTimeout(400);
- await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;viajeAbierto=null;renderRuteros();renderZona();},'gerson');await p.waitForTimeout(200);
+ await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;vistaDetalle=true;viajeAbierto=null;renderRuteros();renderZona();},'gerson');await p.waitForTimeout(200);
  const nuevo=async(cli,monto)=>{await p.evaluate(()=>nuevoViaje());await p.waitForTimeout(300);
    const vid=await p.evaluate(()=>viajes[viajes.length-1].id);
    await p.fill('#in-nom-'+vid,cli);await p.fill('#in-mon-'+vid,monto);await p.tap('.anotaadd');await p.waitForTimeout(200);
@@ -36,13 +36,13 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.tap('text=Cerrar pedidos');await p.waitForTimeout(500);
  ok('Al cerrar pedidos pregunta "¿Lleva envases?"', (await abierto()) && (await p.textContent('#modalRecibeBody')).includes('¿Lleva envases?'));
  await p.screenshot({path:'env-1-pregunta.png'});
- ok('Mientras arma la ruta el botón + está escondido', await p.isHidden('#fab'));
+ ok('Mientras arma la ruta no hay ningún + que tape', await p.isHidden('#fab') && await p.isHidden('.chathd .cmas'));
  await p.tap('#modalRecibeBody button:has-text("No lleva")');await p.waitForTimeout(500);
  ok('"No lleva": se cierra el cuadro', !(await abierto()));
  ok('"No lleva": queda listo para Enviar ruta', await p.isVisible('#viaje-'+vid+' .btn-enviar'));
  ok('"No lleva": no anota envases', !(await p.evaluate(v=>viajes.find(x=>x.id===v).envases,vid)));
  await p.tap('#viaje-'+vid+' .btn-enviar',{force:true});await p.waitForTimeout(2200);
- ok('Ruta enviada y el botón + vuelve a aparecer', await p.isVisible('#fab'));
+ ok('Ruta enviada: vuelve el + del encabezado para otro viaje', await p.isVisible('.chathd .cmas'));
 
  // ---- CASO B: "Sí" ----
  vid=await nuevo('Pedro','400');

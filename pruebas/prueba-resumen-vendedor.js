@@ -23,7 +23,7 @@ upsert:()=>Promise.resolve({error:null}),insert:()=>Promise.resolve({error:null}
    viajes=[vj([ped('a',110)],true),vj([ped('b',345)],true),vj([ped('c',519.5)],true),vj([ped('d',645)],true),
      vj([ped('e',300.75),ped('f',0.0)],true),vj([ped('Tadeo',5657.9,'credito')],true),vj([ped('Silvia',110,'credito')],true),
      vj([ped('Marta mox',170.75)],false)];
-   selRutero='gerson';renderRuteros();renderZona();
+   selRutero='gerson';vistaDetalle=true;renderRuteros();renderZona();
  });
  await p.waitForTimeout(400);
  const txt=await p.textContent('.resR');
@@ -36,7 +36,7 @@ upsert:()=>Promise.resolve({error:null}),insert:()=>Promise.resolve({error:null}
  ok('Ya no está "+ Agregar vendedor"', !(await p.isVisible('#newRutero')) && !(await p.textContent('#ruteros')).includes('Agregar'));
  await p.screenshot({path:'res-final.png'});
  // vendedor sin viajes
- await p.evaluate(()=>{selRutero='Milton';renderRuteros();renderZona();});await p.waitForTimeout(300);
+ await p.evaluate(()=>{selRutero='Milton';vistaDetalle=true;renderRuteros();renderZona();});await p.waitForTimeout(300);
  ok('Vendedor sin viajes: invita a tocar +', (await p.textContent('#zona')).includes('para empezar'));
  await p.screenshot({path:'res-vacio.png'});
  console.log(errs.length?'\n⚠ '+errs.join(' | '):'\nSin errores de JavaScript');

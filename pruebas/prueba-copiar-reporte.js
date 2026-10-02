@@ -26,7 +26,7 @@ insert(o){const c=_cp(o);c.id=window.__DB.seq++;window.__DB.respaldos.push(c);re
    viajes=[
     {id:nuevoId(),uid:uid(),rutero:'Milton',pedidos:ped('Eben',714),cerrado:true,entradaLista:true,pedidosListos:true,horaSalida:t,horaRecibido:t,recibidoPor:'Lesli'},
     {id:nuevoId(),uid:uid(),rutero:'Gerson',pedidos:ped('Tadeo',6185.80),cerrado:false,entradaLista:true,pedidosListos:true,horaSalida:t,envases:'',envOk:false}];
-   selRutero='Milton';viajeAbierto=null;renderRuteros();renderZona();
+   selRutero='Milton';vistaDetalle=true;viajeAbierto=null;renderRuteros();renderZona();
  });
  await p.waitForTimeout(300);
  await p.click('.rep');await p.waitForTimeout(400);

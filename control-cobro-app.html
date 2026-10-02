@@ -174,6 +174,33 @@
   .resR .x{font-size:10.5px;color:var(--rx);font-weight:800;margin-top:2px}
   .resR .pie{border-top:1px solid var(--rdiv);padding:7px 10px;display:flex;justify-content:center;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;font-weight:700;color:var(--rpie);font-variant-numeric:tabular-nums}
   .resR .pt{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
+  /* ===== Lista de vendedores (estilo chats) ===== */
+  .vlista{background:var(--card);border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .vrow{display:flex;align-items:center;gap:13px;padding-left:14px;cursor:pointer;
+    -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+  .vrow:active{background:#f4f3ef}
+  .vrow .av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:21px;flex-shrink:0}
+  .vrow .mid{flex:1;min-width:0;padding:13px 14px 13px 0;border-bottom:1px solid var(--line)}
+  .vrow:last-child .mid{border-bottom:none}
+  .vrow .l1,.vrow .l2{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .vrow .nm{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vrow .hr{font-size:12px;color:var(--mut);font-weight:700;flex-shrink:0}
+  .vrow .hr.on{color:#e8902a}
+  .vrow .sb{font-size:13.5px;color:#7b8391;font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px;min-width:0}
+  .vrow .sb svg{flex-shrink:0}
+  .vrow .s-ruta{color:#c9821f;font-weight:800}.vrow .s-arm{color:#3a7bd5;font-weight:800}
+  .nw{white-space:nowrap}
+  .vrow .bd{min-width:22px;height:22px;border-radius:11px;background:#e8902a;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;margin-top:3px}
+  /* Encabezado del vendedor (como el de una conversación) */
+  .chathd{display:flex;align-items:center;gap:11px;margin:0 0 12px}
+  .chathd .bk{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+  .chathd .av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:19px;flex-shrink:0}
+  .chathd .tx{flex:1;min-width:0}
+  .chathd .nm{font-size:19px;font-weight:900;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chathd .sb{font-size:12.5px;font-weight:800;color:var(--mut)}
+  .chathd .sb.on{color:#e8902a}.chathd .sb.arm{color:#3a7bd5}
+  .chathd .cmas{width:42px;height:42px;border-radius:50%;border:none;background:#e8902a;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 4px 12px rgba(232,144,42,.35);padding:0}
+  .chathd .cmas:active{transform:scale(.92)}
   .modalR{position:fixed;inset:0;background:rgba(20,25,35,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
   .modalR.open{display:flex}
   .modalRcard{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .2s}
@@ -350,6 +377,7 @@ function colorRutero(r){const i=ruteros.indexOf(r);return PALETA[i%PALETA.length
 let viajes=[];
 let selRutero=null, idv=1, idp=1;
 let viajeAbierto=null; // id del viaje cerrado que se está viendo expandido
+let vistaDetalle=false; // false = lista de vendedores; true = adentro de un vendedor
 let _verTodasRutas=false; // barra de rutas en curso: mostrar todas o sólo 4
 const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 let auditoria=[];
@@ -613,19 +641,8 @@ function recalc(){
 }
 
 function renderRuteros(){
-  const c=document.getElementById('ruteros');
-  const icoP=col=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="8" r="3.4" stroke="${col}" stroke-width="2"/><path d="M5.5 19c0-3.2 3-5.2 6.5-5.2s6.5 2 6.5 5.2" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg>`;
-  c.innerHTML=ruteros.map(r=>{const col=colorRutero(r);
-    const on=selRutero===r;
-    const j=r.replace(/'/g,"\\'");
-    return `<div class="rchip ${on?'on':''}" style="${on?'background:'+col+';border-color:'+col:''};display:inline-flex;align-items:center"
-      onclick="if(!_lpFue)selR('${j}')"
-      onpointerdown="lpInicio(event,'${j}')" onpointerup="lpFin()" onpointerleave="lpFin()"
-      onpointercancel="lpFin()" onpointermove="lpMueve(event)" oncontextmenu="return false">
-      ${icoP(on?'#fff':col)}${esc(r)}</div>`;
-  }).join('');
-  // El total ya está en el resumen de abajo, y "Agregar vendedor" vive ahora
-  // en el botón flotante (+ → Nuevo vendedor).
+  // Los chips de vendedores fueron reemplazados por la lista tipo chats.
+  const c=document.getElementById('ruteros');if(c){c.innerHTML='';c.style.display='none';}
 }
 function addRutero(){if(modoLectura)return;const el=document.getElementById('newRutero');if(!el)return;const n=(el.value||'').trim();if(n){
   ruterosBorrados=ruterosBorrados.filter(x=>x!==n); // si se había eliminado antes, vuelve a valer
@@ -688,7 +705,7 @@ async function borrarRutero(r){
   if(viajes.some(v=>v&&v.rutero===r)){toast('Tiene rutas, no se puede',true);return;}
   ruteros=ruteros.filter(x=>x!==r);
   if(!ruterosBorrados.includes(r))ruterosBorrados.push(r);
-  if(selRutero===r){selRutero=ruteros[0]||null;viajeAbierto=null;}
+  if(selRutero===r){selRutero=ruteros[0]||null;viajeAbierto=null;vistaDetalle=false;}
   logAudit('ELIMINÓ VENDEDOR',r);
   renderRuteros();renderZona();
   const ok=await guardarAhora('eliminó al vendedor '+r);
@@ -713,7 +730,7 @@ function scrollSuave(y,ms){
 // Se hace DESPUÉS de que termine el toque, para no redibujar debajo del dedo.
 function irA(r,vid){
   setTimeout(()=>{
-    selRutero=r;viajeAbierto=null;renderRuteros();renderZona();
+    abrirVendedor(r);
     setTimeout(()=>{
       const card=(vid!==undefined&&vid!==null)?document.getElementById('viaje-'+vid):null;
       if(!card){scrollSuave(0);return;}
@@ -765,7 +782,7 @@ function fabNuevoViaje(r){
   cerrarFab();
   if(modoLectura)return;
   if(!ruteros.includes(r))return;
-  if(selRutero!==r){selRutero=r;viajeAbierto=null;renderRuteros();}
+  abrirVendedor(r);
   nuevoViaje();
 }
 function fabNuevoVendedor(){
@@ -789,7 +806,7 @@ function fabCrearVendedor(){
   cerrarModalRecibe();
   ruterosBorrados=ruterosBorrados.filter(x=>x!==n);
   if(!ruteros.includes(n))ruteros.push(n);
-  selRutero=n;viajeAbierto=null;renderRuteros();
+  abrirVendedor(n);
   nuevoViaje();
 }
 // El botón se esconde mientras se arma una ruta (anotando pedidos o en el
@@ -797,8 +814,9 @@ function fabCrearVendedor(){
 // cuando se está viendo un día anterior.
 function actualizarFab(){
   const w=document.getElementById('fabWrap');if(!w)return;
-  const armando=viajes.some(v=>v&&v.rutero===selRutero&&!v.entradaLista&&!v.cerrado);
-  const tapado=modoLectura||armando||document.body.classList.contains('anotando');
+  // Dentro de un vendedor no se muestra: ahí está el + de su encabezado, y
+  // así nunca tapa "Dinero recibido".
+  const tapado=modoLectura||vistaDetalle||document.body.classList.contains('anotando');
   w.style.display=tapado?'none':'flex';
   if(tapado&&_fabAbierto)cerrarFab();
 }
@@ -1199,25 +1217,140 @@ function resumenRutero(r,vs){
   </div>`;
 }
 
+// ===== LISTA DE VENDEDORES (estilo chats) =====
+// Cada vendedor es una fila: su inicial en su color, el nombre y una línea con
+// lo básico. Los que tienen dinero en la calle van arriba. Al tocar uno se abre
+// su detalle; para volver: la flecha ‹ o deslizar a la derecha.
+const ICO_CAMION_S=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#e8902a" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#e8902a" stroke-width="2"/><circle cx="17" cy="17.5" r="1.8" stroke="#e8902a" stroke-width="2"/></svg>`;
+const ICO_CHECK2=`<svg width="17" height="14" viewBox="0 0 26 20" fill="none"><path d="M1.5 10.5l5 5L17 5" stroke="#2fae74" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 15.5L20 5" stroke="#2fae74" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+const ICO_LAPIZ=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L19 9l-4-4L4 16v4Z" stroke="#3a7bd5" stroke-width="2" stroke-linejoin="round"/></svg>`;
+const hCorta=iso=>iso?new Date(iso).toLocaleTimeString('es-GT',{hour:'numeric',minute:'2-digit'}):'';
+function estadoVendedor(r){
+  const vs=viajes.filter(v=>v&&v.rutero===r);
+  const enRuta=vs.filter(v=>v.entradaLista&&!v.cerrado);
+  const arm=vs.filter(v=>!v.entradaLista&&!v.cerrado);
+  const rec=vs.filter(v=>v.cerrado);
+  let ent=0;
+  rec.forEach(v=>(v.pedidos||[]).forEach(p=>{if(p.estado==='credito')ent+=p.total||0;else if(p.estado!=='cancelado')ent+=efectivoDe(p);}));
+  const t=x=>x?new Date(x).getTime():0;
+  const ult=vs.reduce((m,v)=>Math.max(m,t(v.horaRecibido),t(v.horaSalida)),0);
+  return {vs,enRuta,arm,rec,ent,ult};
+}
+function renderLista(){
+  if(!ruteros.length)return '<div class="empty">Tocá <b style="color:#e8902a">+</b> para agregar un vendedor y empezar.</div>';
+  const filas=ruteros.map(r=>{
+    const e=estadoVendedor(r), col=colorRutero(r), j=r.replace(/'/g,"\\'");
+    let sb,hr='',on=false,bd='',prio;
+    if(e.enRuta.length){
+      prio=0;on=true;
+      hr=hCorta(e.enRuta[e.enRuta.length-1].horaSalida);
+      const m=e.enRuta.reduce((s,v)=>s+efectivoViaje(v),0);
+      sb=`${ICO_CAMION_S}<b class="s-ruta">En ruta</b> · ${q(m)}`;
+      bd=`<span class="bd">${e.enRuta.length}</span>`;
+    }else if(e.arm.length){
+      prio=1;const n=e.arm.reduce((s,v)=>s+(v.pedidos||[]).length,0);
+      sb=`${ICO_LAPIZ}<b class="s-arm">Armando ruta</b>${n?' · '+n+' pedido'+(n===1?'':'s'):''}`;
+    }else if(e.rec.length){
+      prio=2;hr=hCorta(e.rec.map(v=>v.horaRecibido).filter(Boolean).sort().pop());
+      sb=`${ICO_CHECK2}${e.rec.length} viaje${e.rec.length===1?'':'s'} · ${q(e.ent)}`;
+    }else{prio=3;sb='<i>Sin viajes hoy</i>';}
+    return {prio,ult:e.ult,html:`<div class="vrow" onclick="if(!_lpFue)abrirVendedor('${j}')"
+      onpointerdown="lpInicio(event,'${j}')" onpointerup="lpFin()" onpointerleave="lpFin()"
+      onpointercancel="lpFin()" onpointermove="lpMueve(event)" oncontextmenu="return false">
+      <div class="av" style="background:${col}">${esc((r.trim()[0]||'?').toUpperCase())}</div>
+      <div class="mid"><div class="l1"><span class="nm">${esc(r)}</span><span class="hr${on?' on':''}">${hr}</span></div>
+        <div class="l2"><span class="sb">${sb}</span>${bd}</div></div></div>`};
+  }).sort((a,b)=>a.prio-b.prio||b.ult-a.ult);
+  return `<div class="vlista">${filas.map(f=>f.html).join('')}</div>`;
+}
+function chatHeader(r){
+  const e=estadoVendedor(r), col=colorRutero(r);
+  let sb='';
+  if(e.enRuta.length)sb=`<div class="sb on">${e.enRuta.length} ruta${e.enRuta.length===1?'':'s'} en curso</div>`;
+  else if(e.arm.length)sb=`<div class="sb arm">Armando ruta</div>`;
+  const mas=(!modoLectura&&!e.arm.length)?`<button class="cmas" onclick="nuevoViaje()" aria-label="Nuevo viaje"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg></button>`:'';
+  return `<div class="chathd"><button class="bk" onclick="volverLista()" aria-label="Volver"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="av" style="background:${col}">${esc((r.trim()[0]||'?').toUpperCase())}</div>
+    <div class="tx"><div class="nm">${esc(r)}</div>${sb}</div>${mas}</div>`;
+}
+// Abrir / volver. Se usa el historial del navegador para que el botón atrás
+// (PC, Android) y el gesto de Safari también vuelvan a la lista.
+function abrirVendedor(r){
+  if(!ruteros.includes(r))return;
+  const yaDentro=vistaDetalle;
+  selRutero=r;viajeAbierto=null;vistaDetalle=true;
+  try{if(yaDentro)history.replaceState({cc:'det'},'');else history.pushState({cc:'det'},'');}catch(e){}
+  renderZona();window.scrollTo(0,0);
+}
+function volverLista(){
+  if(!vistaDetalle)return;
+  try{if(history.state&&history.state.cc==='det'){history.back();return;}}catch(e){}
+  cerrarDetalle();
+}
+function cerrarDetalle(){
+  if(!vistaDetalle)return;
+  vistaDetalle=false;viajeAbierto=null;
+  try{cerrarSwipe();}catch(e){}
+  renderZona();window.scrollTo(0,0);
+}
+window.addEventListener('popstate',()=>{if(vistaDetalle)cerrarDetalle();});
+// Deslizar a la derecha para volver (como WhatsApp). No se activa sobre el
+// encabezado, ni al deslizar un cliente para borrarlo, ni mientras se anotan
+// pedidos, ni con un cuadro abierto.
+let _bk=null;
+document.addEventListener('touchstart',e=>{
+  _bk=null;
+  if(!vistaDetalle||e.touches.length!==1||document.body.classList.contains('anotando'))return;
+  if(e.target.closest('header,.ped[data-swipe],.anotabar,input,textarea,select,.modalR,#overlay,.fabwrap,.pbox'))return;
+  if(typeof _swAbierto!=='undefined'&&_swAbierto)return;
+  _bk={x:e.touches[0].clientX,y:e.touches[0].clientY,dx:0,on:false,muerto:false};
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(!_bk||_bk.muerto)return;
+  const dx=e.touches[0].clientX-_bk.x, dy=e.touches[0].clientY-_bk.y;
+  if(!_bk.on){
+    if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+    if(dx>0&&Math.abs(dx)>Math.abs(dy)*1.4)_bk.on=true;else{_bk.muerto=true;return;}
+  }
+  _bk.dx=Math.max(0,dx);
+  const z=document.getElementById('zona');
+  z.style.transition='none';z.style.transform='translateX('+_bk.dx+'px)';z.style.opacity=String(1-Math.min(.45,_bk.dx/700));
+},{passive:true});
+function _finBk(){
+  const b=_bk;_bk=null;if(!b||!b.on)return;
+  const z=document.getElementById('zona');
+  z.style.transition='transform .18s ease,opacity .18s ease';
+  if(b.dx>80){
+    z.style.transform='translateX(100%)';z.style.opacity='0';
+    setTimeout(()=>{z.style.transition='none';z.style.transform='';z.style.opacity='';volverLista();},170);
+  }else{z.style.transform='';z.style.opacity='';}
+}
+document.addEventListener('touchend',_finBk,{passive:true});
+document.addEventListener('touchcancel',_finBk,{passive:true});
+
 function renderZona(){
   recalc();renderRuteros();
   const cont=document.getElementById('zona');
-  if(!selRutero){cont.innerHTML='<div class="empty">Tocá <b style="color:#e8902a">+</b> para agregar un vendedor y empezar.</div>';actualizarFab();return;}
+  if(vistaDetalle&&(!selRutero||!ruteros.includes(selRutero)))vistaDetalle=false;
+  // LISTA de vendedores (estilo chats)
+  if(!vistaDetalle){
+    cont.innerHTML=renderLista();
+    document.body.classList.remove('anotando');
+    actualizarFab();return;
+  }
+  // DETALLE de un vendedor: encabezado tipo chat + resumen + viajes
   const vs=viajes.filter(v=>v.rutero===selRutero);
-  const totR=totalRutero(selRutero);
-  // Resumen del vendedor en vez de su nombre (ya está en el chip) y del botón
-  // "+ Nuevo viaje" (ahora se crea con el botón flotante).
-  let html=`<div class="panelR">${resumenRutero(selRutero,vs)}`;
-  if(vs.length===0){html+=`<div class="empty">Sin viajes todavía.<br><span style="font-size:13px">Tocá <b style="color:#e8902a">+</b> para empezar uno.</span></div>`;}
+  let html=`<div class="panelR">${chatHeader(selRutero)}${resumenRutero(selRutero,vs)}`;
+  if(vs.length===0){html+=`<div class="empty">Sin viajes todavía.<br><span style="font-size:13px">Tocá <b style="color:#e8902a">+</b> arriba para empezar uno.</span></div>`;}
 
   vs.forEach((v,i)=>{
     const efv=efectivoViaje(v);
     // CERRADO y no expandido -> tarjeta gris, una línea
     if(v.cerrado&&viajeAbierto!==v.id){
-      const horas=v.horaSalida?`<div class="vsub" style="margin-top:1px">Salió ${hhmm(v.horaSalida)} · recibido ${hhmm(v.horaRecibido)} · ${duracion(v.horaSalida,v.horaRecibido)}${v.recibidoPor?' · <b style="color:'+(v.recibidoPor==='Lesli'?'#3a7bd5':'#2fae74')+'">'+v.recibidoPor+'</b>':''}</div>`:'';
+      const horas=v.horaSalida?`<div class="vsub" style="margin-top:1px"><span class="nw">${hCorta(v.horaSalida)} → ${hCorta(v.horaRecibido)}</span> · <span class="nw">${duracion(v.horaSalida,v.horaRecibido)}</span>${v.recibidoPor?' · <b style="color:'+(v.recibidoPor==='Lesli'?'#3a7bd5':'#2fae74')+'">'+v.recibidoPor+'</b>':''}</div>`:'';
       const marca=v.modificado?'<span class="vstat" style="background:#fdeede;color:var(--bad);margin-right:6px">⚠ modificado</span>':'';
       html+=`<div class="vcard"><div class="vcol" onclick="verViaje(${v.id})">
-        <div class="vl">Viaje ${i+1} <span style="color:${colorRutero(v.rutero||selRutero)};font-weight:800">(${v.rutero||selRutero})</span><div class="vsub">${v.pedidos.length} pedidos${(v.envases||'').trim()?' · envase ✓':''}</div>${horas}</div>
+        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}${(v.envases||'').trim()?' · envase ✓':''}</div>${horas}</div>
         <div class="vr">${marca}<span class="vstat vs-done">Recibido</span><span class="vm">${q(efv)}</span><span class="chev">▸</span></div>
       </div></div>`;
       return;
@@ -1225,7 +1358,7 @@ function renderZona(){
     // CERRADO expandido -> detalle sólo lectura
     if(v.cerrado&&viajeAbierto===v.id){
       html+=`<div class="vcard"><div class="vcol" onclick="verViaje(${v.id})">
-        <div class="vl">Viaje ${i+1} <span style="color:${colorRutero(v.rutero||selRutero)};font-weight:800">(${v.rutero||selRutero})</span><div class="vsub">${v.pedidos.length} pedidos</div></div>
+        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}</div></div>
         <div class="vr"><span class="vstat vs-done">Recibido</span><span class="vm">${q(efv)}</span><span class="chev">▾</span></div></div>`;
       html+=renderPedidos(v,false);
       if(v.horaSalida)html+=`<div style="padding:11px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)">Salió ${hhmm(v.horaSalida)} · recibido ${hhmm(v.horaRecibido)} · duró ${duracion(v.horaSalida,v.horaRecibido)}</div>`;
@@ -1238,7 +1371,7 @@ function renderZona(){
     html+=`<div class="vcard abierta" id="viaje-${v.id}" style="border-color:${colorRutero(selRutero)}"><div class="vhead-open" style="background:${colorRutero(selRutero)}">
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/></svg></span>
-        <div><div class="t">Viaje ${i+1} <span style="opacity:.85">(${v.rutero||selRutero})</span></div><div class="s">${enRuta?'En ruta · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido(s) · cargando'}</div></div>
+        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div></div>
       </div>
       <span class="badge">${enRuta?'En ruta':'Preparando'}</span></div>`;
     html+=renderPedidos(v,true);
@@ -1698,6 +1831,7 @@ async function recargarSiHaceFalta(){
   }catch(e){console.log('auto-recarga err',e);}
   _cargando=false;
   selRutero=sel&&ruteros.includes(sel)?sel:(ruteros[0]||null);
+  if(vistaDetalle&&selRutero!==sel)vistaDetalle=false;
   viajeAbierto=va;
   renderRuteros();renderZona();
   _autoOcupado=false;
@@ -1721,6 +1855,7 @@ async function actualizarYa(){
   }catch(e){console.log('actualizar err',e);toast('⚠ Sin internet',true);}
   _cargando=false;
   selRutero=sel&&ruteros.includes(sel)?sel:(ruteros[0]||null);
+  if(vistaDetalle&&selRutero!==sel)vistaDetalle=false;
   viajeAbierto=va;
   renderRuteros();renderZona();
   if(b)setTimeout(()=>b.classList.remove('girando'),500);
@@ -1739,7 +1874,7 @@ async function verDia(fecha){
     _cargando=true;
     ruteros=e.ruteros||[];viajes=e.viajes||[];auditoria=e.auditoria||[];idv=e.idv||1;idp=e.idp||1;
     viajes.forEach(v=>{if(v&&!v.uid)v.uid=uid();});
-    selRutero=ruteros[0]||null;viajeAbierto=null;
+    selRutero=ruteros[0]||null;viajeAbierto=null;vistaDetalle=false;
     _cargando=false;
     renderRuteros();renderZona();
     mostrarBannerHistorial(fecha);
@@ -1751,7 +1886,7 @@ async function volverHoy(){
   document.getElementById('bannerHist').style.display='none';
   _cargando=true;
   await cargarNube();
-  selRutero=ruteros[0]||null;viajeAbierto=null;
+  selRutero=ruteros[0]||null;viajeAbierto=null;vistaDetalle=false;
   _cargando=false;
   renderRuteros();renderZona();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1768,7 +1903,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-01.4';
+const VERSION='2026-10-02.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -34,7 +34,7 @@ const RELOJ=ms=>`(()=>{const D=Date,off=${ms};function F(...a){return a.length?n
  const sync=async p=>{await p.evaluate(async()=>{await actualizarYa();});await p.waitForTimeout(300);};
  // ---- crear y enviar una ruta desde un aparato ----
  const enviar=async(p,vend,cli,monto)=>{
-   await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;viajeAbierto=null;renderRuteros();renderZona();},vend);
+   await p.evaluate(n=>{if(!ruteros.includes(n))ruteros.push(n);selRutero=n;vistaDetalle=true;viajeAbierto=null;renderRuteros();renderZona();},vend);
    await p.evaluate(()=>nuevoViaje());await p.waitForTimeout(250);
    const vid=await p.evaluate(()=>viajes[viajes.length-1].id);
    await p.fill('#in-nom-'+vid,cli);await p.fill('#in-mon-'+vid,String(monto));await p.tap('.anotaadd');await p.waitForTimeout(150);
@@ -45,7 +45,7 @@ const RELOJ=ms=>`(()=>{const D=Date,off=${ms};function F(...a){return a.length?n
  // ---- recibir el dinero de una ruta (por uid) en un aparato ----
  const recibir=async(p,u,quien)=>{
    await sync(p);
-   const vid=await p.evaluate(u=>{const v=viajes.find(x=>x.uid===u);selRutero=v.rutero;viajeAbierto=null;renderRuteros();renderZona();return v.id;},u);
+   const vid=await p.evaluate(u=>{const v=viajes.find(x=>x.uid===u);selRutero=v.rutero;vistaDetalle=true;viajeAbierto=null;renderRuteros();renderZona();return v.id;},u);
    await p.waitForTimeout(250);
    await p.tap('#rec-'+vid);await p.waitForTimeout(400);
    if(await p.isVisible('#modalRecibeBody button:has-text("'+quien+'")'))await p.tap('#modalRecibeBody button:has-text("'+quien+'")');

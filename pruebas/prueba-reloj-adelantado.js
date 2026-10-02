@@ -35,7 +35,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
    await fetch('/__nube',{method:'POST',body:JSON.stringify(n)});
  },ADEL);
  // El celular sincroniza y ve la ruta
- await p.evaluate(async()=>{await actualizarYa();selRutero='gerson';renderRuteros();renderZona();});await p.waitForTimeout(500);
+ await p.evaluate(async()=>{await actualizarYa();selRutero='gerson';vistaDetalle=true;renderRuteros();renderZona();});await p.waitForTimeout(500);
  const vid=await p.evaluate(()=>viajes.find(v=>v.uid==='PC1').id);
  // Recibir el dinero en el celular
  await p.tap('#rec-'+vid);await p.waitForTimeout(400);

@@ -30,7 +30,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
    const V={id:nuevoId(),uid:'V8',rutero:'gerson',entradaLista:true,pedidosListos:true,cerrado:false,
      horaSalida:new Date(Date.now()-60000).toISOString(),envases:'2 cajas',envOk:false,mod:Date.now()-60000,
      pedidos:[{id:nuevoId(),nombre:'Marta mox',total:170.75,estado:'pagado',devolucion:0,descuento:0,vuelto:0}]};
-   viajes=[V];selRutero='gerson';await guardarAhora('inicio');renderZona();return V.id;});
+   viajes=[V];selRutero='gerson';vistaDetalle=true;await guardarAhora('inicio');renderZona();return V.id;});
  await p.waitForTimeout(300);
  // marcar el check de envases
  await p.tap(`#viaje-${vid} div[onclick^="toggleEnvOk"]`);await p.waitForTimeout(300);

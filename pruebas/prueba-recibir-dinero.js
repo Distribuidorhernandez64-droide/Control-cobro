@@ -32,7 +32,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
    const R={id:nuevoId(),uid:'R',rutero:'gerson',entradaLista:true,pedidosListos:true,cerrado:false,horaSalida:t,envases:'',envOk:false,mod:Date.now(),
      pedidos:[{id:nuevoId(),nombre:'Silvia hernandez',total:110,estado:'credito',devolucion:0,descuento:0,vuelto:0}]};
    const X={id:nuevoId(),uid:'X',rutero:'gerson',entradaLista:false,pedidosListos:true,cerrado:false,envases:'',mod:1,pedidos:[]};
-   viajes=[R,X];selRutero='gerson';
+   viajes=[R,X];selRutero='gerson';vistaDetalle=true;
    await guardarAhora('inicio');
    return {R:R.id,X:X.id};
  });

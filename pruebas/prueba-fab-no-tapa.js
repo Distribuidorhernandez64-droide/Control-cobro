@@ -36,7 +36,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
    const R={id:nuevoId(),uid:'R',rutero:'gerson',entradaLista:true,pedidosListos:true,cerrado:false,
      horaSalida:new Date(Date.now()-60000).toISOString(),envases:'',envOk:false,mod:Date.now(),
      pedidos:[{id:nuevoId(),nombre:'Dorcas',total:186.25,estado:'pagado',devolucion:0,descuento:0,vuelto:0}]};
-   viajes=[...muchos,R];selRutero='gerson';await guardarAhora('inicio');renderRuteros();renderZona();return R.id;});
+   viajes=[...muchos,R];selRutero='gerson';vistaDetalle=false;await guardarAhora('inicio');renderRuteros();renderZona();return R.id;});
  await p.waitForTimeout(300);
  // Usar el (+) y cerrarlo, como cuando se crea un viaje
  await p.tap('#fab');await p.waitForTimeout(400);
@@ -53,6 +53,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  if(await p.isVisible('#modalRecibe.open')){await p.tap('#modalRecibeBody button:has-text("César")');await p.waitForTimeout(1200);}
  ok('Y queda recibido',await p.evaluate(id=>viajes.find(x=>x.id===id).cerrado===true,id));
  // El (+) sigue funcionando y su menú se puede usar
+ await p.evaluate(()=>cerrarDetalle());await p.waitForTimeout(300);   // de vuelta en la lista, donde vive el (+)
  await p.tap('#fab');await p.waitForTimeout(400);
  ok('El (+) sigue abriendo su menú',await p.evaluate(()=>_fabAbierto===true));
  ok('Y los vendedores del menú se pueden tocar',await p.evaluate(()=>{const e=document.querySelector('.fabit');if(!e)return false;const r=e.getBoundingClientRect();const h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!(h&&e.contains(h));}));

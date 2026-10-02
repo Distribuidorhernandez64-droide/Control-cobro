@@ -22,10 +22,10 @@ insert(o){const c=_cp(o);c.id=window.__DB.seq++;window.__DB.respaldos.push(c);re
    ruteros=['Keny','Gerson','Antonio chip'];
    viajes=[{id:nuevoId(),uid:uid(),rutero:'Keny',pedidos:[{id:nuevoId(),nombre:'Ana',total:654,estado:'pagado'}],
      cerrado:true,entradaLista:true,pedidosListos:true,horaSalida:new Date().toISOString(),horaRecibido:new Date().toISOString(),recibidoPor:'César'}];
-   selRutero='Keny';renderRuteros();renderZona();
+   selRutero='Keny';vistaDetalle=false;renderRuteros();renderZona();
  });
  // mantener presionado sobre un vendedor SIN rutas
- const chip=n=>p.locator('.rchip',{hasText:n}).first();
+ const chip=n=>p.locator('.vrow',{hasText:n}).first();
  const press=async n=>{const bx=await chip(n).boundingBox();
    await p.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await p.mouse.down();
    await p.waitForTimeout(800);await p.mouse.up();await p.waitForTimeout(250);};
@@ -46,7 +46,7 @@ insert(o){const c=_cp(o);c.id=window.__DB.seq++;window.__DB.respaldos.push(c);re
  await press('Antonio chip');
  await p.click('#modalRecibeBody button:has-text("Eliminar")');await p.waitForTimeout(900);
  ok('Elimina al vendedor sin rutas', !(await p.evaluate(()=>ruteros.includes('Antonio chip'))));
- ok('Desaparece de la pantalla', !(await p.textContent('#ruteros')).includes('Antonio chip'));
+ ok('Desaparece de la lista', !(await p.textContent('#zona')).includes('Antonio chip'));
  ok('Se guardo en la nube sin el', !(await p.evaluate(()=>window.__DB.dias[HOY].estado.ruteros.includes('Antonio chip'))));
 
  // que NO reviva al sincronizar desde otro aparato
@@ -65,15 +65,16 @@ insert(o){const c=_cp(o);c.id=window.__DB.seq++;window.__DB.respaldos.push(c);re
  ok('Vuelve si otro aparato le anoto una ruta', (await p.evaluate(()=>ruteros.includes('Antonio chip'))));
 
  // un toque normal solo selecciona, no borra
- await p.click('.rchip:has-text("Gerson")');await p.waitForTimeout(300);
- ok('Toque normal solo selecciona', (await p.evaluate(()=>selRutero))==='Gerson'
+ await p.evaluate(()=>{vistaDetalle=false;renderZona();});await p.waitForTimeout(200);
+ await p.click('.vrow:has-text("Gerson")');await p.waitForTimeout(300);
+ ok('Toque normal abre al vendedor (no borra)', (await p.evaluate(()=>selRutero))==='Gerson' && (await p.evaluate(()=>vistaDetalle))===true
     && !(await p.isVisible('#modalRecibe.open')));
 
  // el anotador no puede
  await p.evaluate(()=>{cerrarSesion&&0;});
  await p.click('text=salir');await p.waitForTimeout(600);
  await login('tienda','123');
- await p.evaluate(()=>{ruteros=['Keny','Gerson','Nuevo'];selRutero='Keny';renderRuteros();renderZona();});
+ await p.evaluate(()=>{ruteros=['Keny','Gerson','Nuevo'];selRutero='Keny';vistaDetalle=false;renderRuteros();renderZona();});
  await press('Nuevo');
  ok('El anotador no puede eliminar', (await p.textContent('#modalRecibeBody')).includes('Sólo el maestro'));
 

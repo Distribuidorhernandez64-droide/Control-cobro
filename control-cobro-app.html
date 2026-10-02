@@ -192,11 +192,15 @@
   .nw{white-space:nowrap}
   .vrow .bd{min-width:22px;height:22px;border-radius:11px;background:#e8902a;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;margin-top:3px}
   /* Encabezado del vendedor (como el de una conversación) */
-  .chathd{display:flex;align-items:center;gap:11px;margin:0 0 12px}
-  .chathd .bk{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
-  .chathd .av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:19px;flex-shrink:0}
+  .chathd{display:flex;align-items:center;gap:10px;margin:0 -16px 10px;padding:8px 16px;
+    position:sticky;top:var(--hdrH,0px);z-index:40;background:var(--bg)}
+  .anotabar .anotacont{display:flex;align-items:center;justify-content:center;gap:7px}
+  .anav{display:inline-flex;width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;font-weight:900;align-items:center;justify-content:center;flex-shrink:0}
+  .anotacont b{color:var(--ink)}
+  .chathd .bk{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+  .chathd .av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0}
   .chathd .tx{flex:1;min-width:0}
-  .chathd .nm{font-size:19px;font-weight:900;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chathd .nm{font-size:17px;font-weight:900;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chathd .sb{font-size:12.5px;font-weight:800;color:var(--mut)}
   .chathd .sb.on{color:#e8902a}.chathd .sb.arm{color:#3a7bd5}
   .chathd .cmas{width:42px;height:42px;border-radius:50%;border:none;background:#e8902a;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 4px 12px rgba(232,144,42,.35);padding:0}
@@ -736,8 +740,8 @@ function bajarAlViaje(vid){
   setTimeout(()=>{
     const card=(vid!==undefined&&vid!==null)?document.getElementById('viaje-'+vid):null;
     if(!card){scrollSuave(0);return;}
-    const hd=document.querySelector('header');
-    const off=(hd?hd.getBoundingClientRect().height:0)+12;
+    const hd=document.querySelector('header'), ch=document.querySelector('.chathd');
+    const off=(hd?hd.getBoundingClientRect().height:0)+(ch?ch.getBoundingClientRect().height:0)+10;
     let y=card.getBoundingClientRect().top+window.pageYOffset-off;
     // Si con ese desplazamiento "Dinero recibido" quedaría detrás del botón +,
     // bajar un poco más para dejarlo por encima.
@@ -1202,8 +1206,13 @@ function ajustarBarraTeclado(){
     const vv=window.visualViewport;
     tapado=Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
   }
-  bars.forEach(b=>{b.style.transform= tapado>0 ? 'translateY(-'+(tapado+6)+'px)' : 'translateY(0)';});
+  // En iPhone, Safari pone sobre el teclado una barrita flotante (^ ˅ ✓ y
+  // "Autorrellenar") que no descuenta del espacio visible: tapaba el campo
+  // donde se escribe. Se sube la barra lo que mide esa barrita.
+  const extra=(tapado>0&&ES_IPHONE)?50:6;
+  bars.forEach(b=>{b.style.transform= tapado>0 ? 'translateY(-'+(tapado+extra)+'px)' : 'translateY(0)';});
 }
+const ES_IPHONE=/iPhone|iPod/.test(navigator.userAgent);
 // Reaplica el ajuste varias veces mientras el teclado se abre (la animación tarda)
 function reajustarVarias(){
   [0,80,180,320,500].forEach(ms=>setTimeout(ajustarBarraTeclado,ms));
@@ -1346,10 +1355,16 @@ function _finBk(){
 document.addEventListener('touchend',_finBk,{passive:true});
 document.addEventListener('touchcancel',_finBk,{passive:true});
 
+function medirEncabezado(){
+  const hd=document.querySelector('header');
+  if(hd)document.documentElement.style.setProperty('--hdrH',hd.offsetHeight+'px');
+}
+window.addEventListener('resize',()=>{try{medirEncabezado();}catch(e){}});
 function renderZona(){
   recalc();renderRuteros();
   const cont=document.getElementById('zona');
   if(vistaDetalle&&(!selRutero||!ruteros.includes(selRutero)))vistaDetalle=false;
+  medirEncabezado();
   // LISTA de vendedores (estilo chats)
   if(!vistaDetalle){
     cont.innerHTML=renderLista();
@@ -1399,9 +1414,9 @@ function renderZona(){
         const totAnot=v.pedidos.reduce((s,p)=>s+(p.total||0),0);
         html+=`<div style="height:10px"></div>`;
         html+=`<div class="anotabar" id="anotabar-${v.id}">
-          <div class="anotacont">${v.pedidos.length} cliente(s) · ${q(totAnot)}</div>
+          <div class="anotacont"><span class="anav" style="background:${colorRutero(selRutero)}">${esc((selRutero.trim()[0]||'?').toUpperCase())}</span><span><b>${esc(selRutero)}</b> · ${v.pedidos.length} cliente${v.pedidos.length===1?'':'s'} · ${q(totAnot)}</span></div>
           <div class="anotafila">
-            <input id="in-nom-${v.id}" placeholder="Cliente" autocomplete="off" onfocus="reajustarVarias()" onkeydown="keyNom(event,${v.id})">
+            <input id="in-nom-${v.id}" name="cli-${v.id}" placeholder="Cliente" autocomplete="off" autocorrect="off" spellcheck="false" onfocus="reajustarVarias()" onkeydown="keyNom(event,${v.id})">
             <input id="in-mon-${v.id}" inputmode="decimal" placeholder="Q" onfocus="reajustarVarias()" onkeydown="keyMon(event,${v.id})">
             <button class="anotaadd" onclick="addPedido(${v.id})">+</button>
           </div>
@@ -1921,7 +1936,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-02.3';
+const VERSION='2026-10-02.4';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

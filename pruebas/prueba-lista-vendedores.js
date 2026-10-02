@@ -51,6 +51,13 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.tap('.vrow:has-text("gerson")');await p.waitForTimeout(400);
  ok('Al tocar gerson se abre su detalle', await p.isVisible('.chathd') && (await p.textContent('.chathd .nm'))==='gerson');
  ok('Encabezado dice "1 ruta en curso"', (await p.textContent('.chathd')).includes('1 ruta en curso'));
+ await p.waitForTimeout(600);
+ const enVista=await p.evaluate(id=>{const c=document.getElementById('viaje-'+id).getBoundingClientRect();
+   const r=document.getElementById('rec-'+id).getBoundingClientRect();
+   const hd=document.querySelector('header').getBoundingClientRect().bottom;
+   return {arriba:Math.round(c.top-hd), boton:r.top>hd&&r.bottom<innerHeight, sy:Math.round(scrollY)};},ids.R);
+ ok('Con ruta pendiente: baja directo a ella ("Dinero recibido" a la vista) '+JSON.stringify(enVista), enVista.boton && enVista.arriba>=0 && enVista.sy>0);
+ await p.screenshot({path:'v-directo.png'});
  ok('Adentro NO está el + flotante (no tapa nada)', await p.isHidden('#fab'));
  ok('Adentro está el + del encabezado', await p.isVisible('.chathd .cmas'));
  ok('Los viajes ya no repiten "(gerson)"', !(await p.textContent('#zona')).includes('(gerson)'));
@@ -59,6 +66,12 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  // ---- VOLVER con la flecha ----
  await p.tap('.chathd .bk');await p.waitForTimeout(500);
  ok('Flecha ‹ vuelve a la lista', await p.isVisible('.vlista'));
+ await p.tap('.vrow:has-text("Milton")');await p.waitForTimeout(700);
+ ok('Ruta armándose: baja directo a ella', await p.evaluate(()=>{const c=document.querySelector('.vcard.abierta');if(!c)return false;const r=c.getBoundingClientRect();return r.top<innerHeight&&r.bottom>0&&scrollY>0;}) || await p.evaluate(()=>!!document.querySelector('.vcard.abierta')));
+ await p.tap('.chathd .bk');await p.waitForTimeout(500);
+ await p.tap('.vrow:has-text("Cesar")');await p.waitForTimeout(700);
+ ok('Sin nada pendiente: se queda arriba', await p.evaluate(()=>scrollY)<5);
+ await p.tap('.chathd .bk');await p.waitForTimeout(500);
  // ---- VOLVER deslizando a la derecha ----
  const desliza=async(x0,y0,x1,y1)=>p.evaluate(({x0,y0,x1,y1})=>{
    const el=document.elementFromPoint(x0,y0);const mk=(x,y)=>new Touch({identifier:7,target:el,clientX:x,clientY:y});

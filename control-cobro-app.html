@@ -729,17 +729,27 @@ function scrollSuave(y,ms){
 // Ir a la ruta de un vendedor (caritas de "Rutas en curso" y aviso de pendientes).
 // Se hace DESPUÉS de que termine el toque, para no redibujar debajo del dedo.
 function irA(r,vid){
+  setTimeout(()=>{abrirVendedor(r);bajarAlViaje(vid);},0);
+}
+// Baja hasta la tarjeta de un viaje, dejándola justo debajo del encabezado.
+function bajarAlViaje(vid){
   setTimeout(()=>{
-    abrirVendedor(r);
-    setTimeout(()=>{
-      const card=(vid!==undefined&&vid!==null)?document.getElementById('viaje-'+vid):null;
-      if(!card){scrollSuave(0);return;}
-      const hd=document.querySelector('header');
-      const off=(hd?hd.getBoundingClientRect().height:0)+12;
-      const y=card.getBoundingClientRect().top+window.pageYOffset-off;
-      scrollSuave(Math.max(0,y));
-    },70);
-  },0);
+    const card=(vid!==undefined&&vid!==null)?document.getElementById('viaje-'+vid):null;
+    if(!card){scrollSuave(0);return;}
+    const hd=document.querySelector('header');
+    const off=(hd?hd.getBoundingClientRect().height:0)+12;
+    const y=card.getBoundingClientRect().top+window.pageYOffset-off;
+    scrollSuave(Math.max(0,y));
+  },70);
+}
+// Al entrar desde la lista: si hay una ruta pendiente (en la calle o
+// armándose), llevar directo a ella. Si hay varias en la calle, a la que salió
+// primero, que es la que más urge.
+function entrarVendedor(r){
+  abrirVendedor(r);
+  const e=estadoVendedor(r);
+  const v=e.enRuta.length?e.enRuta.slice().sort((a,b)=>new Date(a.horaSalida)-new Date(b.horaSalida))[0]:e.arm[0];
+  if(v)bajarAlViaje(v.id);
 }
 
 // ===== BOTÓN FLOTANTE (+): nuevo viaje eligiendo vendedor =====
@@ -1254,7 +1264,7 @@ function renderLista(){
       prio=2;hr=hCorta(e.rec.map(v=>v.horaRecibido).filter(Boolean).sort().pop());
       sb=`${ICO_CHECK2}${e.rec.length} viaje${e.rec.length===1?'':'s'} · ${q(e.ent)}`;
     }else{prio=3;sb='<i>Sin viajes hoy</i>';}
-    return {prio,ult:e.ult,html:`<div class="vrow" onclick="if(!_lpFue)abrirVendedor('${j}')"
+    return {prio,ult:e.ult,html:`<div class="vrow" onclick="if(!_lpFue)entrarVendedor('${j}')"
       onpointerdown="lpInicio(event,'${j}')" onpointerup="lpFin()" onpointerleave="lpFin()"
       onpointercancel="lpFin()" onpointermove="lpMueve(event)" oncontextmenu="return false">
       <div class="av" style="background:${col}">${esc((r.trim()[0]||'?').toUpperCase())}</div>
@@ -1903,7 +1913,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-02.1';
+const VERSION='2026-10-02.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

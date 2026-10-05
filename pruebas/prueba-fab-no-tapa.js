@@ -43,7 +43,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.tap('#fab');await p.waitForTimeout(400);
  // Ir a la ruta tocando la carita de gerson y bajar al final
  await p.evaluate(id=>irA('gerson',id),id);await p.waitForTimeout(900);
- await p.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));await p.waitForTimeout(400);
+ // La ruta en curso queda arriba (más recientes primero); se revisa donde la deja irA
  const bb=await p.locator('#rec-'+id).boundingBox();
  const quien=await p.evaluate(([x,y])=>{const e=document.elementFromPoint(x,y);return e?(e.id||e.className||e.tagName):'nada';},[bb.x+bb.width/2,bb.y+bb.height/2]);
  console.log('   en el centro del botón está:',quien);

@@ -26,7 +26,7 @@ const UA_IPHONE='Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWeb
  await p.tap('.vrow:has-text("Cesar")');await p.waitForTimeout(900);
  const r=await p.evaluate(()=>{const hd=document.querySelector('header').getBoundingClientRect(),ch=document.querySelector('.chathd').getBoundingClientRect();
    return {scroll:Math.round(scrollY),hdBottom:Math.round(hd.bottom),chTop:Math.round(ch.top),chBottom:Math.round(ch.bottom)};});
- ok('Desplazado hacia abajo, el círculo y el nombre siguen fijos bajo el encabezado '+JSON.stringify(r), r.scroll>200 && Math.abs(r.chTop-r.hdBottom)<=2);
+ ok('Desplazado hacia abajo, el círculo y el nombre siguen fijos bajo el encabezado '+JSON.stringify(r), r.scroll>100 && Math.abs(r.chTop-r.hdBottom)<=2);
  const card=await p.evaluate(()=>{const c=document.querySelector('.vcard.abierta').getBoundingClientRect(),ch=document.querySelector('.chathd').getBoundingClientRect();return {cardTop:Math.round(c.top),chBottom:Math.round(ch.bottom)};});
  ok('La ruta pendiente no queda escondida detrás del nombre fijo '+JSON.stringify(card), card.cardTop>=card.chBottom);
  await p.screenshot({path:'fijo-1.png'});

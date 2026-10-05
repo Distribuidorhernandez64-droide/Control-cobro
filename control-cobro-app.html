@@ -1376,7 +1376,8 @@ function renderZona(){
   let html=`<div class="panelR">${chatHeader(selRutero)}${resumenRutero(selRutero,vs)}`;
   if(vs.length===0){html+=`<div class="empty">Sin viajes todavía.<br><span style="font-size:13px">Tocá <b style="color:#e8902a">+</b> arriba para empezar uno.</span></div>`;}
 
-  vs.forEach((v,i)=>{
+  // Más recientes arriba; el número de viaje sigue siendo el del orden del día
+  vs.map((v,i)=>[v,i]).reverse().forEach(([v,i])=>{
     const efv=efectivoViaje(v);
     // CERRADO y no expandido -> tarjeta gris, una línea
     if(v.cerrado&&viajeAbierto!==v.id){
@@ -1404,7 +1405,7 @@ function renderZona(){
     html+=`<div class="vcard abierta" id="viaje-${v.id}" style="border-color:${colorRutero(selRutero)}"><div class="vhead-open" style="background:${colorRutero(selRutero)}">
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/></svg></span>
-        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div></div>
+        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div></div>
       </div>
       <span class="badge">${enRuta?'En ruta':'Preparando'}</span></div>`;
     html+=renderPedidos(v,true);
@@ -1936,7 +1937,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-02.4';
+const VERSION='2026-10-05.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -80,6 +80,7 @@
   .ped{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:13px 16px;border-top:1px solid var(--line);cursor:pointer}
   .ped:first-of-type{border-top:none}
   .ped .pn{font-weight:700}
+  .ped .edt{text-decoration:underline dotted #c4c9d1;text-underline-offset:4px;cursor:pointer}
   .ped .pm{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;white-space:nowrap}
   .ped .sub{font-size:11.5px;color:var(--mut);margin-top:1px}
   .ped.prob{background:var(--yellow2)}
@@ -579,9 +580,12 @@ let _toastT=null;
 const toast=(m,e)=>{const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' err':'');clearTimeout(_toastT);_toastT=setTimeout(()=>t.className='toast',e?3800:1600);};
 
 function efectivoDe(p){
-  if(p.estado==='cancelado'||p.estado==='credito')return 0;
+  if(p.estado==='cancelado')return 0;
+  // Crédito con abono: lo que dio en efectivo cuenta como efectivo; el resto queda a crédito
+  if(p.estado==='credito')return Math.min(p.abono||0,p.total||0);
   return Math.max(0,(p.total||0)-(p.devolucion||0)-(p.descuento||0)+(p.vuelto||0));
 }
+function creditoDe(p){return p.estado==='credito'?Math.max(0,(p.total||0)-(p.abono||0)):0;}
 function ajusteDe(p){return (p.devolucion||0)+(p.descuento||0)+(p.vuelto||0);}
 function efectivoViaje(v){let s=0;v.pedidos.forEach(p=>s+=efectivoDe(p));return s;}
 function totalRutero(r){let s=0;viajes.filter(v=>v.rutero===r&&v.cerrado).forEach(v=>s+=efectivoViaje(v));return s;}
@@ -595,7 +599,7 @@ function recalc(){
       return; // NO suma al efectivo hasta recibir
     }
     v.pedidos.forEach(p=>{
-      if(p.estado==='credito'){cred+=p.total||0;return;}
+      if(p.estado==='credito'){cred+=creditoDe(p);efv+=efectivoDe(p);return;}
       if(p.estado==='cancelado')return;
       efv+=efectivoDe(p);diff+=ajusteDe(p);
     });
@@ -606,7 +610,7 @@ function recalc(){
   if(diff>0)sub.push(`Ajustes <i>${q(diff)}</i>`);
   // Nombres de quienes quedaron a crédito (a la mano)
   const credNombres=[];
-  viajes.forEach(v=>{if(v.cerrado)v.pedidos.forEach(p=>{if(p.estado==='credito')credNombres.push(p.nombre+' ('+v.rutero+') '+q(p.total));});});
+  viajes.forEach(v=>{if(v.cerrado)v.pedidos.forEach(p=>{if(p.estado==='credito'&&creditoDe(p)>0)credNombres.push(p.nombre+' ('+v.rutero+') '+q(creditoDe(p)));});});
   let subHtml=sub.join(' · ');
   if(credNombres.length)subHtml+=`<div style="font-size:11.5px;font-weight:600;margin-top:3px;opacity:.85;line-height:1.4">📋 ${credNombres.join(' · ')}</div>`;
   document.getElementById('daySub').innerHTML=subHtml;
@@ -876,7 +880,12 @@ async function terminarPedidos(vid){if(modoLectura)return;const v=viajes.find(x=
   }
   if(v.pedidos.length===0){toast('Agregá al menos un pedido',true);_enviando=false;return;}
   const elE=document.getElementById('env-'+vid);if(elE)v.envases=elE.value;
-  v.entradaLista=true;v.horaSalida=new Date().toISOString();tocar(v);
+  // Si la ruta ya había salido hace más de 5 minutos y se volvió a enviar tras
+  // una corrección, el rutero ya iba en camino: se respeta su hora de salida.
+  // Antes de 5 minutos todavía no se había ido: la salida arranca de nuevo.
+  const yaSalio=v.horaSalida&&(Date.now()-new Date(v.horaSalida).getTime())>5*60000;
+  if(!yaSalio)v.horaSalida=new Date().toISOString();
+  v.entradaLista=true;tocar(v);
   renderZona();
   const ok=await guardarAhora('ruta enviada');
   toast(ok?'Ruta enviada y guardada ✓':'⚠ No se pudo guardar. Revisá internet',!ok);
@@ -1037,6 +1046,7 @@ async function confirmarRecibido(vid,quien){
   if(!v0){cerrarModalRecibe();toast('No encontré esa ruta. Tocá 🔄 y probá de nuevo',true);return;}
   const u=v0.uid;               // tras sincronizar el objeto puede cambiar: se sigue por uid
   const hora=new Date().toISOString();
+  const hrAntes=v0.horaRecibido||null; // si se reabrió, se conserva su hora de regreso
   const marcar=v=>{
     (v.pedidos||[]).forEach(p=>{if(p.snapEf===undefined)p.snapEf=efectivoDe(p);});
     v.cerrado=true;v.horaRecibido=v.horaRecibido||hora;v.recibidoPor=quien;tocar(v);
@@ -1052,7 +1062,7 @@ async function confirmarRecibido(vid,quien){
   let v=viajes.find(x=>x.uid===u);
   if(ok && v && !v.cerrado){marcar(v);ok=await guardarAhora(motivo);v=viajes.find(x=>x.uid===u);}
   if(ok && v && v.cerrado){toast('Recibido por '+quien+' y guardado ✓');return;}
-  if(v){v.cerrado=false;v.horaRecibido=null;v.recibidoPor=null;}
+  if(v){v.cerrado=false;v.horaRecibido=hrAntes;v.recibidoPor=null;}
   renderZona();
   toast('⚠ NO se guardó ('+(_errGuardar||'no quedó recibido')+'). Volvé a tocar Recibido',true);
 }
@@ -1121,26 +1131,77 @@ document.addEventListener('touchend',function(e){
     else{ el.style.transform='translateX(0)'; if(_swAbierto===el)_swAbierto=null; }
   }catch(err){}
 },{passive:true});
+// ===== CORREGIR NOMBRE O MONTO =====
+// Tocar el nombre o el monto de un cliente (mientras la ruta se arma o se
+// corrige) abre un cuadro para cambiarlo. El medio de la fila sigue siendo
+// para crédito / no entregó / ajustes.
+function editarPed(vid,pid,campo){
+  if(modoLectura||!esMaestro())return;
+  const v=viajes.find(x=>x.id===vid);if(!v||v.cerrado||v.entradaLista)return;
+  const p=v.pedidos.find(x=>x.id===pid);if(!p)return;
+  const esNom=campo==='nombre';
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="font-size:17px;font-weight:900;margin-bottom:4px">${esNom?'Cambiar nombre':'Cambiar monto'}</div>
+    <div style="font-size:13px;color:var(--mut);margin-bottom:12px">${esNom?'Antes: '+esc(p.nombre):esc(p.nombre)+' · antes '+q(p.total)}</div>
+    <input id="edPed" ${esNom?'autocomplete="off"':'inputmode="decimal"'} enterkeyhint="done"
+      value="${esNom?esc(p.nombre):(p.total||'')}" onkeydown="if(event.key==='Enter'){event.preventDefault();guardarEdPed(${vid},${pid},'${campo}');}">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+      <button class="btn ok" style="padding:15px;font-size:15px" onclick="guardarEdPed(${vid},${pid},'${campo}')">Guardar</button>
+      <button class="btn sec" style="padding:12px" onclick="cerrarModalRecibe()">Cancelar</button>
+    </div>`;
+  document.getElementById('modalRecibe').classList.add('open');
+  // Enfocar dentro del mismo toque para que el iPhone abra el teclado
+  const el=document.getElementById('edPed');
+  if(el){el.focus();try{el.setSelectionRange(0,el.value.length);}catch(e){}}
+}
+function guardarEdPed(vid,pid,campo){
+  const v=viajes.find(x=>x.id===vid);const p=v&&v.pedidos.find(x=>x.id===pid);
+  const el=document.getElementById('edPed');if(!p||!el){cerrarModalRecibe();return;}
+  let antes,ahora;
+  if(campo==='nombre'){
+    const n=(el.value||'').trim();if(!n){el.focus();toast('Escribí el nombre',true);return;}
+    antes=p.nombre;ahora=n;if(antes===ahora){cerrarModalRecibe();return;}
+    p.nombre=n;
+  }else{
+    const m=parseFloat(String(el.value).replace(',','.'));
+    if(isNaN(m)||m<0){el.focus();toast('Escribí un monto válido',true);return;}
+    antes=q(p.total);ahora=q(m);if((p.total||0)===m){cerrarModalRecibe();return;}
+    p.total=m;
+    if((p.abono||0)>m)p.abono=m;
+    if(p.snapEf!==undefined&&Math.abs(p.snapEf-efectivoDe(p))>0.001){p.snapEf=efectivoDe(p);v.modificado=true;}
+  }
+  // Si la ruta ya había salido, queda constancia de la corrección
+  if(v.horaSalida)logAudit(campo==='nombre'?'CAMBIÓ NOMBRE':'CAMBIÓ MONTO',`${campo==='nombre'?antes+' → '+ahora:p.nombre+': '+antes+' → '+ahora} (${v.rutero})`);
+  tocar(v);
+  cerrarModalRecibe();
+  if(document.activeElement)document.activeElement.blur();
+  const sy=window.scrollY;renderZona();window.scrollTo(0,sy);
+  if(v.pedidosListos||v.horaSalida)guardarAhora('corrigió un pedido');
+  toast('Corregido ✓');
+}
 function verViaje(vid){viajeAbierto=viajeAbierto===vid?null:vid;renderZona();}
 
 function abrirPed(vid,pid){if(!esMaestro())return;const el=document.getElementById('pb-'+vid+'-'+pid);
   document.querySelectorAll('.pbox').forEach(b=>{if(b!==el)b.classList.remove('open');});el.classList.toggle('open');}
 function cerrarPed(vid,pid){const el=document.getElementById('pb-'+vid+'-'+pid);if(el)el.classList.remove('open');renderZona();}
 function setEst(vid,pid,est){if(!esMaestro())return;const vv=viajes.find(x=>x.id===vid);const p=vv.pedidos.find(x=>x.id===pid);
-  p.estado=est;if(est!=='pagado'){p.devolucion=0;p.descuento=0;p.vuelto=0;}tocar(vv);renderZona();
+  p.estado=est;if(est!=='pagado'){p.devolucion=0;p.descuento=0;p.vuelto=0;}if(est!=='credito')p.abono=0;tocar(vv);renderZona();
   const el=document.getElementById('pb-'+vid+'-'+pid);if(el)el.classList.add('open');}
 function setAj(vid,pid,campo,val){if(!esMaestro())return;const v=viajes.find(x=>x.id===vid);const p=v.pedidos.find(x=>x.id===pid);
-  p[campo]=parseFloat(val)||0;tocar(v);
+  p[campo]=Math.max(0,parseFloat(val)||0);
+  if(campo==='abono'&&p[campo]>(p.total||0))p[campo]=p.total||0;
+  tocar(v);
   if(p.snapEf!==undefined&&Math.abs(p.snapEf-efectivoDe(p))>0.001){
     logAudit('CAMBIÓ MONTO',`${p.nombre} (${v.rutero}): antes ${q(p.snapEf)} → ahora ${q(efectivoDe(p))}`);
     p.snapEf=efectivoDe(p);v.modificado=true;
   }
   recalc();renderRuteros();
-  const e=document.getElementById('ef-'+vid+'-'+pid);if(e)e.textContent=q(efectivoDe(p));}
+  const e=document.getElementById('ef-'+vid+'-'+pid);if(e)e.textContent=q(efectivoDe(p));
+  const c=document.getElementById('cr-'+vid+'-'+pid);if(c)c.textContent=q(creditoDe(p));}
 
 function pedidoSub(p){
   const orig='Cuenta: '+q(p.total);
-  if(p.estado==='credito')return '<span style="color:var(--credit)">'+orig+' · a crédito</span>';
+  if(p.estado==='credito')return '<span style="color:var(--credit)">'+orig+((p.abono||0)>0?' · pagó '+q(efectivoDe(p)):' · a crédito')+'</span>';
   if(p.estado==='cancelado')return '<span style="color:var(--bad)">'+orig+' · no se entregó</span>';
   const a=ajusteDe(p);
   if(a>0){let parts=[];if(p.devolucion)parts.push('devolución '+q(p.devolucion));if(p.descuento)parts.push('descuento '+q(p.descuento));if(p.vuelto)parts.push('vuelto '+q(p.vuelto));
@@ -1165,7 +1226,7 @@ function renderPedidos(v,editable){
     const prob=p.estado!=='pagado'||ajusteDe(p)>0;
     const ef=efectivoDe(p);
     let montoShow;
-    if(p.estado==='credito')montoShow=`<span style="color:var(--credit)">${q(p.total)}</span><div class="sub" style="color:var(--credit)">a crédito</div>`;
+    if(p.estado==='credito')montoShow=`<span style="color:var(--credit)">${q(creditoDe(p))}</span><div class="sub" style="color:var(--credit)">a crédito</div>`;
     else if(p.estado==='cancelado')montoShow=`<span style="color:var(--bad)">${q(p.total)}</span><div class="sub" style="color:var(--bad)">no entregó</div>`;
     else if(ajusteDe(p)>0)montoShow=`<span style="text-decoration:line-through;color:var(--mut);font-weight:600;font-size:13px">${q(p.total)}</span> ${q(ef)}`;
     else montoShow=q(ef);
@@ -1174,9 +1235,9 @@ function renderPedidos(v,editable){
     let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}" ${swipeAttrs} ${editable?`onclick="abrirPed(${v.id},${p.id})"`:''}>
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:38px;height:38px;border-radius:50%;background:#eef0f3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="#9aa1ad" stroke-width="1.8"/><path d="M5 19c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5" stroke="#9aa1ad" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-        <div><span class="pn">${p.nombre}</span>${pedTag(p)}<div class="sub">${pedidoSub(p)}</div></div>
+        <div><span class="pn${puedeBorrar?' edt':''}" ${puedeBorrar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}<div class="sub">${pedidoSub(p)}</div></div>
       </div>
-      <div class="pm">${montoShow}</div></div></div>`;
+      <div class="pm${puedeBorrar?' edt':''}" ${puedeBorrar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'total')"`:''}>${montoShow}</div></div></div>`;
     if(editable){
       row+=`<div class="pbox" id="pb-${v.id}-${p.id}">
         <div class="chips">
@@ -1188,6 +1249,10 @@ function renderPedidos(v,editable){
           <div><label class="fld">Devolución</label><input inputmode="decimal" value="${p.devolucion||''}" placeholder="0" onclick="event.stopPropagation()" onchange="setAj(${v.id},${p.id},'devolucion',this.value)"></div>
           <div><label class="fld">Descuento</label><input inputmode="decimal" value="${p.descuento||''}" placeholder="0" onclick="event.stopPropagation()" onchange="setAj(${v.id},${p.id},'descuento',this.value)"></div>
           <div><label class="fld">Vuelto pend.</label><input inputmode="decimal" value="${p.vuelto||''}" placeholder="0" onclick="event.stopPropagation()" onchange="setAj(${v.id},${p.id},'vuelto',this.value)"></div>
+        </div>`:''}
+        ${p.estado==='credito'?`<div class="ajustes" style="grid-template-columns:1fr 1fr;align-items:end">
+          <div><label class="fld">Pagó en efectivo</label><input inputmode="decimal" value="${p.abono||''}" placeholder="0" onclick="event.stopPropagation()" onchange="setAj(${v.id},${p.id},'abono',this.value)"></div>
+          <div style="padding:0 0 9px 4px;font-size:13px;color:var(--credit)">Queda a crédito<br><b id="cr-${v.id}-${p.id}" style="font-size:16px">${q(creditoDe(p))}</b></div>
         </div>`:''}
         <div class="efline"><span class="e">Recibido: <b id="ef-${v.id}-${p.id}">${q(ef)}</b></span>
           <button class="btn ok" style="padding:8px 18px" onclick="event.stopPropagation();cerrarPed(${v.id},${p.id})">Listo</button></div>
@@ -1229,8 +1294,8 @@ function resumenRutero(r,vs){
   const nPed=salidos.reduce((s,v)=>s+(v.pedidos||[]).length,0);
   let efv=0,cred=0;
   vs.filter(v=>v&&v.cerrado).forEach(v=>(v.pedidos||[]).forEach(p=>{
-    if(p.estado==='credito')cred+=p.total||0;
-    else if(p.estado!=='cancelado')efv+=efectivoDe(p);
+    cred+=creditoDe(p);
+    if(p.estado!=='cancelado')efv+=efectivoDe(p);
   }));
   // Un tono suave del color del vendedor: combina con su chip y se distingue
   // de un vistazo de quién son los números.
@@ -1259,7 +1324,7 @@ function estadoVendedor(r){
   const arm=vs.filter(v=>!v.entradaLista&&!v.cerrado);
   const rec=vs.filter(v=>v.cerrado);
   let ent=0;
-  rec.forEach(v=>(v.pedidos||[]).forEach(p=>{if(p.estado==='credito')ent+=p.total||0;else if(p.estado!=='cancelado')ent+=efectivoDe(p);}));
+  rec.forEach(v=>(v.pedidos||[]).forEach(p=>{if(p.estado!=='cancelado')ent+=efectivoDe(p)+creditoDe(p);}));
   const t=x=>x?new Date(x).getTime():0;
   const ult=vs.reduce((m,v)=>Math.max(m,t(v.horaRecibido),t(v.horaSalida)),0);
   return {vs,enRuta,arm,rec,ent,ult};
@@ -1476,7 +1541,7 @@ function abrirReporte(){
   let efvDia=0,credDia=0;
   let h=`<div class="shHead"><h2>Reporte del día</h2><button class="x" onclick="cerrarReporte()">×</button></div>`;
   // total grande
-  viajes.forEach(v=>v.pedidos.forEach(p=>{if(p.estado==='credito')credDia+=p.total||0;else if(p.estado!=='cancelado')efvDia+=efectivoDe(p);}));
+  viajes.forEach(v=>v.pedidos.forEach(p=>{credDia+=creditoDe(p);if(p.estado!=='cancelado')efvDia+=efectivoDe(p);}));
   h+=`<div class="rday"><div class="l">Efectivo total recibido</div><div class="v">${q(efvDia)}</div>
     <div class="x2">${credDia>0?'Crédito del día <b>'+q(credDia)+'</b>':''}</div></div>`;
   // por muchacho
@@ -1486,7 +1551,7 @@ function abrirReporte(){
     const tot=totalRutero(r);
     const ajustes=[],creditos=[],noent=[];
     vs.forEach(v=>v.pedidos.forEach(p=>{
-      if(p.estado==='credito'){creditos.push({n:p.nombre,m:p.total});return;}
+      if(p.estado==='credito'){creditos.push({n:p.nombre+((p.abono||0)>0?' (pagó '+q(efectivoDe(p))+')':''),m:creditoDe(p)});return;}
       if(p.estado==='cancelado'){noent.push({n:p.nombre,m:p.total});return;}
       if(p.devolucion)ajustes.push({n:p.nombre,t:'Devolución',m:p.devolucion});
       if(p.descuento)ajustes.push({n:p.nombre,t:'Descuento',m:p.descuento});
@@ -1514,7 +1579,8 @@ function cerrarReporte(){document.getElementById('overlay').classList.remove('op
 let _respFecha=null;
 function efectivoDeSnap(e){
   let s=0;(e&&e.viajes||[]).forEach(v=>(v.pedidos||[]).forEach(p=>{
-    if(p.estado==='credito'||p.estado==='cancelado')return;
+    if(p.estado==='cancelado')return;
+    if(p.estado==='credito'){s+=Math.min(p.abono||0,p.total||0);return;}
     s+=Math.max(0,(p.total||0)-(p.devolucion||0)-(p.descuento||0)+(p.vuelto||0));}));
   return s;
 }
@@ -1611,7 +1677,7 @@ function abrirAuditoria(){
         nPed++;totFact+=(p.total||0);
         totDesc+=(p.descuento||0);totDev+=(p.devolucion||0);
         if((p.descuento||0)>0)detDesc.push({nombre:p.nombre,monto:p.descuento});
-        if(p.estado==='credito'){totCred+=(p.total||0);nCred++;pendientes.push({nombre:p.nombre,rutero:r,monto:(p.total||0)});detCred.push({nombre:p.nombre,monto:p.total});}
+        if(p.estado==='credito'){const c=creditoDe(p),e=efectivoDe(p);totCred+=c;nCred++;totEfec+=e;efvViaje+=e;pendientes.push({nombre:p.nombre,rutero:r,monto:c});detCred.push({nombre:p.nombre+(e>0?' (pagó '+q(e)+')':''),monto:c});}
         else if(p.estado==='cancelado'){totNoEnt+=(p.total||0);detNoEnt.push({nombre:p.nombre,monto:p.total});}
         else{const e=efectivoDe(p);totEfec+=e;efvViaje+=e;totVuelto+=(p.vuelto||0);if((p.vuelto||0)>0)detVuelto.push({nombre:p.nombre,monto:p.vuelto});}
       });
@@ -1649,8 +1715,9 @@ function abrirAuditoria(){
         const ini=(p.nombre||'?').trim().charAt(0).toUpperCase();
         let recStr,ajuste='—';
         if(p.estado==='credito'){
-          recStr=`<span style="color:#9aa1ad">${q(0)}</span>`;
-          ajuste=`<span style="color:#3a7bd5">Crédito ${q(p.total)}</span>`;
+          recStr=ef>0?`<span style="color:#1f8a52">${q(ef)}</span>`:`<span style="color:#9aa1ad">${q(0)}</span>`;
+          sumRecib+=ef;
+          ajuste=`<span style="color:#3a7bd5">Crédito ${q(creditoDe(p))}</span>`;
         } else if(p.estado==='cancelado'){
           recStr=`<span style="color:#d4583e">${q(0)}</span>`;
           ajuste=`<span style="color:#d4583e">No entregó</span>`;
@@ -1720,8 +1787,8 @@ function copiarRecibido(){
   let t='*LO RECIBIDO (con ajustes)*\n\n';let tot=0;
   ruteros.forEach(r=>{const vs=viajes.filter(v=>v.rutero===r);let l='';
     vs.forEach(v=>v.pedidos.forEach(p=>{
-      let val=p.estado==='credito'?'crédito '+q(p.total):(p.estado==='cancelado'?'no entregó':q(efectivoDe(p)));
-      if(p.estado!=='credito'&&p.estado!=='cancelado')tot+=efectivoDe(p);
+      let val=p.estado==='credito'?((p.abono||0)>0?q(efectivoDe(p))+' + ':'')+'crédito '+q(creditoDe(p)):(p.estado==='cancelado'?'no entregó':q(efectivoDe(p)));
+      if(p.estado!=='cancelado')tot+=efectivoDe(p);
       l+=`${p.nombre}: ${val}\n`;}));
     if(l)t+=`*${r}*\n${l}\n`;
   });
@@ -1775,7 +1842,7 @@ function copiarReporteUnico(){
     vs.forEach(v=>v.pedidos.forEach(p=>{
       n++;totO+=p.total;
       const ef=efectivoDe(p);let rec,nota='';
-      if(p.estado==='credito'){rec='CRÉDITO';totC+=p.total;nC++;nota=` (queda a crédito ${q(p.total)})`;}
+      if(p.estado==='credito'){rec=ef>0?q(ef):'CRÉDITO';totR+=ef;totC+=creditoDe(p);nC++;nota=` (queda a crédito ${q(creditoDe(p))})`;}
       else if(p.estado==='cancelado'){rec='NO ENTREGÓ';}
       else{rec=q(ef);totR+=ef;
         const pp=[];
@@ -1790,7 +1857,7 @@ function copiarReporteUnico(){
   t+=`━━━━━━━━━━\n*TOTALES*\nOriginal (${n} pedidos): ${q(totO)}\nRecibido en efectivo: ${q(totR)}`;
   // Efectivo por encargado
   const enc={};
-  viajes.forEach(v=>{if(v.cerrado&&v.recibidoPor){let e=0;v.pedidos.forEach(p=>{if(p.estado!=='credito'&&p.estado!=='cancelado')e+=efectivoDe(p);});enc[v.recibidoPor]=(enc[v.recibidoPor]||0)+e;}});
+  viajes.forEach(v=>{if(v.cerrado&&v.recibidoPor){let e=0;v.pedidos.forEach(p=>{if(p.estado!=='cancelado')e+=efectivoDe(p);});enc[v.recibidoPor]=(enc[v.recibidoPor]||0)+e;}});
   const ek=Object.keys(enc);
   if(ek.length){t+=`\n\n*RECIBIÓ:*`;ek.forEach(k=>{t+=`\n• ${k}: ${q(enc[k])}`;});}
   if(nC>0){
@@ -1798,7 +1865,7 @@ function copiarReporteUnico(){
     t+=`\n\n*PENDIENTES A CRÉDITO:*`;
     ruteros.forEach(r=>{const vs=viajes.filter(v=>v.rutero===r);
       vs.forEach(v=>v.pedidos.forEach(p=>{
-        if(p.estado==='credito')t+=`\n• ${p.nombre} (${r}): ${q(p.total)}`;
+        if(p.estado==='credito')t+=`\n• ${p.nombre} (${r}): ${q(creditoDe(p))}`;
       }));
     });
   }
@@ -1819,7 +1886,7 @@ function copiarReporte(){
   ruteros.forEach(r=>{const vs=viajes.filter(v=>v.rutero===r);if(!vs.length)return;
     const tot=totalRutero(r);let det=[];
     vs.forEach(v=>v.pedidos.forEach(p=>{
-      if(p.estado==='credito'){credDia+=p.total||0;det.push(`  ${p.nombre}: crédito ${q(p.total)}`);return;}
+      if(p.estado==='credito'){credDia+=creditoDe(p);efvDia+=efectivoDe(p);det.push(`  ${p.nombre}: crédito ${q(creditoDe(p))}`+((p.abono||0)>0?` (pagó ${q(efectivoDe(p))})`:''));return;}
       if(p.estado==='cancelado'){det.push(`  ${p.nombre}: no entregó`);return;}
       efvDia+=efectivoDe(p);
       if(p.devolucion)det.push(`  ${p.nombre}: devolución ${q(p.devolucion)}`);
@@ -1937,7 +2004,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-05.1';
+const VERSION='2026-10-16.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

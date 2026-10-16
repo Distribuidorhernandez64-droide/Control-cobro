@@ -58,7 +58,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  await p.tap('#modalRecibeBody button:has-text("Volver")');await p.waitForTimeout(300);
  ok('"← Volver" regresa a la pregunta', (await p.textContent('#modalRecibeBody')).includes('¿Lleva envases?'));
  await p.tap('#modalRecibeBody button:has-text("Sí")');await p.waitForTimeout(300);
- await p.fill('#envModal','2 cajas retornables');
+ await p.focus('#envModal');await p.keyboard.type('2 cajas retornables');
  await p.press('#envModal','Enter');await p.waitForTimeout(800);
  ok('Enter guarda los envases', (await p.evaluate(v=>viajes.find(x=>x.id===v).envases,vid))==='2 cajas retornables');
  ok('Se ven en la tarjeta', (await p.inputValue('#env-'+vid))==='2 cajas retornables');

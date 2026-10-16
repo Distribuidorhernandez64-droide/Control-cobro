@@ -33,7 +33,7 @@ window.supabase={createClient:()=>({from(t){const st={t,f:{}};const a={select:()
  ok('Con un cliente ya no aparece Quitar viaje', await p.isHidden('#viaje-'+vid+' .btn-quitar'));
  await p.tap('text=Cerrar pedidos');await p.waitForTimeout(400);
  await p.tap('#modalRecibeBody button:has-text("Sí")');await p.waitForTimeout(200);
- await p.fill('#envModal','3 cajas');await p.press('#envModal','Enter');await p.waitForTimeout(700);
+ await p.focus('#envModal');await p.keyboard.type('3 cajas');await p.press('#envModal','Enter');await p.waitForTimeout(700);
  ok('Con clientes: Enviar ruta visible', await p.isVisible('#viaje-'+vid+' .btn-enviar'));
  // borrar el único cliente en el paso de envío
  await p.evaluate(v=>{const x=viajes.find(y=>y.id===v);borrarPedido(v,x.pedidos[0].id);},vid);await p.waitForTimeout(700);

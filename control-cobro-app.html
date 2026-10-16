@@ -928,7 +928,8 @@ function anotarEnvases(vid){
       <div style="width:40px;height:40px;border-radius:12px;background:#fdf0e1;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ICO_CAJA}</div>
       <div style="font-size:17px;font-weight:900">¿Qué envases lleva?</div>
     </div>
-    <input id="envModal" placeholder="ej. 2 cajas retornables" autocomplete="off" enterkeyhint="done"
+    <input id="envModal" placeholder="ej. 3.5 o 2 cajas" autocomplete="off" enterkeyhint="done"
+      ${/^\d*\.?\d*$/.test(v.envases||'')?'type="number" step="any"':''}
       value="${esc(v.envases||'')}" onkeydown="if(event.key==='Enter'){event.preventDefault();guardarEnvases(${vid});}">
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
       <button class="btn" style="background:#e8902a;padding:15px;font-size:15px" onclick="guardarEnvases(${vid})">Listo</button>
@@ -936,7 +937,22 @@ function anotarEnvases(vid){
     </div>`;
   // Enfocar YA, dentro del mismo toque: así el iPhone abre el teclado
   const el=document.getElementById('envModal');
-  if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}
+  if(el){tecladoNumeros(el);el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}
+}
+// El campo abre como número: el iPhone muestra el teclado normal ya en la
+// página de números (con "ABC" para letras). Un campo de número no guarda
+// letras, así que al escribir la primera letra o espacio se cambia a texto
+// llevando lo ya escrito.
+function tecladoNumeros(el){
+  if(el.type!=='number')return;
+  let ultimo=el.value;
+  el.addEventListener('input',()=>{if(el.type==='number'&&!(el.validity&&el.validity.badInput))ultimo=el.value;});
+  el.addEventListener('beforeinput',e=>{
+    if(el.type!=='number'||!e.data||/^[0-9.]+$/.test(e.data))return;
+    e.preventDefault();
+    el.type='text';el.value=ultimo+e.data;
+    try{el.setSelectionRange(el.value.length,el.value.length);}catch(err){}
+  });
 }
 function guardarEnvases(vid){
   const v=viajes.find(x=>x.id===vid);if(!v)return;
@@ -2004,7 +2020,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-16.1';
+const VERSION='2026-10-16.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -34,6 +34,15 @@ const UA_IPHONE='Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWeb
  ok('Al escribir letras pasa a texto sin perder nada '+JSON.stringify(r), r.val[0]==='text'&&r.g==='2 cajas retornables');
  r=await prueba('10cajas');
  ok('"10cajas" también '+JSON.stringify(r), r.g==='10cajas');
+ // El botón abc / 123 cambia de teclado
+ const bt=await p.evaluate(id=>{const v=viajes.find(x=>x.id===id);v.envases='';preguntarEnvases(id);anotarEnvases(id);
+   const el=document.getElementById('envModal'),b=document.getElementById('envTec');const r=[el.type,b.textContent];
+   b.click();r.push(el.type,b.textContent,document.activeElement===el);b.click();r.push(el.type,b.textContent);return r;},vid);
+ ok('Botón abc pasa a letras y 123 regresa a números '+JSON.stringify(bt), bt.join()==='number,abc,text,123,true,number,abc');
+ r=await (async()=>{await p.evaluate(id=>{preguntarEnvases(id);anotarEnvases(id);},vid);await p.keyboard.type('4');await p.tap('#envTec');await p.keyboard.type(' cajas');
+   const v=await p.evaluate(()=>document.getElementById('envModal').value);await p.tap('#modalRecibe button:has-text("Listo")');return v;})();
+ ok('4 → toca abc → " cajas" = "4 cajas" ('+r+')', r==='4 cajas');
+ await p.evaluate(id=>{preguntarEnvases(id);anotarEnvases(id);},vid);await p.screenshot({path:'envtec.png'});
  // Si ya tenía texto con letras, abre normal (texto)
  const t=await p.evaluate(id=>{const v=viajes.find(x=>x.id===id);v.envases='2 cajas';anotarEnvases(id);return document.getElementById('envModal').type;},vid);
  ok('Si ya decía "2 cajas", abre como texto', t==='text');

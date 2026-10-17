@@ -928,9 +928,13 @@ function anotarEnvases(vid){
       <div style="width:40px;height:40px;border-radius:12px;background:#fdf0e1;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ICO_CAJA}</div>
       <div style="font-size:17px;font-weight:900">¿Qué envases lleva?</div>
     </div>
-    <input id="envModal" placeholder="ej. 3.5 o 2 cajas" autocomplete="off" enterkeyhint="done"
+    <div style="position:relative">
+    <input id="envModal" placeholder="ej. 3.5 o 2 cajas" autocomplete="off" enterkeyhint="done" style="padding-right:74px"
       ${/^\d*\.?\d*$/.test(v.envases||'')?'type="number" step="any"':''}
       value="${esc(v.envases||'')}" onkeydown="if(event.key==='Enter'){event.preventDefault();guardarEnvases(${vid});}">
+    <button type="button" id="envTec" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="cambiarTecladoEnv()"
+      style="position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;border-radius:9px;background:#eef0f3;color:#4a5260;font-weight:800;font-size:14px;padding:8px 12px;cursor:pointer"></button>
+    </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
       <button class="btn" style="background:#e8902a;padding:15px;font-size:15px" onclick="guardarEnvases(${vid})">Listo</button>
       <button class="btn sec" style="padding:12px" onclick="preguntarEnvases(${vid})">← Volver</button>
@@ -943,15 +947,39 @@ function anotarEnvases(vid){
 // página de números (con "ABC" para letras). Un campo de número no guarda
 // letras, así que al escribir la primera letra o espacio se cambia a texto
 // llevando lo ya escrito.
+// En iPhone el campo de número bloquea las letras sin avisar, así que se
+// detecta la tecla (keydown) y también beforeinput. Y por si acaso, el botón
+// "abc" / "123" dentro del campo cambia de teclado a la segura.
+function botonTecladoEnv(){
+  const el=document.getElementById('envModal'),b=document.getElementById('envTec');
+  if(el&&b)b.textContent=el.type==='number'?'abc':'123';
+}
+function pasarATexto(el,extra,refrescar){
+  const base=el.type==='number'?(el.validity&&el.validity.badInput?'':el.value):el.value;
+  el.type='text';el.value=base+(extra||'');
+  if(refrescar){el.blur();el.focus();} // desde el botón: refresca el teclado a letras
+  try{el.setSelectionRange(el.value.length,el.value.length);}catch(err){}
+  botonTecladoEnv();
+}
+function cambiarTecladoEnv(){
+  const el=document.getElementById('envModal');if(!el)return;
+  if(el.type==='number'){pasarATexto(el,'',true);return;}
+  const v=(el.value||'').trim();
+  // A números sólo si lo escrito es un número (si no, se perdería)
+  if(v&&!/^\d*\.?\d*$/.test(v)){toast('Para números, borrá primero las letras',true);el.focus();return;}
+  el.type='number';el.setAttribute('step','any');el.value=v;
+  el.blur();el.focus();botonTecladoEnv();
+}
 function tecladoNumeros(el){
-  if(el.type!=='number')return;
-  let ultimo=el.value;
-  el.addEventListener('input',()=>{if(el.type==='number'&&!(el.validity&&el.validity.badInput))ultimo=el.value;});
+  botonTecladoEnv();
+  const esLetra=k=>typeof k==='string'&&k.length===1&&!/^[0-9.]$/.test(k);
+  el.addEventListener('keydown',e=>{
+    if(el.type!=='number'||!esLetra(e.key)||e.ctrlKey||e.metaKey)return;
+    e.preventDefault();pasarATexto(el,e.key);
+  });
   el.addEventListener('beforeinput',e=>{
     if(el.type!=='number'||!e.data||/^[0-9.]+$/.test(e.data))return;
-    e.preventDefault();
-    el.type='text';el.value=ultimo+e.data;
-    try{el.setSelectionRange(el.value.length,el.value.length);}catch(err){}
+    e.preventDefault();pasarATexto(el,e.data);
   });
 }
 function guardarEnvases(vid){
@@ -2020,7 +2048,7 @@ function mostrarBannerHistorial(fecha){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-16.2';
+const VERSION='2026-10-17.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

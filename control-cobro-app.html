@@ -399,6 +399,9 @@
   .pe-ftx span{font-size:11px;font-weight:700;color:#c4c9d2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pe-novaf{border:none;background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-weight:800;font-size:12px;border-radius:999px;height:36px;padding:0 12px;cursor:pointer;flex-shrink:0}
   .pe-flota .pe-mas{width:48px;height:48px;box-shadow:none}
+  .t-mod{background:#fbe9e4;color:var(--bad);white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px;margin-left:4px}
+  .pe-modl{color:var(--bad)!important;font-weight:800}
+  .pe-modr{color:var(--bad);font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:4px;margin-top:3px}
   .t-fac{background:#fdf0e1;color:#b0601a;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
 </style>
 </head>
@@ -1413,7 +1416,7 @@ function renderPedidos(v,editable){
     let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}" ${swipeAttrs} ${editable?`onclick="abrirPed(${v.id},${p.id})"`:''}>
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:38px;height:38px;border-radius:50%;background:#eef0f3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="#9aa1ad" stroke-width="1.8"/><path d="M5 19c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5" stroke="#9aa1ad" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-        <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${p.facAnul?'<span class="tag t-canc">anulada en Monica</span>':''}<div class="sub">${pedidoSub(p)}</div></div>
+        <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${p.facAnul?'<span class="tag t-canc">anulada en Monica</span>':''}${peCambioDe(p)?'<span class="tag t-mod">'+ICO_ALERTA+' cambió en Monica</span>':''}<div class="sub">${pedidoSub(p)}</div>${peCambioDe(p)?'<div class="sub pe-modl">'+esc(peCambioTxt(p,peCambioDe(p)))+'</div>':''}</div>
       </div>
       <div class="pm${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'total')"`:''}>${montoShow}</div></div></div>`;
     if(editable){
@@ -1525,12 +1528,14 @@ function renderLista(){
       prio=2;hr=hCorta(e.rec.map(v=>v.horaRecibido).filter(Boolean).sort().pop());
       sb=`${ICO_CHECK2}${e.rec.length} viaje${e.rec.length===1?'':'s'} · ${q(e.ent)}`;
     }else{prio=3;sb='<i>Sin viajes hoy</i>';}
+    const nMod=peModificadasDe(r);
+    const warn=nMod?`<b class="pe-modr">${ICO_ALERTA} ${nMod} cambió en Monica</b>`:'';
     return {prio,ult:e.ult,html:`<div class="vrow" onclick="if(!_lpFue)entrarVendedor('${j}')"
       onpointerdown="lpInicio(event,'${j}')" onpointerup="lpFin()" onpointerleave="lpFin()"
       onpointercancel="lpFin()" onpointermove="lpMueve(event)" oncontextmenu="return false">
       <div class="av" style="background:${col}">${esc((r.trim()[0]||'?').toUpperCase())}</div>
       <div class="mid"><div class="l1"><span class="nm">${esc(r)}</span><span class="hr${on?' on':''}">${hr}</span></div>
-        <div class="l2"><span class="sb">${sb}</span>${bd}</div></div></div>`};
+        <div class="l2"><span class="sb">${sb}</span>${bd}</div>${warn}</div></div>`};
   }).sort((a,b)=>a.prio-b.prio||b.ult-a.ult);
   return peTarjetaLista()+`<div class="vlista">${filas.map(f=>f.html).join('')}</div>`;
 }
@@ -2186,13 +2191,14 @@ function mostrarBannerHistorial(fecha){
 // campanita; se escogen, se mandan a un rutero y siguen el camino de siempre.
 // Estados: pendiente → asignada (en un viaje que se arma; el monto sigue a
 // Monica) → enviada (salió en ruta; ya no cambia, lo cuida la base de datos).
-const PE={filas:[],cargado:false,edad:null,sel:new Set(),filtro:'todos',buscar:'',abierto:false,error:'',ocupado:false};
+const PE={cambios:{},filas:[],cargado:false,edad:null,sel:new Set(),filtro:'todos',buscar:'',abierto:false,error:'',ocupado:false};
 const PE_FRESCO=90; // segundos: si Facturación rápida no reporta en este tiempo, los montos pueden no estar al día
 const ICO_CAMPANA=`<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5Z" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICO_NOTA=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l4 4v14H6z" stroke="#e8902a" stroke-width="1.9" stroke-linejoin="round"/><path d="M15 3v4h4M9 12h7M9 16h5" stroke="#e8902a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICO_LUPA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="#9aa1ad" stroke-width="2"/><path d="m20 20-4-4" stroke="#9aa1ad" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICO_OK_S=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICO_CAJA_S=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/></svg>`;
+const ICO_ALERTA=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><path d="M12 3.5 22 20.5H2L12 3.5Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.6v.2" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
 // "brenda (pueblo)" -> "Brenda pueblo"
@@ -2212,13 +2218,14 @@ async function peLeerEdad(){
 }
 async function peCargar(){
   if(modoLectura||PE.ocupado)return;
-  PE.ocupado=true;
+  PE.ocupado=true;let camb=false;
   try{
     const r=await sb.from('pendientes_entrega').select('*').in('estado',['pendiente','asignada']).order('nro');
     if(r.error)throw r.error;
     const antes=new Set(PE.filas.map(f=>f.nro));
     PE.filas=(r.data||[]).map(f=>({...f,total:Number(f.total)||0}));
     PE.cargado=true;PE.error='';
+    camb=await peCargarCambios();
     const nuevas=pePendientes().filter(f=>!antes.has(f.nro)&&!peVistas().has(f.nro));
     if(nuevas.length&&antes.size){try{navigator.vibrate&&navigator.vibrate([40,60,40]);}catch(e){}
       const b=document.getElementById('btnPE');if(b){b.classList.remove('sacude');void b.offsetWidth;b.classList.add('sacude');}}
@@ -2230,6 +2237,28 @@ async function peCargar(){
   peRenderCampana();
   if(PE.abierto)peRenderPanel();
   else if(!vistaDetalle&&!escribiendoAhora())renderZona();
+  else if(camb&&!escribiendoAhora()){const sy=window.scrollY;renderZona();window.scrollTo(0,sy);}
+}
+// Notas que YA salieron en ruta y que en Monica fueron modificadas después (solo es un aviso; lo que salió no cambia)
+async function peCargarCambios(){
+  try{
+    const r=await sb.from('pendientes_entrega').select('nro,total,total_enviado,monica_total,monica_anulada,monica_cambio_en').eq('estado','enviada').eq('monica_cambio',true).gte('enviada_en',HOY);
+    if(r.error)return; // todavía no se corrió el SQL del aviso: no pasa nada
+    const m={};(r.data||[]).forEach(f=>{m[f.nro]=f;});
+    const dif=JSON.stringify(m)!==JSON.stringify(PE.cambios);PE.cambios=m;return dif;
+  }catch(e){}
+  return false;
+}
+function peModificadasDe(r){
+  let n=0;viajes.forEach(v=>{if(v&&v.rutero===r)(v.pedidos||[]).forEach(p=>{if(peCambioDe(p))n++;});});return n;
+}
+function peCambioDe(p){return p&&p.fac&&p.facEnv?PE.cambios[p.fac]:null;}
+// Línea que explica qué cambió: "Salió Q500.00 · Monica ahora Q450.00"
+function peCambioTxt(p,c){
+  if(c.monica_anulada)return 'Salió '+q(p.total)+' · anulada en Monica';
+  const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
+  if(mt!==null&&Math.abs(mt-(p.total||0))>0.001)return 'Salió '+q(p.total)+' · Monica ahora '+q(mt);
+  return 'Modificada en Monica (mismo total '+q(p.total)+')';
 }
 // Mientras el viaje no sale, los montos siguen a Monica (si allá modifican la nota)
 function peSeguirMonica(){
@@ -2658,7 +2687,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-24.6';
+const VERSION='2026-10-24.7';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -142,6 +142,20 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('En la nube quedan ENVIADAS con su total', e1.estado==='enviada'&&Number(e1.total_enviado)===400&&e2.estado==='enviada'&&Number(e2.total_enviado)===250);
   const intento=await rest('PATCH','pendientes_entrega?nro=eq.21801',{total:1});
   ok('Una enviada ya no se puede cambiar (lo bloquea la base)', intento.status===400);
+  // Después de enviada, en Monica la modifican: solo aparece el aviso, lo que salió no cambia
+  ok('Sin cambios en Monica: no hay aviso', !(await p.textContent('#zona')).includes('cambió en Monica'));
+  await rest('PATCH','pendientes_entrega?nro=eq.21801',{monica_cambio:true,monica_total:380,monica_anulada:false});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1200);
+  const zt=await p.textContent('#zona');
+  ok('Nota enviada y modificada en Monica: marca "cambió en Monica"', zt.includes('cambió en Monica'));
+  ok('Dice cuánto salió y cuánto dice Monica ahora', zt.includes('Salió Q400.00 · Monica ahora Q380.00'));
+  v=await p.evaluate(()=>viajes.find(x=>x.rutero==='Juan'));
+  ok('Lo que salió no cambia (sigue Q400.00 y Q250.00)', v.pedidos.reduce((s,x)=>s+x.total,0)===650);
+  await p.screenshot({path:SHOTS+'/8b-cambio-en-monica.png'});
+  await p.evaluate(()=>volverLista());await p.waitForTimeout(300);
+  ok('En la lista del vendedor aparece "1 cambió en Monica"', (await p.textContent('#zona')).includes('1 cambió en Monica'));
+  await p.screenshot({path:SHOTS+'/8c-lista-cambio.png'});
+  await p.evaluate(()=>entrarVendedor('Juan'));await p.waitForTimeout(300);
   await p.screenshot({path:SHOTS+'/8-enviada.png'});
 
   // Corregir: la nota enviada no se puede quitar

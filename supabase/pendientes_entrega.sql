@@ -29,13 +29,29 @@ create table if not exists public.pendientes_entrega (
 alter table public.pendientes_entrega add column if not exists envases jsonb;
 create index if not exists pendientes_entrega_estado_fecha on public.pendientes_entrega (estado, fecha);
 
+-- Aviso: si en Monica modifican una nota que YA salió en ruta, Facturación rápida lo anota aquí
+-- (solo estas 4 columnas; lo que salió en la ruta nunca cambia).
+alter table public.pendientes_entrega add column if not exists monica_cambio boolean not null default false;
+alter table public.pendientes_entrega add column if not exists monica_total numeric(12,2);
+alter table public.pendientes_entrega add column if not exists monica_anulada boolean not null default false;
+alter table public.pendientes_entrega add column if not exists monica_cambio_en timestamptz;
+
 -- Guardia: una factura ENVIADA ya no se puede cambiar (ni desde Cobros ni desde Facturación rápida).
+-- Única excepción: las columnas del aviso de arriba (para avisar que Monica ya no coincide).
 create or replace function public.pendientes_guardia() returns trigger
 language plpgsql as $$
+declare libres text[] := array['monica_cambio','monica_total','monica_anulada','monica_cambio_en','cambiado_en'];
 begin
   if tg_op = 'UPDATE' then
     if old.estado = 'enviada' then
-      raise exception 'La nota % ya salió en ruta y no se puede cambiar', old.nro;
+      if (to_jsonb(new) - libres) is distinct from (to_jsonb(old) - libres) then
+        raise exception 'La nota % ya salió en ruta y no se puede cambiar', old.nro;
+      end if;
+      if new.monica_cambio and not old.monica_cambio then
+        new.monica_cambio_en := now();
+      end if;
+      new.cambiado_en := now();
+      return new;
     end if;
     if new.estado = 'enviada' and old.estado <> 'asignada' then
       raise exception 'La nota % no estaba en una ruta', old.nro;

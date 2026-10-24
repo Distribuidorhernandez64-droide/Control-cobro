@@ -25,6 +25,8 @@ create table if not exists public.pendientes_entrega (
   creado_en         timestamptz not null default now(),
   cambiado_en       timestamptz not null default now()
 );
+-- Envases que lleva la nota (cajas, vidrio, cilindros), calculados por Facturación rápida
+alter table public.pendientes_entrega add column if not exists envases jsonb;
 create index if not exists pendientes_entrega_estado_fecha on public.pendientes_entrega (estado, fecha);
 
 -- Guardia: una factura ENVIADA ya no se puede cambiar (ni desde Cobros ni desde Facturación rápida).

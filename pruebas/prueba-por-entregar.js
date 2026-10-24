@@ -17,14 +17,15 @@ async function rest(metodo,ruta,cuerpo,prefer){
   const r=await fetch(LOCAL+'/rest/v1/'+ruta,{method:metodo,headers:{apikey:JWT,Authorization:'Bearer '+JWT,'Content-Type':'application/json',Prefer:prefer||'return=representation'},body:cuerpo?JSON.stringify(cuerpo):undefined});
   const t=await r.text();return {status:r.status,data:t?JSON.parse(t):null};
 }
-const fila=(nro,cliente,vend,vid,total,hora,cod)=>({nro,fecha:'2026-10-24',hora,cliente,codigo_cliente:cod,vendedor:vend,vendedor_id:vid,total,lineas:4});
+const CAJA=q=>({n:'cajas',u:'caja',v:'cajas',q}), CIL25=q=>({n:'cil25',u:'cilindro 25lb',v:'cilindros 25lb',q});
+const fila=(nro,cliente,vend,vid,total,hora,cod,envases)=>({nro,fecha:'2026-10-24',hora,cliente,codigo_cliente:cod,vendedor:vend,vendedor_id:vid,total,lineas:4,envases:envases||[]});
 let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
 
 (async()=>{
   sql('truncate pendientes_entrega; truncate puente; truncate dias; truncate respaldos;');
   await rest('POST','pendientes_entrega',[
-    fila(21801,'TIENDA LA BENDICIÓN','brenda (pueblo)',42,385,'08:15','101'),
-    fila(21802,'ABARROTERÍA SAN JOSÉ','brenda (pueblo)',42,220.5,'08:32','214'),
+    fila(21801,'TIENDA LA BENDICIÓN','brenda (pueblo)',42,385,'08:15','101',[CAJA(1)]),
+    fila(21802,'ABARROTERÍA SAN JOSÉ','brenda (pueblo)',42,220.5,'08:32','214',[CAJA(0.5),CIL25(1)]),
     fila(21803,'DESPENSA LUCY','lesli',48,645,'09:05','087'),
     fila(21804,'TIENDA EL CARMEN','silvia (pueblo)',40,98.75,'09:20','132')]);
   await rest('POST','puente?on_conflict=id',[{id:'facturacion',latido:1}],'resolution=merge-duplicates,return=minimal');
@@ -67,6 +68,8 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.click('.pe-todas');await p.waitForTimeout(200);
   ok('"Todas" selecciona el grupo', (await p.$$('.pe-item.on')).length===2);
   ok('Barra con total seleccionado Q605.50', (await p.textContent('.pe-barra')).includes('Q605.50'));
+  ok('Barra suma los envases (1.5 cajas · 1 cilindro 25lb)', (await p.textContent('.pe-barra')).includes('1.5 cajas · 1 cilindro 25lb'));
+  ok('Cada nota muestra sus envases', (await p.textContent('#peLista')).includes('0.5 caja · 1 cilindro 25lb'));
   await p.screenshot({path:SHOTS+'/3-seleccion.png'});
 
   await p.click('.pe-mas');await p.waitForTimeout(300);
@@ -78,6 +81,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('En la nube quedan apartadas para Juan', db.filter(f=>f.estado==='asignada'&&f.rutero==='Juan').map(f=>f.nro).join()==='21801,21802');
   let v=await p.evaluate(()=>viajes.find(x=>x.rutero==='Juan'));
   ok('Se armó el viaje de Juan con las 2 notas', v&&v.pedidos.length===2&&v.pedidos.every(x=>x.fac)&&!v.entradaLista);
+  ok('Envases del viaje anotados solos (1.5 cajas · 1 cilindro 25lb)', v.envases==='1.5 cajas · 1 cilindro 25lb');
   ok('El panel sigue abierto y quedan 2', await p.evaluate(()=>PE.abierto)&&(await p.$$('#peLista .pe-item:not(.quieto)')).length===2);
   ok('La ruta quedó guardada en la nube', JSON.stringify((await rest('GET','dias?select=estado')).data).includes('21801'));
   ok('Aparecen en "En rutas que se preparan"', (await p.textContent('#peLista')).includes('En rutas que se preparan'));
@@ -92,6 +96,10 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.evaluate(()=>peCargar());await p.waitForTimeout(1200);
   v=await p.evaluate(()=>viajes.find(x=>x.rutero==='Juan'));
   ok('Mientras no sale, el monto sigue a Monica (385 → 400)', v.pedidos.find(x=>x.fac===21801).total===400);
+  await rest('PATCH','pendientes_entrega?nro=eq.21801&estado=neq.enviada',{envases:[CAJA(2)]});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1200);
+  v=await p.evaluate(()=>viajes.find(x=>x.rutero==='Juan'));
+  ok('Si cambian los envases en Monica, el viaje se actualiza (2.5 cajas)', v.envases==='2.5 cajas · 1 cilindro 25lb');
 
   await p.click('.shHead .x');await p.waitForTimeout(300);
   await p.evaluate(()=>entrarVendedor('Juan'));await p.waitForTimeout(500);
@@ -103,7 +111,9 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
 
   // Cerrar pedidos -> no lleva envases
   await p.click('text=Cerrar pedidos');await p.waitForTimeout(600);
-  if(await p.isVisible('#modalRecibe.open'))await p.click('#modalRecibeBody button:has-text("No lleva")');
+  ok('Con envases de Monica ya no pregunta "¿Lleva envases?"', !(await p.isVisible('#modalRecibe.open')));
+  ok('Muestra "Según Monica" junto a envases', (await p.textContent('#zona')).includes('Según Monica: 2.5 cajas · 1 cilindro 25lb'));
+  await p.screenshot({path:SHOTS+'/6b-envases.png'});
   await p.waitForTimeout(400);
   // Justo antes de enviar cambian otra nota en Monica (sin que la app se haya enterado)
   await rest('PATCH','pendientes_entrega?nro=eq.21802&estado=neq.enviada',{total:250});
@@ -115,6 +125,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.click('#modalRecibeBody button:has-text("Usar montos de Monica")');await p.waitForTimeout(2500);
   v=await p.evaluate(()=>viajes.find(x=>x.rutero==='Juan'));
   ok('Salió con los montos exactos (400 + 250)', v.entradaLista&&v.pedidos.reduce((s,x)=>s+x.total,0)===650);
+  ok('Salió con sus envases anotados', v.envases==='2.5 cajas · 1 cilindro 25lb'&&(await p.textContent('#zona')).includes('2.5 cajas · 1 cilindro 25lb'));
   db=(await rest('GET','pendientes_entrega?select=*&order=nro')).data;
   const e1=db.find(f=>f.nro===21801),e2=db.find(f=>f.nro===21802);
   ok('En la nube quedan ENVIADAS con su total', e1.estado==='enviada'&&Number(e1.total_enviado)===400&&e2.estado==='enviada'&&Number(e2.total_enviado)===250);
@@ -140,6 +151,15 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   db=(await rest('GET','pendientes_entrega?select=*&nro=eq.21803')).data;
   ok('Quitar del viaje (antes de salir) la regresa a pendientes', db[0].estado==='pendiente'&&!db[0].rutero);
 
+  // Envases escritos a mano no se pisan
+  await p.evaluate(()=>{PE.sel=new Set([21804]);return peAsignar('Rosa');});await p.waitForTimeout(1500);
+  await rest('PATCH','pendientes_entrega?nro=eq.21804&estado=neq.enviada',{envases:[CAJA(3)]});
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Rosa');setEnvasesSilent(v.id,'4 cajas');});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1200);
+  ok('Envases escritos a mano no se pisan', await p.evaluate(()=>viajes.find(x=>x.rutero==='Rosa').envases)==='4 cajas');
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Rosa');peUsarEnvMonica(v.id);});
+  ok('"Usar" pone lo de Monica', await p.evaluate(()=>viajes.find(x=>x.rutero==='Rosa').envases)==='3 cajas');
+
   // Anulada en Monica después de apartarla
   await p.evaluate(()=>{PE.sel=new Set([21803]);return peAsignar('Pedro');});await p.waitForTimeout(1500);
   await rest('PATCH','pendientes_entrega?nro=eq.21803',{anulada:true,motivo:'anulada en Monica'});
@@ -155,7 +175,9 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.evaluate(()=>volverLista());
   await p.evaluate(()=>peAbrir());await p.waitForTimeout(1200);
   ok('Panel avisa que Facturación rápida no reporta', (await p.textContent('.pe-est')).includes('no reporta hace 10 min'));
-  await p.click('.pe-item:has-text("TIENDA EL CARMEN")');await p.click('.pe-mas');await p.waitForTimeout(300);
+  await rest('POST','pendientes_entrega',[fila(21805,'TIENDA NUEVA','lesli',48,50,'10:00','300')]);
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1000);
+  await p.click('.pe-item:has-text("TIENDA NUEVA")');await p.click('.pe-mas');await p.waitForTimeout(300);
   ok('Antes de mandar pide confirmar montos', (await p.textContent('#modalRecibeBody')).includes('Montos sin confirmar'));
   await p.screenshot({path:SHOTS+'/9-sin-confirmar.png'});
   await p.click('#modalRecibeBody button.sec');

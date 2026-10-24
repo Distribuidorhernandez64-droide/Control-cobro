@@ -351,6 +351,10 @@
   .pe-cam span{color:#5b6472;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pe-cam b{flex-shrink:0;font-weight:900}
   .pe-cam.mal b{color:var(--bad)}
+  .pe-env{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#b0601a;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pe-envhint{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12.5px;color:#5b6472;font-weight:700}
+  .pe-envhint b{color:var(--ink)}
+  .pe-envhint button{margin-left:auto;border:1px solid var(--line);background:var(--card);border-radius:9px;font-family:inherit;font-weight:800;font-size:12px;color:var(--ink);padding:6px 11px;cursor:pointer}
   .t-fac{background:#fdf0e1;color:#b0601a;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
 </style>
 </head>
@@ -1068,7 +1072,7 @@ function guardarEnvases(vid){
   const el=document.getElementById('envModal');
   const txt=el?(el.value||'').trim():'';
   if(!txt){if(el)el.focus();toast('Escribí qué envases lleva',true);return;}
-  v.envases=txt;v.envOk=false;tocar(v);
+  v.envases=txt;v.envOk=false;if(txt!==peEnvViaje(v))v.envMan=true;tocar(v);
   cerrarModalRecibe();
   if(document.activeElement)document.activeElement.blur();
   renderZona();
@@ -1110,8 +1114,8 @@ function addPedido(vid){
     if(filas.length){filas[filas.length-1].scrollIntoView({block:'center',behavior:'smooth'});}
   },30);
 }
-function setEnvases(vid,val){const v=viajes.find(x=>x.id===vid);if(!v)return;const tenia=!!(v.envases||'').trim();v.envases=val;tocar(v);const tiene=!!val.trim();if(tenia!==tiene){renderZona();setTimeout(()=>{const el=document.getElementById('env-'+vid);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}},20);}}
-function setEnvasesSilent(vid,val){const v=viajes.find(x=>x.id===vid);if(v){v.envases=val;tocar(v);}}
+function setEnvases(vid,val){const v=viajes.find(x=>x.id===vid);if(!v)return;const tenia=!!(v.envases||'').trim();v.envases=val;v.envMan=val!==peEnvViaje(v);tocar(v);const tiene=!!val.trim();if(tenia!==tiene){renderZona();setTimeout(()=>{const el=document.getElementById('env-'+vid);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}},20);}}
+function setEnvasesSilent(vid,val){const v=viajes.find(x=>x.id===vid);if(v){v.envases=val;v.envMan=val!==peEnvViaje(v);tocar(v);}}
 // El check de envases cuenta como cambio (mod) y se guarda de una vez. Antes
 // sólo quedaba en la pantalla: la siguiente sincronización lo desmarcaba sin
 // avisar y "Dinero recibido" se trababa pidiendo el check.
@@ -1213,7 +1217,7 @@ function borrarPedido(vid,pid){
   const pq=v.pedidos.find(p=>p.id===pid);
   if(pq&&pq.facEnv){toast('Esa nota ya salió en ruta; no se puede quitar',true);return;}
   v.pedidos=v.pedidos.filter(p=>p.id!==pid);
-  if(pq&&pq.fac)peLiberar(pq); // vuelve a pendientes
+  if(pq&&pq.fac){peLiberar(pq);peActualizarEnvases(v);} // vuelve a pendientes
   // Dejar constancia de que este pedido se borró A PROPÓSITO. Sin esto, la
   // fusión lo rescataría de la nube y volvería a aparecer.
   (v.pedBorrados=v.pedBorrados||[]).push(pid);
@@ -1629,7 +1633,9 @@ function renderZona(){
         html+=`<div style="padding:14px 16px;border-top:1px solid var(--line)">
           <button class="btn sec" style="font-size:12px;padding:8px 13px;margin-bottom:12px" onclick="volverAnotar(${v.id})">← Agregar más pedidos</button>
           <label class="fld">Envases que se llevó (opcional)</label>
-          <input id="env-${v.id}" placeholder="ej. 2 cajas retornable" value="${(v.envases||'').replace(/"/g,'&quot;')}" oninput="setEnvasesSilent(${v.id},this.value)"></div>
+          <input id="env-${v.id}" placeholder="ej. 2 cajas retornable" value="${(v.envases||'').replace(/"/g,'&quot;')}" oninput="setEnvasesSilent(${v.id},this.value)">
+          ${(()=>{const t=peEnvViaje(v);if(!t)return '';const igual=(v.envases||'')===t;
+            return `<div class="pe-envhint">${ICO_CAJA_S}<span>Según Monica: <b>${esc(t)}</b></span>${igual?'':`<button onclick="peUsarEnvMonica(${v.id})">Usar</button>`}</div>`;})()}</div>
         <div class="enviar-wrap">
           <button class="btn-enviar" ontouchstart="terminarPedidos(${v.id})" onclick="terminarPedidos(${v.id})">
             <span class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M7 5h7a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h6" stroke="#e8770f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="5" r="2.3" fill="#e8770f"/><circle cx="17" cy="17" r="2.3" fill="#e8770f"/></svg></span>
@@ -2142,6 +2148,7 @@ const ICO_CAMPANA=`<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><
 const ICO_NOTA=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l4 4v14H6z" stroke="#e8902a" stroke-width="1.9" stroke-linejoin="round"/><path d="M15 3v4h4M9 12h7M9 16h5" stroke="#e8902a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICO_LUPA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="#9aa1ad" stroke-width="2"/><path d="m20 20-4-4" stroke="#9aa1ad" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICO_OK_S=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICO_CAJA_S=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
 // "brenda (pueblo)" -> "Brenda pueblo"
@@ -2192,8 +2199,10 @@ function peSeguirMonica(){
       if(!f.anulada&&Math.abs((p.total||0)-f.total)>0.001){p.total=f.total;c=true;}
       if(!f.anulada&&f.cliente&&p.nombre!==f.cliente){p.nombre=f.cliente;c=true;}
       if(!!p.facAnul!==!!f.anulada){p.facAnul=!!f.anulada;c=true;}
+      if(!f.anulada&&JSON.stringify(p.env||[])!==JSON.stringify(f.envases||[])){p.env=f.envases||[];c=true;}
       if(c&&!tocados.includes(v))tocados.push(v);
     });
+    if(peActualizarEnvases(v)&&!tocados.includes(v))tocados.push(v);
   });
   if(!tocados.length)return;
   tocados.forEach(tocar);
@@ -2313,7 +2322,7 @@ function peRenderLista(){
         h+=`<button class="pe-item${on?' on':''}" onclick="peToggle(${f.nro})" aria-pressed="${on}">
           <span class="pe-check">${on?ICO_OK_S:''}</span>
           <span class="pe-mid"><span class="pe-nom">${esc(f.cliente||'Sin nombre')}</span>
-            <span class="pe-sub">${vistas.has(f.nro)?'':'<span class="pe-nueva">nueva</span>'}Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}${f.codigo_cliente?' · Cód. '+esc(f.codigo_cliente):''}</span></span>
+            <span class="pe-sub">${vistas.has(f.nro)?'':'<span class="pe-nueva">nueva</span>'}Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}${f.codigo_cliente?' · Cód. '+esc(f.codigo_cliente):''}</span>${(f.envases||[]).length?`<span class="pe-env">${ICO_CAJA_S}${esc(peEnvTexto(f.envases))}</span>`:''}</span>
           <span class="pe-tot">${q(f.total)}</span></button>`;
       });
       h+=`</div>`;
@@ -2340,7 +2349,7 @@ function peRenderBarra(){
   if(!PE.sel.size){b.innerHTML='';return;}
   const fs=PE.filas.filter(f=>PE.sel.has(f.nro)), tot=fs.reduce((s,f)=>s+f.total,0);
   b.innerHTML=`<div class="pe-barra">
-    <div class="pe-btx"><span>${fs.length} seleccionada${fs.length===1?'':'s'}</span><b>${q(tot)}</b></div>
+    <div class="pe-btx"><span>${fs.length} seleccionada${fs.length===1?'':'s'}${(()=>{const t=peEnvTexto(peEnvSumar(fs.map(f=>f.envases)));return t?' · '+esc(t):'';})()}</span><b>${q(tot)}</b></div>
     ${esMaestro()?`<button class="pe-descartar" onclick="peDescartarPreguntar()">No va a ruta</button>`:''}
     <button class="pe-mas" onclick="peElegirRutero()" aria-label="Mandar a un rutero"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg></button>
   </div>`;
@@ -2417,9 +2426,9 @@ async function peAsignar(r){
     tomadas.sort((a,b)=>a.nro-b.nro).forEach(f=>{
       if(pePedidoDe(f.nro))return;
       v.pedidos.push({id:nuevoId(),nombre:f.cliente||('Nota '+f.nro),total:f.total,estado:'pagado',devolucion:0,descuento:0,vuelto:0,
-        fac:f.nro,codCli:f.codigo_cliente||'',vendMon:f.vendedor||'',horaFac:f.hora||''});
+        fac:f.nro,codCli:f.codigo_cliente||'',vendMon:f.vendedor||'',horaFac:f.hora||'',env:f.envases||[]});
     });
-    tocar(v);
+    tocar(v);peActualizarEnvases(v);
     logAudit('FACTURAS A RUTA',`${r}: notas ${tomadas.map(f=>f.nro).join(', ')} (${q(tomadas.reduce((s,f)=>s+f.total,0))})`);
     const mapa={};tomadas.forEach(f=>mapa[f.nro]=f);
     PE.filas=PE.filas.map(f=>mapa[f.nro]||f);
@@ -2475,6 +2484,31 @@ async function peLiberar(p){
   peCargar();
 }
 
+// ---- Envases de las notas (cajas, vidrio, cilindros) ----
+// Facturación rápida cuenta en cada nota los envases que deben regresar. Aquí
+// se suman por viaje y se anotan solos en "Envases" (si no los escribiste a mano).
+const PE_ENV_ORDEN=['cajas','tiky','orange','quezalteca','cil25','cil35'];
+function peNum(q){q=Math.round(q*100)/100;return Number.isInteger(q)?String(q):String(q);}
+function peEnvSumar(listas){
+  const m={};
+  listas.forEach(l=>(l||[]).forEach(e=>{if(!e||!e.n)return;const x=m[e.n]||(m[e.n]={n:e.n,u:e.u,v:e.v,q:0});x.q=Math.round((x.q+(Number(e.q)||0))*100)/100;}));
+  const ord=n=>{const i=PE_ENV_ORDEN.indexOf(n);return i<0?99:i;};
+  return Object.values(m).filter(e=>e.q>0).sort((a,b)=>ord(a.n)-ord(b.n));
+}
+function peEnvTexto(lista){return (lista||[]).map(e=>peNum(e.q)+' '+(e.q<=1?e.u:e.v)).join(' · ');}
+function peEnvViaje(v){return peEnvTexto(peEnvSumar((v.pedidos||[]).filter(p=>p&&p.fac).map(p=>p.env)));}
+// Pone en el viaje los envases que dice Monica, salvo que se hayan escrito a mano
+function peActualizarEnvases(v){
+  if(!v||v.entradaLista||v.cerrado||v.envMan)return false;
+  const t=peEnvViaje(v);
+  if((v.envases||'')===t)return false;
+  v.envases=t;v.envOk=false;tocar(v);return true;
+}
+function peUsarEnvMonica(vid){
+  const v=viajes.find(x=>x.id===vid);if(!v)return;
+  v.envMan=false;v.envases='';peActualizarEnvases(v);tocar(v);renderZona();guardarAhora('envases de Monica');
+}
+
 // ---- Antes de "Enviar ruta": montos exactos y al día ----
 async function peRevisarAntesDeEnviar(v){
   const ps=(v.pedidos||[]).filter(p=>p&&p.fac&&!p.facEnv);
@@ -2490,13 +2524,17 @@ async function peRevisarAntesDeEnviar(v){
   ps.forEach(p=>{const f=por[p.fac];
     if(!f||f.estado==='pendiente'||f.estado==='descartada'||(f.viaje_uid&&f.viaje_uid!==v.uid&&f.estado!=='enviada')){perdidas.push(p);return;}
     if(f.anulada){anuladas.push({p,f});return;}
-    if(Math.abs((p.total||0)-f.total)>0.001)cambios.push({p,f});
+    const envCambio=JSON.stringify(p.env||[])!==JSON.stringify(f.envases||[]);
+    if(Math.abs((p.total||0)-f.total)>0.001||envCambio)cambios.push({p,f,envCambio});
   });
   return {ok:!cambios.length&&!anuladas.length&&!perdidas.length&&peFresco(),cambios,anuladas,perdidas,fresco:peFresco()};
 }
 function peAvisoEnvio(vid,rv){
   const li=[];
-  rv.cambios.forEach(({p,f})=>li.push(`<div class="pe-cam"><span>Nota ${p.fac} · ${esc(f.cliente||p.nombre)}</span><b>${q(p.total)} → ${q(f.total)}</b></div>`));
+  rv.cambios.forEach(({p,f,envCambio})=>{
+    if(Math.abs((p.total||0)-f.total)>0.001)li.push(`<div class="pe-cam"><span>Nota ${p.fac} · ${esc(f.cliente||p.nombre)}</span><b>${q(p.total)} → ${q(f.total)}</b></div>`);
+    if(envCambio)li.push(`<div class="pe-cam"><span>Nota ${p.fac} · envases</span><b>${esc(peEnvTexto(p.env)||'ninguno')} → ${esc(peEnvTexto(f.envases)||'ninguno')}</b></div>`);
+  });
   rv.anuladas.forEach(({p})=>li.push(`<div class="pe-cam mal"><span>Nota ${p.fac} · ${esc(p.nombre)}</span><b>Anulada · se quita</b></div>`));
   rv.perdidas.forEach(p=>li.push(`<div class="pe-cam mal"><span>Nota ${p.fac} · ${esc(p.nombre)}</span><b>No está apartada para esta ruta</b></div>`));
   const viejo=!rv.fresco?`<div style="font-size:13px;color:#b0601a;background:#fdf0e1;border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.45">Facturación rápida no reporta${PE.edad===null?'':' hace '+Math.max(1,Math.round(PE.edad/60))+' min'}. Si cambiaron una nota en Monica, aquí todavía no se ve.</div>`:'';
@@ -2513,11 +2551,11 @@ function peAplicarYEnviar(vid){
   const x=PE._rv;cerrarModalRecibe();
   const v=viajes.find(y=>y.id===vid);if(!v||!x||x.vid!==vid)return;
   const quitar=new Set();
-  x.rv.cambios.forEach(({p,f})=>{const q_=v.pedidos.find(y=>y.id===p.id);if(q_){q_.total=f.total;if(f.cliente)q_.nombre=f.cliente;}});
+  x.rv.cambios.forEach(({p,f})=>{const q_=v.pedidos.find(y=>y.id===p.id);if(q_){q_.total=f.total;if(f.cliente)q_.nombre=f.cliente;q_.env=f.envases||[];}});
   x.rv.anuladas.forEach(({p})=>quitar.add(p.id));
   x.rv.perdidas.forEach(p=>quitar.add(p.id));
   if(quitar.size){v.pedidos=v.pedidos.filter(p=>!quitar.has(p.id));(v.pedBorrados=v.pedBorrados||[]).push(...quitar);}
-  tocar(v);renderZona();
+  tocar(v);peActualizarEnvases(v);renderZona();
   if(!v.pedidos.length){toast('El viaje se quedó sin pedidos',true);guardarAhora('notas anuladas quitadas');return;}
   terminarPedidos(vid,true);
 }
@@ -2535,7 +2573,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-24.2';
+const VERSION='2026-10-24.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

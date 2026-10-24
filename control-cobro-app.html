@@ -835,6 +835,7 @@ function bajarAlViaje(vid){
 // primero, que es la que más urge.
 function entrarVendedor(r){
   abrirVendedor(r);
+  peCargar();
   const e=estadoVendedor(r);
   const v=e.enRuta.length?e.enRuta.slice().sort((a,b)=>new Date(a.horaSalida)-new Date(b.horaSalida))[0]:e.arm[0];
   if(v)bajarAlViaje(v.id);
@@ -2069,6 +2070,7 @@ async function recargarSiHaceFalta(){
 // Recarga FORZADA (botón actualizar): trae lo último ya mismo
 async function actualizarYa(){
   const b=document.getElementById('btnActualizar'); if(b)b.classList.add('girando');
+  peCargar();
   const sel=selRutero, va=viajeAbierto;
   _cargando=true;
   // Combinar lo de la nube con lo mío (no perder lo que anoté sin subir)
@@ -2533,7 +2535,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-24.1';
+const VERSION='2026-10-24.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});
@@ -2573,9 +2575,9 @@ async function iniciar(){
   // Auto-actualización cada 5 minutos. Solo baja cambios de otros teléfonos
   // si no estás escribiendo ni tenés un viaje en proceso. Nunca interrumpe.
   setInterval(recargarSiHaceFalta,300000);
-  // Por entregar: revisa la nube cada 20 s (solo con la app a la vista)
+  // Por entregar: revisa la nube cada 10 s (solo con la app a la vista)
   peCargar();
-  setInterval(()=>{if(document.visibilityState==='visible')peCargar();},20000);
+  setInterval(()=>{if(document.visibilityState==='visible')peCargar();},10000);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')peCargar();});
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',ajustarBarraTeclado);

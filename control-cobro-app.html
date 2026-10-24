@@ -2428,14 +2428,19 @@ async function peAsignar(r){
       v.pedidos.push({id:nuevoId(),nombre:f.cliente||('Nota '+f.nro),total:f.total,estado:'pagado',devolucion:0,descuento:0,vuelto:0,
         fac:f.nro,codCli:f.codigo_cliente||'',vendMon:f.vendedor||'',horaFac:f.hora||'',env:f.envases||[]});
     });
+    v.pedidosListos=true; // directo al paso de "Enviar ruta" (ahí está "Agregar más pedidos")
     tocar(v);peActualizarEnvases(v);
     logAudit('FACTURAS A RUTA',`${r}: notas ${tomadas.map(f=>f.nro).join(', ')} (${q(tomadas.reduce((s,f)=>s+f.total,0))})`);
     const mapa={};tomadas.forEach(f=>mapa[f.nro]=f);
     PE.filas=PE.filas.map(f=>mapa[f.nro]||f);
   }
   PE.sel.clear();
-  peRenderCampana();peRenderPanel();
-  if(!vistaDetalle)renderZona();
+  peRenderCampana();
+  if(tomadas.length){
+    // Se cierra la lista y se va directo al viaje del rutero, listo para "Enviar ruta"
+    PE.abierto=false;peMarcarVistas();document.getElementById('overlay').classList.remove('open');
+    abrirVendedor(r);irAEnviar(v.id);
+  }else{peRenderPanel();if(!vistaDetalle)renderZona();}
   const faltan=nros.length-tomadas.length;
   let ok=true;
   if(tomadas.length)ok=await guardarAhora('facturas a ruta de '+r);
@@ -2573,7 +2578,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-24.3';
+const VERSION='2026-10-24.4';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -82,7 +82,12 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   let v=await p.evaluate(()=>viajes.find(x=>x.rutero==='Juan'));
   ok('Se armó el viaje de Juan con las 2 notas', v&&v.pedidos.length===2&&v.pedidos.every(x=>x.fac)&&!v.entradaLista);
   ok('Envases del viaje anotados solos (1.5 cajas · 1 cilindro 25lb)', v.envases==='1.5 cajas · 1 cilindro 25lb');
-  ok('El panel sigue abierto y quedan 2', await p.evaluate(()=>PE.abierto)&&(await p.$$('#peLista .pe-item:not(.quieto)')).length===2);
+  ok('Al escoger rutero va directo a "Enviar ruta" (sin Cerrar pedidos)', !(await p.evaluate(()=>PE.abierto))&&v.pedidosListos===true&&await p.isVisible('#viaje-'+v.id+' .btn-enviar'));
+  ok('Ahí mismo está "Agregar más pedidos"', (await p.textContent('#viaje-'+v.id)).includes('Agregar más pedidos'));
+  await p.screenshot({path:SHOTS+'/5b-directo-a-enviar.png'});
+  await p.evaluate(()=>{volverLista();});await p.waitForTimeout(300);
+  await p.evaluate(()=>peAbrir());await p.waitForTimeout(800);
+  ok('En la lista quedan 2 pendientes', (await p.$$('#peLista .pe-item:not(.quieto)')).length===2);
   ok('La ruta quedó guardada en la nube', JSON.stringify((await rest('GET','dias?select=estado')).data).includes('21801'));
   ok('Aparecen en "En rutas que se preparan"', (await p.textContent('#peLista')).includes('En rutas que se preparan'));
   await p.screenshot({path:SHOTS+'/5-despues-de-mandar.png'});
@@ -110,8 +115,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('No deja editar el monto de una nota de Monica', !(await p.isVisible('#modalRecibe.open')));
 
   // Cerrar pedidos -> no lleva envases
-  await p.click('text=Cerrar pedidos');await p.waitForTimeout(600);
-  ok('Con envases de Monica ya no pregunta "¿Lleva envases?"', !(await p.isVisible('#modalRecibe.open')));
+  ok('No pregunta "¿Lleva envases?" (ya vienen de Monica)', !(await p.isVisible('#modalRecibe.open')));
   ok('Muestra "Según Monica" junto a envases', (await p.textContent('#zona')).includes('Según Monica: 2.5 cajas · 1 cilindro 25lb'));
   await p.screenshot({path:SHOTS+'/6b-envases.png'});
   await p.waitForTimeout(400);

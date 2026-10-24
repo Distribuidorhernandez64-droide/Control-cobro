@@ -373,6 +373,32 @@
   .pe-card .pe-env svg{width:11px;height:11px}
   .pe-cpie{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:auto;padding-top:3px}
   .pe-ctot{font-size:14px;font-weight:900;flex-shrink:0;letter-spacing:-.2px}
+  /* Panel "Por entregar" a pantalla completa (buscador fijo arriba, lista con su propio scroll) */
+  body.pe-bloqueo{overflow:hidden}
+  .overlay.pe-modo{align-items:stretch;bottom:auto;height:100%}
+  .sheet.pe-sheet{position:relative;display:flex;flex-direction:column;max-height:none;height:auto;flex:1;margin-top:max(10px,env(safe-area-inset-top));overflow:hidden;background:var(--bg)}
+  .pe-cab{flex-shrink:0;background:var(--card);border-bottom:1px solid var(--line);padding:16px 16px 0}
+  .pe-tit{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .pe-tit h2{margin:0;font-size:19px;font-weight:900;letter-spacing:-.2px}
+  .pe-cerrar{width:34px;height:34px;border-radius:50%;border:none;background:#f1f0ec;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
+  .pe-cerrar:active{transform:scale(.92)}
+  .pe-sheet .pe-buscar{height:44px;border-radius:12px;background:#f4f3ef;border:1px solid transparent;padding:0 6px 0 12px;transition:border-color .15s,background .15s}
+  .pe-sheet .pe-buscar:focus-within{background:var(--card);border-color:#d9d6ce}
+  .pe-sheet .pe-buscar input{font-size:16px;font-weight:700}
+  .pe-limpiar{width:28px;height:28px;border-radius:50%;border:none;background:#a9aeb7;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
+  .pe-limpiar.ver{display:flex}
+  .pe-limpiar:active{transform:scale(.9)}
+  .pe-sheet .pe-chips{padding:10px 0 12px}
+  .pe-sheet .pe-chip{min-height:34px;font-size:13px;padding:0 12px}
+  .pe-sheet #peLista{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 12px 0}
+  .pe-flota{position:absolute;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:6px;max-width:calc(100% - 28px);background:var(--ink);color:#fff;border-radius:999px;padding:6px 6px 6px 18px;box-shadow:0 10px 28px rgba(28,36,51,.32)}
+  .pe-flota.entra{animation:peEntra .26s cubic-bezier(.34,1.4,.64,1)}
+  @keyframes peEntra{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+  .pe-ftx{display:flex;flex-direction:column;min-width:0;margin-right:4px}
+  .pe-ftx b{font-size:16px;font-weight:900;line-height:1.15;letter-spacing:-.2px}
+  .pe-ftx span{font-size:11px;font-weight:700;color:#c4c9d2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pe-novaf{border:none;background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-weight:800;font-size:12px;border-radius:999px;height:36px;padding:0 12px;cursor:pointer;flex-shrink:0}
+  .pe-flota .pe-mas{width:48px;height:48px;box-shadow:none}
   .t-fac{background:#fdf0e1;color:#b0601a;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
 </style>
 </head>
@@ -2264,24 +2290,52 @@ function peTarjetaLista(){
 function peAbrir(){
   if(modoLectura)return;
   PE.abierto=true;
-  document.getElementById('overlay').classList.add('open');
+  const ov=document.getElementById('overlay'),sh=document.getElementById('sheet');
+  sh.innerHTML='';sh.classList.add('pe-sheet');ov.classList.add('open','pe-modo');
+  document.body.classList.add('pe-bloqueo');
+  peAjustarVista();
   peRenderPanel();
   peCargar();
 }
-function peCerrar(){
+function peCerrar(sinRender){
   PE.abierto=false;peMarcarVistas();
-  document.getElementById('overlay').classList.remove('open');
+  const ov=document.getElementById('overlay'),sh=document.getElementById('sheet');
+  if(document.activeElement&&document.activeElement.id==='peBuscar')document.activeElement.blur();
+  ov.classList.remove('open','pe-modo');ov.style.top='';ov.style.height='';
+  sh.classList.remove('pe-sheet');sh.innerHTML='';
+  document.body.classList.remove('pe-bloqueo');
   peRenderCampana();
-  if(!vistaDetalle)renderZona();
+  if(!sinRender&&!vistaDetalle)renderZona();
 }
-function peToggle(nro){if(PE.sel.has(nro))PE.sel.delete(nro);else PE.sel.add(nro);peRenderPanel();}
+// El panel ocupa exactamente lo que se ve: con el teclado abierto, el buscador
+// queda arriba a la vista y la lista se acomoda en el espacio que queda.
+function peAjustarVista(){
+  if(!PE.abierto)return;
+  const ov=document.getElementById('overlay'),vv=window.visualViewport;
+  if(!ov||!vv){return;}
+  ov.style.top=vv.offsetTop+'px';ov.style.height=vv.height+'px';
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',peAjustarVista);
+  window.visualViewport.addEventListener('scroll',peAjustarVista);
+}
+function peToggle(nro){if(PE.sel.has(nro))PE.sel.delete(nro);else PE.sel.add(nro);peRenderLista();}
 function peToggleGrupo(v){
   const fs=peFiltradas().filter(f=>f.vendedor===v);
   const todas=fs.every(f=>PE.sel.has(f.nro));
-  fs.forEach(f=>todas?PE.sel.delete(f.nro):PE.sel.add(f.nro));peRenderPanel();
+  fs.forEach(f=>todas?PE.sel.delete(f.nro):PE.sel.add(f.nro));peRenderLista();
 }
-function peFiltro(v){PE.filtro=v;peRenderPanel();}
-function peBuscar(t){PE.buscar=t;peRenderLista();}
+function peFiltro(v){PE.filtro=v;peRenderPanel();const l=document.getElementById('peLista');if(l)l.scrollTop=0;}
+function peBuscar(t){
+  PE.buscar=t;
+  const x=document.getElementById('peLimpiar');if(x)x.classList.toggle('ver',!!t);
+  peRenderLista();const l=document.getElementById('peLista');if(l)l.scrollTop=0;
+}
+function peLimpiar(){
+  const el=document.getElementById('peBuscar');
+  if(el){el.value='';el.focus();}
+  peBuscar('');
+}
 function peFiltradas(){
   const q=PE.buscar.trim().toLowerCase();
   return pePendientes().filter(f=>{
@@ -2306,17 +2360,21 @@ function peRenderPanel(){
   if(PE.filtro!=='todos'&&!g[PE.filtro])PE.filtro='todos';
   // quitar de la selección lo que ya no está
   const vivas=new Set(ps.map(f=>f.nro));[...PE.sel].forEach(n=>{if(!vivas.has(n))PE.sel.delete(n);});
+  // El esqueleto (con el buscador) se arma UNA vez: así el teclado no se cierra al refrescar
+  if(!document.getElementById('peBuscar')){
+    sh.innerHTML=`<div class="pe-cab">
+        <div class="pe-tit"><div><h2>Por entregar</h2><div id="peEst"></div></div><button class="pe-cerrar" onclick="peCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div>
+        <div class="pe-buscar">${ICO_LUPA}<input id="peBuscar" type="text" inputmode="search" placeholder="Cliente, nota o código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" value="${esc(PE.buscar)}" oninput="peBuscar(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
+          <button id="peLimpiar" class="pe-limpiar${PE.buscar?' ver':''}" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="peLimpiar()" aria-label="Borrar búsqueda"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg></button></div>
+        <div class="pe-chips" id="peChips"></div>
+      </div>
+      <div id="peLista"></div>
+      <div id="peBarra"></div>`;
+  }
   const chips=[`<button class="pe-chip${PE.filtro==='todos'?' on':''}" onclick="peFiltro('todos')">Todos <b>${ps.length}</b></button>`]
     .concat(Object.keys(g).sort().map(v=>`<button class="pe-chip${PE.filtro===v?' on':''}" onclick="peFiltro('${esc(v).replace(/'/g,"\\'")}')"><i style="background:${peColorVend(v)}"></i>${esc(peNombreVend(v))} <b>${g[v]}</b></button>`)).join('');
-  const buscarActivo=document.activeElement&&document.activeElement.id==='peBuscar';
-  sh.innerHTML=`<div class="shHead"><div><h2 style="display:flex;align-items:center;gap:8px">Por entregar</h2>${peEstadoPuente()}</div><button class="x" onclick="peCerrar()" aria-label="Cerrar">×</button></div>
-    <div class="pe-top">
-      <label class="pe-buscar">${ICO_LUPA}<input id="peBuscar" placeholder="Cliente, nota o código" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" value="${esc(PE.buscar)}" oninput="peBuscar(this.value)"></label>
-      <div class="pe-chips">${chips}</div>
-    </div>
-    <div id="peLista"></div>
-    <div id="peBarra"></div>`;
-  if(buscarActivo){const el=document.getElementById('peBuscar');if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}}
+  const ce=document.getElementById('peChips');if(ce.__h!==chips){ce.innerHTML=chips;ce.__h=chips;}
+  const ee=document.getElementById('peEst'),est=peEstadoPuente();if(ee.__h!==est){ee.innerHTML=est;ee.__h=est;}
   peRenderLista();
 }
 function peRenderLista(){
@@ -2360,18 +2418,20 @@ function peRenderLista(){
     });
     h+=`</div>`;
   }
-  h+=`<div style="height:${PE.sel.size?110:24}px"></div>`;
-  cont.innerHTML=h;
+  h+=`<div style="height:${PE.sel.size?104:24}px"></div>`;
+  const y=cont.scrollTop;cont.innerHTML=h;cont.scrollTop=y;
   peRenderBarra();
 }
 function peRenderBarra(){
   const b=document.getElementById('peBarra');if(!b)return;
   if(!PE.sel.size){b.innerHTML='';return;}
   const fs=PE.filas.filter(f=>PE.sel.has(f.nro)), tot=fs.reduce((s,f)=>s+f.total,0);
-  b.innerHTML=`<div class="pe-barra">
-    <div class="pe-btx"><span>${fs.length} seleccionada${fs.length===1?'':'s'}${(()=>{const t=peEnvTexto(peEnvSumar(fs.map(f=>f.envases)));return t?' · '+esc(t):'';})()}</span><b>${q(tot)}</b></div>
-    ${esMaestro()?`<button class="pe-descartar" onclick="peDescartarPreguntar()">No va a ruta</button>`:''}
-    <button class="pe-mas" onclick="peElegirRutero()" aria-label="Mandar a un rutero"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+  const env=peEnvTexto(peEnvSumar(fs.map(f=>f.envases)));
+  const nuevo=!b.firstElementChild;
+  b.innerHTML=`<div class="pe-flota${nuevo?' entra':''}">
+    <div class="pe-ftx"><b>${q(tot)}</b><span>${fs.length} nota${fs.length===1?'':'s'}${env?' · '+esc(env):''}</span></div>
+    ${esMaestro()?`<button class="pe-novaf" onclick="peDescartarPreguntar()">No va</button>`:''}
+    <button class="pe-mas" onclick="peElegirRutero()" aria-label="Mandar a un rutero"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.7" stroke-linecap="round"/></svg></button>
   </div>`;
 }
 
@@ -2458,7 +2518,7 @@ async function peAsignar(r){
   peRenderCampana();
   if(tomadas.length){
     // Se cierra la lista y se va directo al viaje del rutero, listo para "Enviar ruta"
-    PE.abierto=false;peMarcarVistas();document.getElementById('overlay').classList.remove('open');
+    peCerrar(true);
     abrirVendedor(r);irAEnviar(v.id);
   }else{peRenderPanel();if(!vistaDetalle)renderZona();}
   const faltan=nros.length-tomadas.length;
@@ -2598,7 +2658,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-24.5';
+const VERSION='2026-10-24.6';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

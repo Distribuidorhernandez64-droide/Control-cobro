@@ -62,14 +62,20 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('Busca por nombre', (await p.textContent('#peLista')).includes('TIENDA LA BENDICIÓN')&&(await p.$$('#peLista .pe-card')).length===1);
   await p.fill('#peBuscar','214');await p.waitForTimeout(200);
   ok('Busca por código', (await p.textContent('#peLista')).includes('ABARROTERÍA SAN JOSÉ'));
-  await p.fill('#peBuscar','');await p.waitForTimeout(200);
+  ok('Aparece la X para borrar lo escrito', await p.isVisible('#peLimpiar'));
+  await p.evaluate(()=>{window.__inp=document.getElementById('peBuscar');});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(800);
+  ok('Al refrescar no se cierra el teclado (el buscador sigue siendo el mismo)', await p.evaluate(()=>document.getElementById('peBuscar')===window.__inp));
+  await p.click('#peLimpiar');await p.waitForTimeout(200);
+  ok('La X borra todo y deja el cursor en el buscador', (await p.inputValue('#peBuscar'))===''&&await p.evaluate(()=>document.activeElement.id==='peBuscar')&&(await p.$$('#peLista .pe-card')).length===4&&!(await p.isVisible('#peLimpiar')));
 
   await p.click('.pe-chip:has-text("Brenda")');await p.waitForTimeout(200);
   ok('Filtro por vendedor', (await p.$$('#peLista .pe-card')).length===2);
   await p.click('.pe-todas');await p.waitForTimeout(200);
   ok('"Todas" selecciona el grupo', (await p.$$('.pe-card.on')).length===2);
-  ok('Barra con total seleccionado Q605.50', (await p.textContent('.pe-barra')).includes('Q605.50'));
-  ok('Barra suma los envases (1.5 cajas · 1 cilindro 25lb)', (await p.textContent('.pe-barra')).includes('1.5 cajas · 1 cilindro 25lb'));
+  ok('El + flota a la vista sin bajar hasta abajo', await p.evaluate(()=>{const b=document.querySelector('.pe-flota .pe-mas').getBoundingClientRect();return b.bottom<=window.innerHeight&&b.top>window.innerHeight-140;}));
+  ok('Barra con total seleccionado Q605.50', (await p.textContent('.pe-flota')).includes('Q605.50'));
+  ok('Barra suma los envases (1.5 cajas · 1 cilindro 25lb)', (await p.textContent('.pe-flota')).includes('1.5 cajas · 1 cilindro 25lb'));
   ok('Cada nota muestra sus envases', (await p.textContent('#peLista')).includes('0.5 caja · 1 cilindro 25lb'));
   await p.screenshot({path:SHOTS+'/3-seleccion.png'});
 
@@ -107,7 +113,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   v=await p.evaluate(()=>viajes.find(x=>x.rutero==='Juan'));
   ok('Si cambian los envases en Monica, el viaje se actualiza (2.5 cajas)', v.envases==='2.5 cajas · 1 cilindro 25lb');
 
-  await p.click('.shHead .x');await p.waitForTimeout(300);
+  await p.click('.pe-cerrar');await p.waitForTimeout(300);
   await p.evaluate(()=>entrarVendedor('Juan'));await p.waitForTimeout(500);
   ok('La fila del pedido muestra la nota', (await p.textContent('#zona')).includes('Nota 21801'));
   await p.screenshot({path:SHOTS+'/6-viaje-juan.png'});

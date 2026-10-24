@@ -21,3 +21,10 @@ Correrlas antes de subir cualquier cambio al guardado.
 
 `prueba-dos-aparatos.js` simula celular y PC a la vez contra la misma nube,
 con la PC 3 minutos adelantada. Es la prueba más importante del dinero.
+
+## Por entregar (notas de Monica)
+
+`prueba-por-entregar.js` — campanita, buscar, escoger, mandar a un rutero,
+montos que siguen a Monica hasta que sale la ruta, aviso de cambios al enviar
+y candado de las notas ya enviadas. Usa la librería real de Supabase contra
+una base local (Postgres + PostgREST) con `supabase/pendientes_entrega.sql`.

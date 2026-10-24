@@ -281,6 +281,77 @@
   .pedwrap .ped{position:relative;background:#fff;transition:transform .18s ease;will-change:transform;z-index:1}
   #btnActualizar.girando svg{animation:girar .5s linear}
   @keyframes girar{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  /* ===== Por entregar (notas de Monica) ===== */
+  .pebell{position:relative;width:42px;height:42px;border-radius:12px;border:none;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
+  .pebell:active{transform:scale(.93)}
+  .pebell .pebd{position:absolute;top:-5px;right:-5px;min-width:21px;height:21px;padding:0 6px;border-radius:11px;background:#d4583e;color:#fff;font-size:11.5px;font-weight:900;display:none;align-items:center;justify-content:center;border:2px solid var(--yellow);box-sizing:border-box}
+  .pebell.nuevas .pebd{animation:pePulso 1.8s ease-in-out infinite}
+  .pebell.sacude svg{animation:peSacude .7s ease}
+  @keyframes pePulso{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+  @keyframes peSacude{0%,100%{transform:rotate(0)}20%{transform:rotate(-16deg)}40%{transform:rotate(13deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(5deg)}}
+  .pe-aviso{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;color:var(--ink)}
+  .pe-aviso:active{background:#f4f3ef}
+  .pe-aviso-ico{width:44px;height:44px;border-radius:13px;background:#fdf0e1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .pe-aviso-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+  .pe-aviso-tx b{font-size:15.5px;font-weight:900}
+  .pe-aviso-ch{display:flex;flex-wrap:wrap;gap:6px}
+  .pe-mini{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#5b6472;background:#f4f3ef;border-radius:20px;padding:3px 9px}
+  .pe-mini i,.pe-chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .pe-aviso-ir{font-size:24px;color:var(--mut);font-weight:700}
+  .pe-est{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--mut);margin-top:3px}
+  .pe-est i{width:8px;height:8px;border-radius:50%;background:var(--mut)}
+  .pe-est.ok{color:var(--green)}.pe-est.ok i{background:var(--mint)}
+  .pe-est.mal{color:#b0601a}.pe-est.mal i{background:#e8902a}
+  .pe-top{padding:12px 16px 4px;background:var(--bg)}
+  .pe-buscar{display:flex;align-items:center;gap:9px;height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+  .pe-buscar input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:inherit;font-size:16px;font-weight:700;color:var(--ink);padding:0;margin:0;box-shadow:none;height:auto}
+  .pe-chips{display:flex;gap:7px;overflow-x:auto;padding:11px 0 4px;scrollbar-width:none}
+  .pe-chips::-webkit-scrollbar{display:none}
+  .pe-chip{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 13px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-family:inherit;font-size:13.5px;font-weight:800;color:var(--ink);cursor:pointer;white-space:nowrap}
+  .pe-chip b{font-weight:900;color:var(--mut)}
+  .pe-chip.on{background:var(--ink);border-color:var(--ink);color:#fff}.pe-chip.on b{color:#f8d967}
+  #peLista{padding:6px 16px 0}
+  .pe-grupo{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)}
+  .pe-gh{display:flex;align-items:center;gap:11px;padding:12px 12px 10px 14px;border-bottom:1px solid var(--line)}
+  .pe-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;flex-shrink:0}
+  .pe-gtx{flex:1;min-width:0;display:flex;flex-direction:column}
+  .pe-gtx b{font-size:15px;font-weight:900}.pe-gtx span{font-size:12.5px;color:var(--mut);font-weight:700}
+  .pe-todas{border:none;background:#f4f3ef;color:var(--ink);font-family:inherit;font-weight:800;font-size:12.5px;border-radius:10px;min-height:36px;padding:0 12px;cursor:pointer}
+  .pe-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:none;border-top:1px solid #f2f1ed;background:var(--card);padding:12px 14px;min-height:62px;font-family:inherit;color:var(--ink);cursor:pointer;transition:background .15s}
+  .pe-gh+.pe-item,.pe-grupo>.pe-item:first-child{border-top:none}
+  .pe-item:active{background:#f6f5f2}
+  .pe-item.on{background:#fff7dc}
+  .pe-item.quieto{cursor:default}
+  .pe-check{width:26px;height:26px;border-radius:50%;border:2px solid #cfd3da;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;box-sizing:border-box}
+  .pe-item.on .pe-check{background:var(--ink);border-color:var(--ink);animation:checkpop .22s}
+  .pe-check.gris{border:none;background:#fdf0e1}
+  .pe-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .pe-nom{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pe-sub{font-size:12.5px;color:#7b8391;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pe-nueva{display:inline-block;margin-right:6px;font-size:10px;font-weight:900;color:#fff;background:#d4583e;border-radius:8px;padding:1px 7px;vertical-align:1px}
+  .pe-tot{font-size:15px;font-weight:900;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .pe-devolver{border:1px solid var(--line);background:var(--card);border-radius:9px;font-family:inherit;font-size:11.5px;font-weight:800;color:var(--ink);padding:5px 9px;cursor:pointer}
+  .pe-sec{font-size:11.5px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--mut);margin:16px 4px 8px}
+  .pe-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:40px 20px;color:var(--mut);font-size:13.5px}
+  .pe-vacio b{color:var(--ink);font-size:16px}
+  .pe-vacio-ico{width:52px;height:52px;border-radius:16px;background:var(--green2);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+  .pe-barra{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(28,36,51,.07)}
+  .pe-btx{flex:1;min-width:0;display:flex;flex-direction:column}
+  .pe-btx span{font-size:12.5px;color:var(--mut);font-weight:800}.pe-btx b{font-size:19px;font-weight:900}
+  .pe-descartar{border:1px solid var(--line);background:var(--card);border-radius:12px;font-family:inherit;font-weight:800;font-size:12.5px;color:#7b8391;min-height:44px;padding:0 12px;cursor:pointer}
+  .pe-mas{width:58px;height:58px;border-radius:50%;border:none;background:#e8902a;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 16px rgba(232,144,42,.45);flex-shrink:0;padding:0}
+  .pe-mas:active{transform:scale(.92)}
+  .pe-ruts{display:flex;flex-direction:column;max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:14px}
+  .pe-rut{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;border-top:1px solid var(--line);background:var(--card);padding:10px 12px;min-height:58px;font-family:inherit;color:var(--ink);cursor:pointer}
+  .pe-rut:first-child{border-top:none}
+  .pe-rut:active{background:#f6f5f2}
+  .pe-ir{font-size:22px;color:var(--mut)}
+  .pe-cams{display:flex;flex-direction:column;gap:7px;max-height:46vh;overflow:auto}
+  .pe-cam{display:flex;justify-content:space-between;gap:10px;font-size:13px;background:#f6f5f2;border-radius:10px;padding:9px 11px}
+  .pe-cam span{color:#5b6472;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pe-cam b{flex-shrink:0;font-weight:900}
+  .pe-cam.mal b{color:var(--bad)}
+  .t-fac{background:#fdf0e1;color:#b0601a;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
 </style>
 </head>
 <body>
@@ -298,7 +369,8 @@
 <div class="demo" style="background:#e8f4ec;color:#1f6b4e">☁ <span id="quienSoy"></span> · <span id="btnSalir" onclick="cerrarSesion()" style="text-decoration:underline;cursor:pointer">salir</span> <span id="verApp" style="opacity:.55;font-weight:600;margin-left:4px"></span></div>
 <div id="avisoVersion" onclick="recargarApp()" style="display:none;background:#e8902a;color:#fff;text-align:center;font-size:13px;font-weight:800;padding:9px 12px;cursor:pointer">Hay una versión nueva de la app · <u>Tocá para actualizar</u></div>
 <header>
-  <div class="htop"><h1>Control de Cobro <span id="syncDot" class="dot ok" title="guardado"></span> <button id="btnActualizar" onclick="actualizarYa()" title="Actualizar" style="background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button> <span class="solo-maestro" style="position:relative;display:inline-block;vertical-align:middle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#1c2433" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><input type="date" id="fechaHist" max="" onchange="verDia(this.value)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer"></span></h1><div style="display:flex;gap:7px">
+  <div class="htop"><h1>Control de Cobro <span id="syncDot" class="dot ok" title="guardado"></span> <button id="btnActualizar" onclick="actualizarYa()" title="Actualizar" style="background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button> <span class="solo-maestro" style="position:relative;display:inline-block;vertical-align:middle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#1c2433" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><input type="date" id="fechaHist" max="" onchange="verDia(this.value)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer"></span></h1><div style="display:flex;gap:7px;align-items:center">
+    <button id="btnPE" class="pebell" onclick="peAbrir()" aria-label="Por entregar"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5Z" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><span class="pebd" id="peBadge"></span></button>
     <button class="rep solo-maestro" style="display:flex;align-items:center;gap:6px" onclick="abrirAuditoria()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 18V10M12 18V5M18 18v-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>Reporte</button>
   </div></div>
   <div class="daytot"><span class="l">Efectivo del día</span><span class="v" id="tEfectivo">Q0.00</span></div>
@@ -872,14 +944,21 @@ function nuevoViaje(){if(modoLectura)return;if(!selRutero)return;const v={id:nue
     const el=document.getElementById('in-nom-'+v.id);if(el)el.focus();
   },80);}
 let _enviando=false;
-async function terminarPedidos(vid){if(modoLectura)return;const v=viajes.find(x=>x.id===vid);if(!v)return;
+async function terminarPedidos(vid,confirmado){if(modoLectura)return;const v=viajes.find(x=>x.id===vid);if(!v)return;
   if(_enviando)return; _enviando=true;
   const elN=document.getElementById('in-nom-'+vid), elM=document.getElementById('in-mon-'+vid);
   if(elN&&elM&&(elN.value||'').trim()&&!isNaN(parseFloat(elM.value))){
     v.pedidos.push({id:nuevoId(),nombre:elN.value.trim(),total:parseFloat(elM.value),estado:'pagado',devolucion:0,descuento:0,vuelto:0});
   }
   if(v.pedidos.length===0){toast('Agregá al menos un pedido',true);_enviando=false;return;}
+  // Notas de Monica: antes de salir, montos exactos y al día
+  if(!confirmado&&v.pedidos.some(p=>p&&p.fac&&!p.facEnv)){
+    let rv=await peRevisarAntesDeEnviar(v);
+    if(rv.sinRed)rv={ok:false,cambios:[],anuladas:[],perdidas:[],fresco:false};
+    if(!rv.ok){_enviando=false;const elE0=document.getElementById('env-'+vid);if(elE0)v.envases=elE0.value;peAvisoEnvio(vid,rv);return;}
+  }
   const elE=document.getElementById('env-'+vid);if(elE)v.envases=elE.value;
+  v.pedidos.forEach(p=>{if(p&&p.fac)p.facEnv=true;}); // ya no cambian
   // Si la ruta ya había salido hace más de 5 minutos y se volvió a enviar tras
   // una corrección, el rutero ya iba en camino: se respeta su hora de salida.
   // Antes de 5 minutos todavía no se había ido: la salida arranca de nuevo.
@@ -889,7 +968,8 @@ async function terminarPedidos(vid){if(modoLectura)return;const v=viajes.find(x=
   renderZona();
   const ok=await guardarAhora('ruta enviada');
   toast(ok?'Ruta enviada y guardada ✓':'⚠ No se pudo guardar. Revisá internet',!ok);
-  _enviando=false;}
+  _enviando=false;
+  if(ok&&v.pedidos.some(p=>p&&p.fac))peSellar(v);}
 async function terminarAnotar(vid){if(modoLectura)return;const v=viajes.find(x=>x.id===vid);if(!v)return;
   const elN=document.getElementById('in-nom-'+vid), elM=document.getElementById('in-mon-'+vid);
   if(elN&&elM&&(elN.value||'').trim()&&!isNaN(parseFloat(elM.value))){
@@ -1129,7 +1209,10 @@ function borrarPedido(vid,pid){
   const v=viajes.find(x=>x.id===vid);if(!v)return;
   if(v.cerrado)return;
   if(v.entradaLista)return; // ruta ya enviada: primero "Corregir pedidos o envases"
+  const pq=v.pedidos.find(p=>p.id===pid);
+  if(pq&&pq.facEnv){toast('Esa nota ya salió en ruta; no se puede quitar',true);return;}
   v.pedidos=v.pedidos.filter(p=>p.id!==pid);
+  if(pq&&pq.fac)peLiberar(pq); // vuelve a pendientes
   // Dejar constancia de que este pedido se borró A PROPÓSITO. Sin esto, la
   // fusión lo rescataría de la nube y volvería a aparecer.
   (v.pedBorrados=v.pedBorrados||[]).push(pid);
@@ -1183,6 +1266,7 @@ function editarPed(vid,pid,campo){
   if(modoLectura||!esMaestro())return;
   const v=viajes.find(x=>x.id===vid);if(!v||v.cerrado||v.entradaLista)return;
   const p=v.pedidos.find(x=>x.id===pid);if(!p)return;
+  if(p.fac){toast('Viene de Monica (nota '+p.fac+'). Si hay que cambiarla, se cambia en Monica.',true);return;}
   const esNom=campo==='nombre';
   document.getElementById('modalRecibeBody').innerHTML=`
     <div style="font-size:17px;font-weight:900;margin-bottom:4px">${esNom?'Cambiar nombre':'Cambiar monto'}</div>
@@ -1265,8 +1349,9 @@ function renderPedidos(v,editable){
   // el botón desaparece: para corregir hay que tocar "Corregir pedidos o
   // envases", que devuelve el viaje a modo edición y lo habilita de nuevo.
   // El anotador nunca puede eliminar.
-  const puedeBorrar = esMaestro() && !v.cerrado && !v.entradaLista;
+  const puedeBorrarV = esMaestro() && !v.cerrado && !v.entradaLista;
   return v.pedidos.map(p=>{
+    const puedeBorrar=puedeBorrarV&&!p.facEnv, puedeEditar=puedeBorrarV&&!p.fac;
     const prob=p.estado!=='pagado'||ajusteDe(p)>0;
     const ef=efectivoDe(p);
     let montoShow;
@@ -1279,9 +1364,9 @@ function renderPedidos(v,editable){
     let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}" ${swipeAttrs} ${editable?`onclick="abrirPed(${v.id},${p.id})"`:''}>
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:38px;height:38px;border-radius:50%;background:#eef0f3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="#9aa1ad" stroke-width="1.8"/><path d="M5 19c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5" stroke="#9aa1ad" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-        <div><span class="pn${puedeBorrar?' edt':''}" ${puedeBorrar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}<div class="sub">${pedidoSub(p)}</div></div>
+        <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${p.facAnul?'<span class="tag t-canc">anulada en Monica</span>':''}<div class="sub">${pedidoSub(p)}</div></div>
       </div>
-      <div class="pm${puedeBorrar?' edt':''}" ${puedeBorrar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'total')"`:''}>${montoShow}</div></div></div>`;
+      <div class="pm${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'total')"`:''}>${montoShow}</div></div></div>`;
     if(editable){
       row+=`<div class="pbox" id="pb-${v.id}-${p.id}">
         <div class="chips">
@@ -1374,7 +1459,7 @@ function estadoVendedor(r){
   return {vs,enRuta,arm,rec,ent,ult};
 }
 function renderLista(){
-  if(!ruteros.length)return '<div class="empty">Tocá <b style="color:#e8902a">+</b> para agregar un vendedor y empezar.</div>';
+  if(!ruteros.length)return peTarjetaLista()+'<div class="empty">Tocá <b style="color:#e8902a">+</b> para agregar un vendedor y empezar.</div>';
   const filas=ruteros.map(r=>{
     const e=estadoVendedor(r), col=colorRutero(r), j=r.replace(/'/g,"\\'");
     let sb,hr='',on=false,bd='',prio;
@@ -1398,7 +1483,7 @@ function renderLista(){
       <div class="mid"><div class="l1"><span class="nm">${esc(r)}</span><span class="hr${on?' on':''}">${hr}</span></div>
         <div class="l2"><span class="sb">${sb}</span>${bd}</div></div></div>`};
   }).sort((a,b)=>a.prio-b.prio||b.ult-a.ult);
-  return `<div class="vlista">${filas.map(f=>f.html).join('')}</div>`;
+  return peTarjetaLista()+`<div class="vlista">${filas.map(f=>f.html).join('')}</div>`;
 }
 function chatHeader(r){
   const e=estadoVendedor(r), col=colorRutero(r);
@@ -2021,7 +2106,7 @@ async function verDia(fecha){
     viajes.forEach(v=>{if(v&&!v.uid)v.uid=uid();});
     selRutero=ruteros[0]||null;viajeAbierto=null;vistaDetalle=false;
     _cargando=false;
-    renderRuteros();renderZona();
+    renderRuteros();renderZona();peRenderCampana();
     mostrarBannerHistorial(fecha);
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(err){toast('No se pudo cargar ese día',true);console.log(err);}
@@ -2033,7 +2118,7 @@ async function volverHoy(){
   await cargarNube();
   selRutero=ruteros[0]||null;viajeAbierto=null;vistaDetalle=false;
   _cargando=false;
-  renderRuteros();renderZona();
+  renderRuteros();renderZona();peCargar();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function mostrarBannerHistorial(fecha){
@@ -2043,12 +2128,412 @@ function mostrarBannerHistorial(fecha){
   b.style.display='block';
 }
 
+// ===== POR ENTREGAR: notas de Monica que sube Facturación rápida =====
+// Facturación rápida (en la PC) sube cada 20 s las notas de entrega de los
+// vendedores elegidos a la tabla 'pendientes_entrega'. Aquí aparecen con la
+// campanita; se escogen, se mandan a un rutero y siguen el camino de siempre.
+// Estados: pendiente → asignada (en un viaje que se arma; el monto sigue a
+// Monica) → enviada (salió en ruta; ya no cambia, lo cuida la base de datos).
+const PE={filas:[],cargado:false,edad:null,sel:new Set(),filtro:'todos',buscar:'',abierto:false,error:'',ocupado:false};
+const PE_FRESCO=90; // segundos: si Facturación rápida no reporta en este tiempo, los montos pueden no estar al día
+const ICO_CAMPANA=`<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5Z" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg>`;
+const ICO_NOTA=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l4 4v14H6z" stroke="#e8902a" stroke-width="1.9" stroke-linejoin="round"/><path d="M15 3v4h4M9 12h7M9 16h5" stroke="#e8902a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICO_LUPA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="#9aa1ad" stroke-width="2"/><path d="m20 20-4-4" stroke="#9aa1ad" stroke-width="2" stroke-linecap="round"/></svg>`;
+const ICO_OK_S=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
+
+// "brenda (pueblo)" -> "Brenda pueblo"
+function peNombreVend(v){const s=String(v||'Sin vendedor').replace(/[()]/g,' ').replace(/\s+/g,' ').trim();return s.charAt(0).toUpperCase()+s.slice(1);}
+function peColorVend(v){const t=String(v||'');let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return ['#3a7bd5','#c2407a','#1ab5a5','#9b59b6','#2fae74','#d4583e'][h%6];}
+function peHora(h){if(!h)return '';const m=String(h).match(/^(\d{1,2}):(\d{2})/);if(!m)return esc(h);let H=+m[1];const ap=H<12?'a. m.':'p. m.';H=H%12||12;return H+':'+m[2]+' '+ap;}
+function peVistas(){try{return new Set(JSON.parse(localStorage.getItem('cc_pe_vistas')||'[]'));}catch(e){return new Set();}}
+function peMarcarVistas(){try{const s=peVistas();PE.filas.forEach(f=>s.add(f.nro));localStorage.setItem('cc_pe_vistas',JSON.stringify([...s].slice(-800)));}catch(e){}}
+// Nota ya puesta en algún viaje de este aparato
+function pePedidoDe(nro){for(const v of viajes){if(!v)continue;const p=(v.pedidos||[]).find(x=>x&&x.fac===nro);if(p)return {v,p};}return null;}
+function pePendientes(){return PE.filas.filter(f=>f.estado==='pendiente'&&!f.anulada&&!pePedidoDe(f.nro));}
+function peAsignadas(){return PE.filas.filter(f=>f.estado==='asignada'&&!f.anulada);}
+function peFresco(){return PE.edad!==null&&PE.edad!==undefined&&PE.edad<=PE_FRESCO;}
+
+async function peLeerEdad(){
+  try{const r=await sb.rpc('puente_edad',{p_id:'facturacion'});if(r&&!r.error)PE.edad=(r.data===null||r.data===undefined)?null:Number(r.data);}catch(e){}
+}
+async function peCargar(){
+  if(modoLectura||PE.ocupado)return;
+  PE.ocupado=true;
+  try{
+    const r=await sb.from('pendientes_entrega').select('*').in('estado',['pendiente','asignada']).order('nro');
+    if(r.error)throw r.error;
+    const antes=new Set(PE.filas.map(f=>f.nro));
+    PE.filas=(r.data||[]).map(f=>({...f,total:Number(f.total)||0}));
+    PE.cargado=true;PE.error='';
+    const nuevas=pePendientes().filter(f=>!antes.has(f.nro)&&!peVistas().has(f.nro));
+    if(nuevas.length&&antes.size){try{navigator.vibrate&&navigator.vibrate([40,60,40]);}catch(e){}
+      const b=document.getElementById('btnPE');if(b){b.classList.remove('sacude');void b.offsetWidth;b.classList.add('sacude');}}
+  }catch(e){PE.error='sin conexión';}
+  await peLeerEdad();
+  PE.ocupado=false;
+  peSeguirMonica();
+  peReintentarEnviadas();
+  peRenderCampana();
+  if(PE.abierto)peRenderPanel();
+  else if(!vistaDetalle&&!escribiendoAhora())renderZona();
+}
+// Mientras el viaje no sale, los montos siguen a Monica (si allá modifican la nota)
+function peSeguirMonica(){
+  const por={};PE.filas.forEach(f=>por[f.nro]=f);
+  const tocados=[];
+  viajes.forEach(v=>{
+    if(!v||v.entradaLista||v.cerrado)return;
+    (v.pedidos||[]).forEach(p=>{
+      if(!p||!p.fac||p.facEnv)return;const f=por[p.fac];if(!f)return;
+      let c=false;
+      if(!f.anulada&&Math.abs((p.total||0)-f.total)>0.001){p.total=f.total;c=true;}
+      if(!f.anulada&&f.cliente&&p.nombre!==f.cliente){p.nombre=f.cliente;c=true;}
+      if(!!p.facAnul!==!!f.anulada){p.facAnul=!!f.anulada;c=true;}
+      if(c&&!tocados.includes(v))tocados.push(v);
+    });
+  });
+  if(!tocados.length)return;
+  tocados.forEach(tocar);
+  if(!escribiendoAhora()){const sy=window.scrollY;renderZona();window.scrollTo(0,sy);}
+  guardarAhora('montos al día con Monica');
+}
+// Si al enviar la ruta no hubo internet para marcar las notas, se reintenta
+async function peReintentarEnviadas(){
+  const asig=new Set(peAsignadas().map(f=>f.nro));
+  for(const v of viajes){
+    if(!v||!(v.entradaLista||v.cerrado))continue;
+    for(const p of (v.pedidos||[])){
+      if(p&&p.fac&&p.facEnv&&asig.has(p.fac)){
+        try{await sb.from('pendientes_entrega').update({estado:'enviada',total_enviado:p.total,rutero:v.rutero,viaje_uid:v.uid}).eq('nro',p.fac).eq('estado','asignada');}catch(e){}
+      }
+    }
+  }
+}
+
+function peRenderCampana(){
+  const b=document.getElementById('btnPE'),bd=document.getElementById('peBadge');if(!b||!bd)return;
+  b.style.display=modoLectura?'none':'';
+  const n=pePendientes().length;
+  bd.textContent=n>99?'99+':String(n);bd.style.display=n?'flex':'none';
+  const hayNuevas=pePendientes().some(f=>!peVistas().has(f.nro));
+  b.classList.toggle('nuevas',hayNuevas);
+  b.setAttribute('aria-label',n?n+' facturas por entregar':'Por entregar');
+}
+// Tarjeta arriba de la lista de ruteros (solo si hay algo por entregar)
+function peTarjetaLista(){
+  if(modoLectura)return '';
+  const ps=pePendientes();if(!ps.length)return '';
+  const g={};ps.forEach(f=>{g[f.vendedor]=(g[f.vendedor]||0)+1;});
+  const chips=Object.keys(g).sort().map(v=>`<span class="pe-mini"><i style="background:${peColorVend(v)}"></i>${esc(peNombreVend(v))} ${g[v]}</span>`).join('');
+  return `<button class="pe-aviso" onclick="peAbrir()">
+    <span class="pe-aviso-ico">${ICO_NOTA}</span>
+    <span class="pe-aviso-tx"><b>${ps.length} factura${ps.length===1?'':'s'} por entregar</b><span class="pe-aviso-ch">${chips}</span></span>
+    <span class="pe-aviso-ir">›</span></button>`;
+}
+
+function peAbrir(){
+  if(modoLectura)return;
+  PE.abierto=true;
+  document.getElementById('overlay').classList.add('open');
+  peRenderPanel();
+  peCargar();
+}
+function peCerrar(){
+  PE.abierto=false;peMarcarVistas();
+  document.getElementById('overlay').classList.remove('open');
+  peRenderCampana();
+  if(!vistaDetalle)renderZona();
+}
+function peToggle(nro){if(PE.sel.has(nro))PE.sel.delete(nro);else PE.sel.add(nro);peRenderPanel();}
+function peToggleGrupo(v){
+  const fs=peFiltradas().filter(f=>f.vendedor===v);
+  const todas=fs.every(f=>PE.sel.has(f.nro));
+  fs.forEach(f=>todas?PE.sel.delete(f.nro):PE.sel.add(f.nro));peRenderPanel();
+}
+function peFiltro(v){PE.filtro=v;peRenderPanel();}
+function peBuscar(t){PE.buscar=t;peRenderLista();}
+function peFiltradas(){
+  const q=PE.buscar.trim().toLowerCase();
+  return pePendientes().filter(f=>{
+    if(PE.filtro!=='todos'&&f.vendedor!==PE.filtro)return false;
+    if(!q)return true;
+    return String(f.nro).includes(q)||String(f.codigo_cliente||'').toLowerCase()===q||String(f.cliente||'').toLowerCase().includes(q);
+  });
+}
+function peEstadoPuente(){
+  if(PE.error)return `<div class="pe-est mal"><i></i>Sin conexión con la nube. Revisá internet.</div>`;
+  if(!PE.cargado)return `<div class="pe-est"><i></i>Cargando…</div>`;
+  if(PE.edad===null)return `<div class="pe-est mal"><i></i>Facturación rápida todavía no se ha conectado.</div>`;
+  if(!peFresco()){const m=Math.round(PE.edad/60);
+    return `<div class="pe-est mal"><i></i>Facturación rápida no reporta hace ${m<1?'menos de 1':m} min. Los montos pueden no estar al día.</div>`;}
+  return `<div class="pe-est ok"><i></i>Al día con Monica</div>`;
+}
+function peRenderPanel(){
+  if(!PE.abierto)return;
+  const sh=document.getElementById('sheet');
+  const ps=pePendientes();
+  const g={};ps.forEach(f=>{g[f.vendedor]=(g[f.vendedor]||0)+1;});
+  if(PE.filtro!=='todos'&&!g[PE.filtro])PE.filtro='todos';
+  // quitar de la selección lo que ya no está
+  const vivas=new Set(ps.map(f=>f.nro));[...PE.sel].forEach(n=>{if(!vivas.has(n))PE.sel.delete(n);});
+  const chips=[`<button class="pe-chip${PE.filtro==='todos'?' on':''}" onclick="peFiltro('todos')">Todos <b>${ps.length}</b></button>`]
+    .concat(Object.keys(g).sort().map(v=>`<button class="pe-chip${PE.filtro===v?' on':''}" onclick="peFiltro('${esc(v).replace(/'/g,"\\'")}')"><i style="background:${peColorVend(v)}"></i>${esc(peNombreVend(v))} <b>${g[v]}</b></button>`)).join('');
+  const buscarActivo=document.activeElement&&document.activeElement.id==='peBuscar';
+  sh.innerHTML=`<div class="shHead"><div><h2 style="display:flex;align-items:center;gap:8px">Por entregar</h2>${peEstadoPuente()}</div><button class="x" onclick="peCerrar()" aria-label="Cerrar">×</button></div>
+    <div class="pe-top">
+      <label class="pe-buscar">${ICO_LUPA}<input id="peBuscar" placeholder="Cliente, nota o código" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" value="${esc(PE.buscar)}" oninput="peBuscar(this.value)"></label>
+      <div class="pe-chips">${chips}</div>
+    </div>
+    <div id="peLista"></div>
+    <div id="peBarra"></div>`;
+  if(buscarActivo){const el=document.getElementById('peBuscar');if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}}
+  peRenderLista();
+}
+function peRenderLista(){
+  const cont=document.getElementById('peLista');if(!cont)return;
+  const fs=peFiltradas(), vistas=peVistas();
+  let h='';
+  if(!pePendientes().length){
+    h=`<div class="pe-vacio"><div class="pe-vacio-ico">${ICO_CHECK2}</div><b>Todo entregado</b><span>Cuando se facturen notas de los vendedores de ruta, aparecen aquí.</span></div>`;
+  }else if(!fs.length){
+    h=`<div class="pe-vacio"><b>Sin resultados</b><span>No hay notas que coincidan con “${esc(PE.buscar)}”.</span></div>`;
+  }else{
+    const grupos={};fs.forEach(f=>{(grupos[f.vendedor]=grupos[f.vendedor]||[]).push(f);});
+    Object.keys(grupos).sort().forEach(v=>{
+      const lista=grupos[v].sort((a,b)=>a.nro-b.nro), col=peColorVend(v);
+      const tot=lista.reduce((s,f)=>s+f.total,0), todas=lista.every(f=>PE.sel.has(f.nro));
+      h+=`<div class="pe-grupo"><div class="pe-gh"><span class="pe-av" style="background:${col}">${esc((peNombreVend(v)[0]||'?').toUpperCase())}</span>
+        <div class="pe-gtx"><b>${esc(peNombreVend(v))}</b><span>${lista.length} nota${lista.length===1?'':'s'} · ${q(tot)}</span></div>
+        <button class="pe-todas" onclick="peToggleGrupo('${esc(v).replace(/'/g,"\\'")}')">${todas?'Quitar':'Todas'}</button></div>`;
+      lista.forEach(f=>{
+        const on=PE.sel.has(f.nro);
+        h+=`<button class="pe-item${on?' on':''}" onclick="peToggle(${f.nro})" aria-pressed="${on}">
+          <span class="pe-check">${on?ICO_OK_S:''}</span>
+          <span class="pe-mid"><span class="pe-nom">${esc(f.cliente||'Sin nombre')}</span>
+            <span class="pe-sub">${vistas.has(f.nro)?'':'<span class="pe-nueva">nueva</span>'}Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}${f.codigo_cliente?' · Cód. '+esc(f.codigo_cliente):''}</span></span>
+          <span class="pe-tot">${q(f.total)}</span></button>`;
+      });
+      h+=`</div>`;
+    });
+  }
+  // Notas que ya están en una ruta que se está armando
+  const asig=peAsignadas();
+  if(asig.length){
+    h+=`<div class="pe-sec">En rutas que se preparan</div><div class="pe-grupo">`;
+    asig.forEach(f=>{
+      const aqui=pePedidoDe(f.nro);
+      h+=`<div class="pe-item quieto"><span class="pe-check gris">${ICO_CAMION_S}</span>
+        <span class="pe-mid"><span class="pe-nom">${esc(f.cliente||'')}</span><span class="pe-sub">Nota ${f.nro} · ${esc(f.rutero||aqui&&aqui.v.rutero||'')}</span></span>
+        <span class="pe-tot">${q(f.total)}${(!aqui&&esMaestro())?`<button class="pe-devolver" onclick="peDevolver(${f.nro})">Devolver</button>`:''}</span></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<div style="height:${PE.sel.size?110:24}px"></div>`;
+  cont.innerHTML=h;
+  peRenderBarra();
+}
+function peRenderBarra(){
+  const b=document.getElementById('peBarra');if(!b)return;
+  if(!PE.sel.size){b.innerHTML='';return;}
+  const fs=PE.filas.filter(f=>PE.sel.has(f.nro)), tot=fs.reduce((s,f)=>s+f.total,0);
+  b.innerHTML=`<div class="pe-barra">
+    <div class="pe-btx"><span>${fs.length} seleccionada${fs.length===1?'':'s'}</span><b>${q(tot)}</b></div>
+    ${esMaestro()?`<button class="pe-descartar" onclick="peDescartarPreguntar()">No va a ruta</button>`:''}
+    <button class="pe-mas" onclick="peElegirRutero()" aria-label="Mandar a un rutero"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+  </div>`;
+}
+
+// ---- Elegir rutero (o crear uno) ----
+function peElegirRutero(){
+  if(!PE.sel.size)return;
+  if(!peFresco()){
+    const m=PE.edad===null?'':' hace '+Math.max(1,Math.round(PE.edad/60))+' min';
+    document.getElementById('modalRecibeBody').innerHTML=`
+      <div style="font-size:17px;font-weight:900;margin-bottom:6px">Montos sin confirmar</div>
+      <div style="font-size:13.5px;color:var(--mut);margin-bottom:16px;line-height:1.5">Facturación rápida no reporta${m}. Si cambiaron alguna nota en Monica, aquí todavía no se ve. Abrí Facturación rápida en la PC.</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn" style="padding:14px" onclick="peElegirRuteroYa()">Seguir igual</button>
+        <button class="btn sec" style="padding:12px" onclick="cerrarModalRecibe()">Esperar</button></div>`;
+    document.getElementById('modalRecibe').classList.add('open');return;
+  }
+  peElegirRuteroYa();
+}
+function peElegirRuteroYa(){
+  const fs=PE.filas.filter(f=>PE.sel.has(f.nro)), tot=fs.reduce((s,f)=>s+f.total,0);
+  const filas=ruteros.map(r=>{
+    const e=estadoVendedor(r), j=r.replace(/'/g,"\\'");
+    const sb_=e.arm.length?`<span style="color:#3a7bd5">Armando ruta · ${e.arm.reduce((s,v)=>s+(v.pedidos||[]).length,0)} pedidos</span>`:e.enRuta.length?'<span style="color:#c9821f">En ruta</span>':'<span>Sin ruta armándose</span>';
+    return `<button class="pe-rut" onclick="peAsignar('${j}')"><span class="pe-av" style="background:${colorRutero(r)}">${esc((r.trim()[0]||'?').toUpperCase())}</span>
+      <span class="pe-mid"><span class="pe-nom">${esc(r)}</span><span class="pe-sub">${sb_}</span></span><span class="pe-ir">›</span></button>`;
+  }).join('');
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="font-size:17px;font-weight:900;margin-bottom:3px">¿Quién lo lleva?</div>
+    <div style="font-size:13px;color:var(--mut);margin-bottom:12px">${fs.length} nota${fs.length===1?'':'s'} · <b style="color:var(--ink)">${q(tot)}</b></div>
+    <div class="pe-ruts">${filas}
+      <button class="pe-rut nuevo" onclick="peNuevoRutero()"><span class="pe-av" style="background:#eef0f3;color:var(--mut)">+</span><span class="pe-mid"><span class="pe-nom" style="color:var(--mut)">Nuevo rutero</span></span></button>
+    </div>
+    <button class="btn sec" style="width:100%;padding:12px;margin-top:12px" onclick="cerrarModalRecibe()">Cancelar</button>`;
+  document.getElementById('modalRecibe').classList.add('open');
+}
+function peNuevoRutero(){
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="font-size:17px;font-weight:900;margin-bottom:12px">Nuevo rutero</div>
+    <input id="peNom" placeholder="Nombre del rutero" autocomplete="off" onkeydown="if(event.key==='Enter')peCrearYAsignar()">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+      <button class="btn" style="padding:14px" onclick="peCrearYAsignar()">Crear y mandar</button>
+      <button class="btn sec" style="padding:12px" onclick="peElegirRuteroYa()">← Volver</button></div>`;
+  const el=document.getElementById('peNom');if(el)el.focus();
+}
+function peCrearYAsignar(){
+  const el=document.getElementById('peNom');const n=el?(el.value||'').trim():'';
+  if(!n){toast('Escribí el nombre',true);if(el)el.focus();return;}
+  peAsignar(n);
+}
+let _peAsignando=false;
+async function peAsignar(r){
+  if(_peAsignando||modoLectura)return;
+  const nros=[...PE.sel].filter(n=>!pePedidoDe(n));
+  if(!nros.length){cerrarModalRecibe();return;}
+  _peAsignando=true;cerrarModalRecibe();toast('Mandando…');
+  // El viaje que se está armando para ese rutero; si no hay, uno nuevo
+  let v=viajes.filter(x=>x&&x.rutero===r&&!x.entradaLista&&!x.cerrado).pop();
+  const nuevo=!v;
+  if(nuevo)v={id:nuevoId(),uid:uid(),rutero:r,pedidos:[],cerrado:false,envases:'',envOk:false,entradaLista:false,pedidosListos:false};
+  // Se apartan en la nube: si otro aparato ya la tomó, no se repite
+  let tomadas=[];
+  try{
+    const res=await sb.from('pendientes_entrega').update({estado:'asignada',rutero:r,viaje_uid:v.uid,quien:sesion?sesion.nombre:'?'})
+      .in('nro',nros).eq('estado','pendiente').eq('anulada',false).select('*');
+    if(res.error)throw res.error;
+    tomadas=(res.data||[]).map(f=>({...f,total:Number(f.total)||0}));
+  }catch(e){_peAsignando=false;toast('⚠ Sin conexión. No se mandó nada',true);return;}
+  if(tomadas.length){
+    ruterosBorrados=ruterosBorrados.filter(x=>x!==r);
+    if(!ruteros.includes(r))ruteros.push(r);
+    if(nuevo)viajes.push(v);
+    tomadas.sort((a,b)=>a.nro-b.nro).forEach(f=>{
+      if(pePedidoDe(f.nro))return;
+      v.pedidos.push({id:nuevoId(),nombre:f.cliente||('Nota '+f.nro),total:f.total,estado:'pagado',devolucion:0,descuento:0,vuelto:0,
+        fac:f.nro,codCli:f.codigo_cliente||'',vendMon:f.vendedor||'',horaFac:f.hora||''});
+    });
+    tocar(v);
+    logAudit('FACTURAS A RUTA',`${r}: notas ${tomadas.map(f=>f.nro).join(', ')} (${q(tomadas.reduce((s,f)=>s+f.total,0))})`);
+    const mapa={};tomadas.forEach(f=>mapa[f.nro]=f);
+    PE.filas=PE.filas.map(f=>mapa[f.nro]||f);
+  }
+  PE.sel.clear();
+  peRenderCampana();peRenderPanel();
+  if(!vistaDetalle)renderZona();
+  const faltan=nros.length-tomadas.length;
+  let ok=true;
+  if(tomadas.length)ok=await guardarAhora('facturas a ruta de '+r);
+  _peAsignando=false;
+  if(!ok)toast('⚠ Se apartaron pero no se guardó la ruta. Revisá internet',true);
+  else if(faltan)toast(`${tomadas.length} a ${r} ✓ · ${faltan} ya las había tomado otro aparato`,true);
+  else toast(`${tomadas.length} nota${tomadas.length===1?'':'s'} → ${r} ✓`);
+  peCargar();
+}
+// Maestro: una nota que no va a ruta (la recogieron en tienda, etc.)
+function peDescartarPreguntar(){
+  if(!esMaestro())return;
+  const n=PE.sel.size;
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="font-size:17px;font-weight:900;margin-bottom:6px">¿No van a ruta?</div>
+    <div style="font-size:13.5px;color:var(--mut);margin-bottom:16px;line-height:1.5">${n} nota${n===1?'':'s'} sale${n===1?'':'n'} de la lista de pendientes (por ejemplo, las recogieron en tienda). Queda anotado.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn" style="background:var(--bad);padding:14px" onclick="peDescartar()">Sí, quitar de pendientes</button>
+      <button class="btn sec" style="padding:12px" onclick="cerrarModalRecibe()">Cancelar</button></div>`;
+  document.getElementById('modalRecibe').classList.add('open');
+}
+async function peDescartar(){
+  if(!esMaestro())return;
+  const nros=[...PE.sel];cerrarModalRecibe();
+  try{
+    const res=await sb.from('pendientes_entrega').update({estado:'descartada',quien:sesion.nombre}).in('nro',nros).eq('estado','pendiente').select('nro');
+    if(res.error)throw res.error;
+    logAudit('NOTAS SIN RUTA',`notas ${nros.join(', ')}`);
+    PE.sel.clear();toast('Quitadas de pendientes ✓');guardarAhora('notas sin ruta');
+  }catch(e){toast('⚠ Sin conexión',true);}
+  peCargar();
+}
+// Maestro: nota apartada para una ruta que ya no existe → vuelve a pendientes
+async function peDevolver(nro){
+  if(!esMaestro()||pePedidoDe(nro))return;
+  try{
+    const res=await sb.from('pendientes_entrega').update({estado:'pendiente',rutero:null,viaje_uid:null}).eq('nro',nro).eq('estado','asignada');
+    if(res.error)throw res.error;toast('Nota '+nro+' de vuelta en pendientes');
+  }catch(e){toast('⚠ Sin conexión',true);}
+  peCargar();
+}
+// Al quitar de un viaje (antes de salir) una nota de Monica, vuelve a pendientes
+async function peLiberar(p){
+  if(!p||!p.fac||p.facEnv)return;
+  try{await sb.from('pendientes_entrega').update({estado:'pendiente',rutero:null,viaje_uid:null}).eq('nro',p.fac).eq('estado','asignada');}catch(e){}
+  peCargar();
+}
+
+// ---- Antes de "Enviar ruta": montos exactos y al día ----
+async function peRevisarAntesDeEnviar(v){
+  const ps=(v.pedidos||[]).filter(p=>p&&p.fac&&!p.facEnv);
+  if(!ps.length)return {ok:true};
+  let filas;
+  try{
+    const r=await sb.from('pendientes_entrega').select('*').in('nro',ps.map(p=>p.fac));
+    if(r.error)throw r.error;filas=r.data||[];
+  }catch(e){return {ok:false,sinRed:true};}
+  await peLeerEdad();
+  const por={};filas.forEach(f=>por[f.nro]={...f,total:Number(f.total)||0});
+  const cambios=[],anuladas=[],perdidas=[];
+  ps.forEach(p=>{const f=por[p.fac];
+    if(!f||f.estado==='pendiente'||f.estado==='descartada'||(f.viaje_uid&&f.viaje_uid!==v.uid&&f.estado!=='enviada')){perdidas.push(p);return;}
+    if(f.anulada){anuladas.push({p,f});return;}
+    if(Math.abs((p.total||0)-f.total)>0.001)cambios.push({p,f});
+  });
+  return {ok:!cambios.length&&!anuladas.length&&!perdidas.length&&peFresco(),cambios,anuladas,perdidas,fresco:peFresco()};
+}
+function peAvisoEnvio(vid,rv){
+  const li=[];
+  rv.cambios.forEach(({p,f})=>li.push(`<div class="pe-cam"><span>Nota ${p.fac} · ${esc(f.cliente||p.nombre)}</span><b>${q(p.total)} → ${q(f.total)}</b></div>`));
+  rv.anuladas.forEach(({p})=>li.push(`<div class="pe-cam mal"><span>Nota ${p.fac} · ${esc(p.nombre)}</span><b>Anulada · se quita</b></div>`));
+  rv.perdidas.forEach(p=>li.push(`<div class="pe-cam mal"><span>Nota ${p.fac} · ${esc(p.nombre)}</span><b>No está apartada para esta ruta</b></div>`));
+  const viejo=!rv.fresco?`<div style="font-size:13px;color:#b0601a;background:#fdf0e1;border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.45">Facturación rápida no reporta${PE.edad===null?'':' hace '+Math.max(1,Math.round(PE.edad/60))+' min'}. Si cambiaron una nota en Monica, aquí todavía no se ve.</div>`:'';
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="font-size:17px;font-weight:900;margin-bottom:8px">${li.length?'Cambiaron notas en Monica':'Montos sin confirmar'}</div>
+    ${viejo}${li.length?`<div class="pe-cams">${li.join('')}</div>`:''}
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+      <button class="btn" style="padding:14px" onclick="peAplicarYEnviar(${vid})">${li.length?'Usar montos de Monica y enviar':'Enviar igual'}</button>
+      <button class="btn sec" style="padding:12px" onclick="cerrarModalRecibe()">${li.length?'Revisar primero':'Esperar'}</button></div>`;
+  document.getElementById('modalRecibe').classList.add('open');
+  PE._rv={vid,rv};
+}
+function peAplicarYEnviar(vid){
+  const x=PE._rv;cerrarModalRecibe();
+  const v=viajes.find(y=>y.id===vid);if(!v||!x||x.vid!==vid)return;
+  const quitar=new Set();
+  x.rv.cambios.forEach(({p,f})=>{const q_=v.pedidos.find(y=>y.id===p.id);if(q_){q_.total=f.total;if(f.cliente)q_.nombre=f.cliente;}});
+  x.rv.anuladas.forEach(({p})=>quitar.add(p.id));
+  x.rv.perdidas.forEach(p=>quitar.add(p.id));
+  if(quitar.size){v.pedidos=v.pedidos.filter(p=>!quitar.has(p.id));(v.pedBorrados=v.pedBorrados||[]).push(...quitar);}
+  tocar(v);renderZona();
+  if(!v.pedidos.length){toast('El viaje se quedó sin pedidos',true);guardarAhora('notas anuladas quitadas');return;}
+  terminarPedidos(vid,true);
+}
+// Después de guardar la ruta enviada: las notas quedan selladas
+async function peSellar(v){
+  const ps=(v.pedidos||[]).filter(p=>p&&p.fac);
+  for(const p of ps){
+    try{await sb.from('pendientes_entrega').update({estado:'enviada',total_enviado:p.total,rutero:v.rutero,viaje_uid:v.uid}).eq('nro',p.fac).eq('estado','asignada');}catch(e){}
+  }
+  peCargar();
+}
+
 // ===== VERSIÓN Y ACTUALIZACIÓN AUTOMÁTICA =====
 // Cambiar VERSION en cada cambio que se publique. La app compara la suya con
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-17.1';
+const VERSION='2026-10-24.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});
@@ -2088,6 +2573,10 @@ async function iniciar(){
   // Auto-actualización cada 5 minutos. Solo baja cambios de otros teléfonos
   // si no estás escribiendo ni tenés un viaje en proceso. Nunca interrumpe.
   setInterval(recargarSiHaceFalta,300000);
+  // Por entregar: revisa la nube cada 20 s (solo con la app a la vista)
+  peCargar();
+  setInterval(()=>{if(document.visibilityState==='visible')peCargar();},20000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')peCargar();});
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',ajustarBarraTeclado);
     window.visualViewport.addEventListener('scroll',ajustarBarraTeclado);

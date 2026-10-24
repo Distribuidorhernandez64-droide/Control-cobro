@@ -1,3 +1,4 @@
 # Salidas de las pruebas (capturas y dependencias): no se suben
 pruebas/node_modules/
 pruebas/*.png
+pruebas/capturas/

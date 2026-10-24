@@ -355,6 +355,24 @@
   .pe-envhint{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12.5px;color:#5b6472;font-weight:700}
   .pe-envhint b{color:var(--ink)}
   .pe-envhint button{margin-left:auto;border:1px solid var(--line);background:var(--card);border-radius:9px;font-family:inherit;font-weight:800;font-size:12px;color:var(--ink);padding:6px 11px;cursor:pointer}
+  .pe-grupo .pe-gh{padding:9px 10px 8px 12px;gap:9px}
+  .pe-grupo .pe-gh .pe-av{width:30px;height:30px;font-size:13px}
+  .pe-grupo .pe-gtx b{font-size:14px}.pe-grupo .pe-gtx span{font-size:11.5px}
+  .pe-grupo .pe-todas{min-height:32px;font-size:12px;padding:0 11px}
+  .pe-cnom{padding-right:4px}
+  .pe-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
+  .pe-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:1px;text-align:left;padding:8px 9px 7px;border-radius:11px;border:1px solid #ebe9e3;background:#fbfaf7;font-family:inherit;color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s;min-width:0}
+  .pe-card:active{transform:scale(.97)}
+  .pe-card.on{background:#fff4cc;border-color:var(--ink);box-shadow:0 0 0 .5px var(--ink) inset}
+  .pe-cok{position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;border:2px solid #fff;animation:checkpop .22s}
+  .pe-cok svg{width:11px;height:11px}
+  .pe-cnueva{position:absolute;top:-6px;right:-3px;margin:0;font-size:9px;padding:0 6px;line-height:15px;border:2px solid #fff}
+  .pe-cnom{font-size:13px;font-weight:900;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;letter-spacing:-.1px}
+  .pe-csub{font-size:10.5px;color:#868d99;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .pe-card .pe-env{font-size:10.5px;margin-top:0;gap:4px}
+  .pe-card .pe-env svg{width:11px;height:11px}
+  .pe-cpie{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:auto;padding-top:3px}
+  .pe-ctot{font-size:14px;font-weight:900;flex-shrink:0;letter-spacing:-.2px}
   .t-fac{background:#fdf0e1;color:#b0601a;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
 </style>
 </head>
@@ -2317,15 +2335,17 @@ function peRenderLista(){
       h+=`<div class="pe-grupo"><div class="pe-gh"><span class="pe-av" style="background:${col}">${esc((peNombreVend(v)[0]||'?').toUpperCase())}</span>
         <div class="pe-gtx"><b>${esc(peNombreVend(v))}</b><span>${lista.length} nota${lista.length===1?'':'s'} · ${q(tot)}</span></div>
         <button class="pe-todas" onclick="peToggleGrupo('${esc(v).replace(/'/g,"\\'")}')">${todas?'Quitar':'Todas'}</button></div>`;
+      h+=`<div class="pe-grid">`;
       lista.forEach(f=>{
         const on=PE.sel.has(f.nro);
-        h+=`<button class="pe-item${on?' on':''}" onclick="peToggle(${f.nro})" aria-pressed="${on}">
-          <span class="pe-check">${on?ICO_OK_S:''}</span>
-          <span class="pe-mid"><span class="pe-nom">${esc(f.cliente||'Sin nombre')}</span>
-            <span class="pe-sub">${vistas.has(f.nro)?'':'<span class="pe-nueva">nueva</span>'}Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}${f.codigo_cliente?' · Cód. '+esc(f.codigo_cliente):''}</span>${(f.envases||[]).length?`<span class="pe-env">${ICO_CAJA_S}${esc(peEnvTexto(f.envases))}</span>`:''}</span>
-          <span class="pe-tot">${q(f.total)}</span></button>`;
+        h+=`<button class="pe-card${on?' on':''}" onclick="peToggle(${f.nro})" aria-pressed="${on}">
+          ${on?`<span class="pe-cok">${ICO_OK_S}</span>`:(vistas.has(f.nro)?'':'<span class="pe-nueva pe-cnueva">nueva</span>')}
+          <span class="pe-cnom">${esc(f.cliente||'Sin nombre')}</span>
+          <span class="pe-csub">Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}</span>
+          ${(f.envases||[]).length?`<span class="pe-env">${ICO_CAJA_S}${esc(peEnvTexto(f.envases))}</span>`:''}
+          <span class="pe-cpie"><span class="pe-csub">${f.codigo_cliente?'Cód. '+esc(f.codigo_cliente):''}</span><span class="pe-ctot">${q(f.total)}</span></span></button>`;
       });
-      h+=`</div>`;
+      h+=`</div></div>`;
     });
   }
   // Notas que ya están en una ruta que se está armando
@@ -2578,7 +2598,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-24.4';
+const VERSION='2026-10-24.5';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

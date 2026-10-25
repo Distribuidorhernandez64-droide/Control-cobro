@@ -156,6 +156,14 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('En la lista del vendedor aparece "1 cambió en Monica"', (await p.textContent('#zona')).includes('1 cambió en Monica'));
   await p.screenshot({path:SHOTS+'/8c-lista-cambio.png'});
   await p.evaluate(()=>entrarVendedor('Juan'));await p.waitForTimeout(300);
+  ok('Dentro del rutero, el viaje con la nota cambiada muestra la advertencia', (await p.textContent('#zona')).includes('1 cambió en Monica'));
+  await p.screenshot({path:SHOTS+'/8d-viaje-con-aviso.png'});
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Juan');v.cerrado=true;v.horaSalida=v.horaSalida||Date.now();v.horaRecibido=Date.now();viajeAbierto=null;renderZona();});
+  ok('Viaje ya recibido (tarjeta gris): también muestra la advertencia', (await p.textContent('.vcard.pe-vmod')).includes('1 cambió en Monica'));
+  await p.screenshot({path:SHOTS+'/8e-viaje-recibido-aviso.png'});
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Juan');v.cerrado=false;renderZona();});
+  await p.evaluate(()=>volverLista());await p.waitForTimeout(300);
+  await p.evaluate(()=>entrarVendedor('Juan'));await p.waitForTimeout(300);
   await p.screenshot({path:SHOTS+'/8-enviada.png'});
 
   // Corregir: la nota enviada no se puede quitar

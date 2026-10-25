@@ -403,6 +403,9 @@
   .pe-novaf{border:none;background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-weight:800;font-size:12px;border-radius:999px;height:36px;padding:0 12px;cursor:pointer;flex-shrink:0}
   .pe-flota .pe-mas{width:48px;height:48px;box-shadow:none}
   .t-mod{background:#fbe9e4;color:var(--bad);white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px;margin-left:4px}
+  .pe-modv{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:12.5px;font-weight:800;color:var(--bad)}
+  .pe-vmod{border-color:#e7a89a!important;box-shadow:0 0 0 1px #f3cfc6 inset}
+  .pe-modh{font-weight:900!important;color:#fff3b0!important;display:flex;align-items:center;gap:4px;margin-top:2px}
   .pe-modl{color:var(--bad)!important;font-weight:800}
   .pe-modr{color:var(--bad);font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:4px;margin-top:3px}
   .t-fac{background:#fdf0e1;color:#b0601a;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
@@ -1634,16 +1637,16 @@ function renderZona(){
     if(v.cerrado&&viajeAbierto!==v.id){
       const horas=v.horaSalida?`<div class="vsub" style="margin-top:1px"><span class="nw">${hCorta(v.horaSalida)} → ${hCorta(v.horaRecibido)}</span> · <span class="nw">${duracion(v.horaSalida,v.horaRecibido)}</span>${v.recibidoPor?' · <b style="color:'+(v.recibidoPor==='Lesli'?'#3a7bd5':'#2fae74')+'">'+v.recibidoPor+'</b>':''}</div>`:'';
       const marca=v.modificado?'<span class="vstat" style="background:#fdeede;color:var(--bad);margin-right:6px">⚠ modificado</span>':'';
-      html+=`<div class="vcard"><div class="vcol" onclick="verViaje(${v.id})">
-        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}${(v.envases||'').trim()?' · envase ✓':''}</div>${horas}</div>
+      html+=`<div class="vcard${peModViaje(v)?' pe-vmod':''}"><div class="vcol" onclick="verViaje(${v.id})">
+        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}${(v.envases||'').trim()?' · envase ✓':''}</div>${horas}${peModLinea(v)}</div>
         <div class="vr">${marca}<span class="vstat vs-done">Recibido</span><span class="vm">${q(efv)}</span><span class="chev">▸</span></div>
       </div></div>`;
       return;
     }
     // CERRADO expandido -> detalle sólo lectura
     if(v.cerrado&&viajeAbierto===v.id){
-      html+=`<div class="vcard"><div class="vcol" onclick="verViaje(${v.id})">
-        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}</div></div>
+      html+=`<div class="vcard${peModViaje(v)?' pe-vmod':''}"><div class="vcol" onclick="verViaje(${v.id})">
+        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}</div>${peModLinea(v)}</div>
         <div class="vr"><span class="vstat vs-done">Recibido</span><span class="vm">${q(efv)}</span><span class="chev">▾</span></div></div>`;
       html+=renderPedidos(v,false);
       if(v.horaSalida)html+=`<div style="padding:11px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)">Salió ${hhmm(v.horaSalida)} · recibido ${hhmm(v.horaRecibido)} · duró ${duracion(v.horaSalida,v.horaRecibido)}</div>`;
@@ -1656,7 +1659,7 @@ function renderZona(){
     html+=`<div class="vcard abierta" id="viaje-${v.id}" style="border-color:${colorRutero(selRutero)}"><div class="vhead-open" style="background:${colorRutero(selRutero)}">
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/></svg></span>
-        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div></div>
+        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${peModViaje(v)?`<div class="s pe-modh">${ICO_ALERTA} ${peModViaje(v)} cambió en Monica</div>`:''}</div>
       </div>
       <span class="badge">${enRuta?'En ruta':'Preparando'}</span></div>`;
     html+=renderPedidos(v,true);
@@ -2258,6 +2261,8 @@ async function peCargarCambios(){
   }catch(e){}
   return false;
 }
+function peModViaje(v){return (v.pedidos||[]).filter(p=>peCambioDe(p)).length;}
+function peModLinea(v){const n=peModViaje(v);return n?`<div class="pe-modv">${ICO_ALERTA} ${n} cambió en Monica</div>`:'';}
 function peModificadasDe(r){
   let n=0;viajes.forEach(v=>{if(v&&v.rutero===r)(v.pedidos||[]).forEach(p=>{if(peCambioDe(p))n++;});});return n;
 }
@@ -2743,7 +2748,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-24.8';
+const VERSION='2026-10-25.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

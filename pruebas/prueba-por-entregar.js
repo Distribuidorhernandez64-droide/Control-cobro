@@ -207,6 +207,49 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.screenshot({path:SHOTS+'/9-sin-confirmar.png'});
   await p.click('#modalRecibeBody button.sec');
 
+  // Mantener presionada una nota: "Para mañana" (maestro) y regresa sola al otro día
+  await rest('POST','pendientes_entrega',[fila(21806,'CLIENTE PARA MAÑANA','lesli',48,120,'11:00','555'),fila(21807,'OTRA NOTA','lesli',48,60,'11:05','556')]);
+  await p.evaluate(()=>{PE.sel.clear();peCargar();});await p.waitForTimeout(1200);
+  const presionar=async(sel,ms)=>{const bb=await p.locator(sel).first().boundingBox();await p.mouse.move(bb.x+bb.width/2,bb.y+bb.height/2);await p.mouse.down();await p.waitForTimeout(ms);await p.mouse.up();await p.waitForTimeout(300);};
+  await presionar('.pe-card:has-text("CLIENTE PARA MAÑANA")',120);
+  ok('Un toque corto selecciona (no abre el menú)', !(await p.isVisible('#modalRecibe.open'))&&await p.evaluate(()=>PE.sel.has(21806)));
+  await p.evaluate(()=>{PE.sel.clear();peRenderLista();});
+  await presionar('.pe-card:has-text("CLIENTE PARA MAÑANA")',800);
+  ok('Mantener presionada abre "Dejar para mañana"', (await p.textContent('#modalRecibeBody')).includes('Dejar para mañana'));
+  ok('Mantener presionada NO la selecciona', !(await p.evaluate(()=>PE.sel.has(21806))));
+  await p.screenshot({path:SHOTS+'/10-menu-manana.png'});
+  await p.click('#modalRecibeBody button.sec');await p.waitForTimeout(200);
+  ok('Cancelar no cambia nada', (await rest('GET','pendientes_entrega?select=pospuesta_hasta&nro=eq.21806')).data[0].pospuesta_hasta===null);
+  await presionar('.pe-card:has-text("CLIENTE PARA MAÑANA")',800);
+  await p.click('#modalRecibeBody button:has-text("Dejar para mañana")');await p.waitForTimeout(1500);
+  const man=await p.evaluate(()=>peMananaF());
+  ok('En la nube queda para mañana', (await rest('GET','pendientes_entrega?select=pospuesta_hasta,estado&nro=eq.21806')).data[0].pospuesta_hasta===man);
+  ok('Sale de la lista de hoy', !(await p.textContent('#peLista')).includes('CLIENTE PARA MAÑANA'));
+  ok('Aparece el filtro "Mañana 1"', (await p.textContent('#peChips')).replace(/\s+/g,' ').includes('Mañana 1'));
+  await p.click('.pe-chip:has-text("Mañana")');await p.waitForTimeout(300);
+  ok('En "Mañana" se ve la nota', (await p.textContent('#peLista')).includes('CLIENTE PARA MAÑANA'));
+  await p.screenshot({path:SHOTS+'/11-manana.png'});
+  await p.click('.pe-card:has-text("CLIENTE PARA MAÑANA")');await p.waitForTimeout(200);
+  ok('En "Mañana" un toque no la selecciona', !(await p.evaluate(()=>PE.sel.has(21806))));
+  await presionar('.pe-card:has-text("CLIENTE PARA MAÑANA")',800);
+  ok('Mantener presionada ofrece "Regresar a hoy"', (await p.textContent('#modalRecibeBody')).includes('Regresar a hoy'));
+  await p.click('#modalRecibeBody button:has-text("Regresar a hoy")');await p.waitForTimeout(1500);
+  ok('Regresó a hoy', (await rest('GET','pendientes_entrega?select=pospuesta_hasta&nro=eq.21806')).data[0].pospuesta_hasta===null&&await p.evaluate(()=>PE.filtro==='todos'));
+  // Mañana "llega": la fecha ya es hoy -> aparece sola, marcada "de ayer"
+  await rest('PATCH','pendientes_entrega?nro=eq.21807',{pospuesta_hasta:await p.evaluate(()=>peMananaF())});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1000);
+  ok('Para mañana no cuenta en la campanita', await p.evaluate(()=>!pePendientes().some(f=>f.nro===21807)));
+  await rest('PATCH','pendientes_entrega?nro=eq.21807',{pospuesta_hasta:await p.evaluate(()=>peHoyF())});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1000);
+  ok('Al llegar el día aparece sola', (await p.textContent('#peLista')).includes('OTRA NOTA'));
+  ok('Marcada "de ayer"', (await p.textContent('.pe-card:has-text("OTRA NOTA")')).includes('de ayer'));
+  await p.screenshot({path:SHOTS+'/12-de-ayer.png'});
+  // El anotador no tiene esta opción
+  await p.evaluate(()=>{window.__m=esMaestro;window.esMaestro=()=>false;});
+  await presionar('.pe-card:has-text("OTRA NOTA")',800);
+  ok('Anotador: mantener presionada no hace nada', !(await p.isVisible('#modalRecibe.open')));
+  await p.evaluate(()=>{window.esMaestro=window.__m;PE.sel.clear();});
+
   // Anotador (tienda): ve la campana, no puede descartar
   ok('Sin errores en la página', errs.length===0);
   if(errs.length)console.log(errs);

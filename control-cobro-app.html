@@ -362,6 +362,9 @@
   .pe-cnom{padding-right:4px}
   .pe-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
   .pe-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:1px;text-align:left;padding:8px 9px 7px;border-radius:11px;border:1px solid #ebe9e3;background:#fbfaf7;font-family:inherit;color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s;min-width:0}
+  .pe-card{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+  .pe-card.manana{background:#f1f0ec;border-style:dashed}
+  .pe-ayer{background:#3a7bd5}
   .pe-card:active{transform:scale(.97)}
   .pe-card.on{background:#fff4cc;border-color:var(--ink);box-shadow:0 0 0 .5px var(--ink) inset}
   .pe-cok{position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;border:2px solid #fff;animation:checkpop .22s}
@@ -2199,6 +2202,7 @@ const ICO_LUPA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><cir
 const ICO_OK_S=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICO_CAJA_S=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/></svg>`;
 const ICO_ALERTA=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><path d="M12 3.5 22 20.5H2L12 3.5Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.6v.2" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+const ICO_LUNA=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
 // "brenda (pueblo)" -> "Brenda pueblo"
@@ -2209,7 +2213,12 @@ function peVistas(){try{return new Set(JSON.parse(localStorage.getItem('cc_pe_vi
 function peMarcarVistas(){try{const s=peVistas();PE.filas.forEach(f=>s.add(f.nro));localStorage.setItem('cc_pe_vistas',JSON.stringify([...s].slice(-800)));}catch(e){}}
 // Nota ya puesta en algún viaje de este aparato
 function pePedidoDe(nro){for(const v of viajes){if(!v)continue;const p=(v.pedidos||[]).find(x=>x&&x.fac===nro);if(p)return {v,p};}return null;}
-function pePendientes(){return PE.filas.filter(f=>f.estado==='pendiente'&&!f.anulada&&!pePedidoDe(f.nro));}
+function peHoyF(){return new Date().toLocaleDateString('en-CA');}
+function peMananaF(){const d=new Date();d.setDate(d.getDate()+1);return d.toLocaleDateString('en-CA');}
+// Nota que el maestro dejó para otro día: no sale en la lista de hoy y regresa sola ese día
+function peEsManana(f){return !!f.pospuesta_hasta&&String(f.pospuesta_hasta).slice(0,10)>peHoyF();}
+function pePendientes(){return PE.filas.filter(f=>f.estado==='pendiente'&&!f.anulada&&!pePedidoDe(f.nro)&&!peEsManana(f));}
+function pePospuestas(){return PE.filas.filter(f=>f.estado==='pendiente'&&!f.anulada&&!pePedidoDe(f.nro)&&peEsManana(f));}
 function peAsignadas(){return PE.filas.filter(f=>f.estado==='asignada'&&!f.anulada);}
 function peFresco(){return PE.edad!==null&&PE.edad!==undefined&&PE.edad<=PE_FRESCO;}
 
@@ -2348,6 +2357,46 @@ if(window.visualViewport){
   window.visualViewport.addEventListener('resize',peAjustarVista);
   window.visualViewport.addEventListener('scroll',peAjustarVista);
 }
+// Mantener presionada una nota (solo maestro): dejarla para mañana / regresarla a hoy
+let _peLP=null,_peLPfue=false;
+function peLPIni(e){
+  const c=e.target.closest&&e.target.closest('.pe-card');_peLPfue=false;
+  if(!c||!esMaestro())return;
+  if(_peLP)clearTimeout(_peLP.t);
+  const nro=+c.dataset.nro;
+  _peLP={x:e.clientX,y:e.clientY,t:setTimeout(()=>{_peLP=null;_peLPfue=true;try{navigator.vibrate&&navigator.vibrate(30);}catch(e){}peMenuNota(nro);},520)};
+}
+function peLPMueve(e){if(_peLP&&Math.hypot(e.clientX-_peLP.x,e.clientY-_peLP.y)>10){clearTimeout(_peLP.t);_peLP=null;}}
+function peLPFin(){if(_peLP){clearTimeout(_peLP.t);_peLP=null;}}
+function peTap(nro){
+  if(_peLPfue){_peLPfue=false;return;}
+  if(PE.filtro==='__m'){toast('Está para mañana · mantené presionada para regresarla a hoy');return;}
+  peToggle(nro);
+}
+function peMenuNota(nro){
+  if(!esMaestro())return;
+  const f=PE.filas.find(x=>x.nro===nro);if(!f||f.estado!=='pendiente')return;
+  const m=peEsManana(f);
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div style="font-size:17px;font-weight:900;margin-bottom:2px">${esc(f.cliente||'Sin nombre')}</div>
+    <div style="font-size:13px;color:var(--mut);font-weight:700;margin-bottom:12px">Nota ${f.nro} · ${q(f.total)}</div>
+    <div style="font-size:13.5px;color:var(--mut);margin-bottom:16px;line-height:1.5">${m?'Vuelve a la lista de hoy.':'Sale de la lista de hoy y aparece de nuevo mañana. Si la modifican en Monica, se actualiza igual.'}</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn" style="padding:14px" onclick="peMover(${f.nro},${!m})">${m?'Regresar a hoy':'Dejar para mañana'}</button>
+      <button class="btn sec" style="padding:12px" onclick="cerrarModalRecibe()">Cancelar</button></div>`;
+  document.getElementById('modalRecibe').classList.add('open');
+}
+async function peMover(nro,aManana){
+  if(!esMaestro())return;cerrarModalRecibe();
+  try{
+    const res=await sb.from('pendientes_entrega').update({pospuesta_hasta:aManana?peMananaF():null}).eq('nro',nro).eq('estado','pendiente').select('nro');
+    if(res.error)throw res.error;
+    if(!res.data||!res.data.length){toast('⚠ Esa nota ya no está pendiente',true);peCargar();return;}
+    logAudit(aManana?'NOTA PARA MAÑANA':'NOTA REGRESA A HOY',`nota ${nro}`);
+    PE.sel.delete(nro);toast(aManana?'Nota '+nro+' queda para mañana ✓':'Nota '+nro+' regresó a hoy ✓');guardarAhora('nota para mañana');
+  }catch(e){toast(String(e&&e.message||'').includes('pospuesta_hasta')?'⚠ Falta correr el SQL de "para mañana" en Supabase':'⚠ Sin conexión',true);}
+  peCargar();
+}
 function peToggle(nro){if(PE.sel.has(nro))PE.sel.delete(nro);else PE.sel.add(nro);peRenderLista();}
 function peToggleGrupo(v){
   const fs=peFiltradas().filter(f=>f.vendedor===v);
@@ -2366,9 +2415,9 @@ function peLimpiar(){
   peBuscar('');
 }
 function peFiltradas(){
-  const q=PE.buscar.trim().toLowerCase();
-  return pePendientes().filter(f=>{
-    if(PE.filtro!=='todos'&&f.vendedor!==PE.filtro)return false;
+  const q=PE.buscar.trim().toLowerCase(), enM=PE.filtro==='__m';
+  return (enM?pePospuestas():pePendientes()).filter(f=>{
+    if(!enM&&PE.filtro!=='todos'&&f.vendedor!==PE.filtro)return false;
     if(!q)return true;
     return String(f.nro).includes(q)||String(f.codigo_cliente||'').toLowerCase()===q||String(f.cliente||'').toLowerCase().includes(q);
   });
@@ -2386,7 +2435,8 @@ function peRenderPanel(){
   const sh=document.getElementById('sheet');
   const ps=pePendientes();
   const g={};ps.forEach(f=>{g[f.vendedor]=(g[f.vendedor]||0)+1;});
-  if(PE.filtro!=='todos'&&!g[PE.filtro])PE.filtro='todos';
+  const pos=pePospuestas();
+  if(PE.filtro==='__m'?!pos.length:(PE.filtro!=='todos'&&!g[PE.filtro]))PE.filtro='todos';
   // quitar de la selección lo que ya no está
   const vivas=new Set(ps.map(f=>f.nro));[...PE.sel].forEach(n=>{if(!vivas.has(n))PE.sel.delete(n);});
   // El esqueleto (con el buscador) se arma UNA vez: así el teclado no se cierra al refrescar
@@ -2399,18 +2449,23 @@ function peRenderPanel(){
       </div>
       <div id="peLista"></div>
       <div id="peBarra"></div>`;
+    const L=document.getElementById('peLista');
+    L.addEventListener('pointerdown',peLPIni);L.addEventListener('pointermove',peLPMueve);
+    ['pointerup','pointercancel','pointerleave'].forEach(t=>L.addEventListener(t,peLPFin));
+    L.addEventListener('contextmenu',e=>e.preventDefault());
   }
   const chips=[`<button class="pe-chip${PE.filtro==='todos'?' on':''}" onclick="peFiltro('todos')">Todos <b>${ps.length}</b></button>`]
-    .concat(Object.keys(g).sort().map(v=>`<button class="pe-chip${PE.filtro===v?' on':''}" onclick="peFiltro('${esc(v).replace(/'/g,"\\'")}')"><i style="background:${peColorVend(v)}"></i>${esc(peNombreVend(v))} <b>${g[v]}</b></button>`)).join('');
+    .concat(Object.keys(g).sort().map(v=>`<button class="pe-chip${PE.filtro===v?' on':''}" onclick="peFiltro('${esc(v).replace(/'/g,"\\'")}')"><i style="background:${peColorVend(v)}"></i>${esc(peNombreVend(v))} <b>${g[v]}</b></button>`))
+    .concat(pos.length?[`<button class="pe-chip${PE.filtro==='__m'?' on':''}" onclick="peFiltro('__m')">${ICO_LUNA} Mañana <b>${pos.length}</b></button>`]:[]).join('');
   const ce=document.getElementById('peChips');if(ce.__h!==chips){ce.innerHTML=chips;ce.__h=chips;}
   const ee=document.getElementById('peEst'),est=peEstadoPuente();if(ee.__h!==est){ee.innerHTML=est;ee.__h=est;}
   peRenderLista();
 }
 function peRenderLista(){
   const cont=document.getElementById('peLista');if(!cont)return;
-  const fs=peFiltradas(), vistas=peVistas();
+  const fs=peFiltradas(), vistas=peVistas(), enM=PE.filtro==='__m';
   let h='';
-  if(!pePendientes().length){
+  if(!(enM?pePospuestas():pePendientes()).length){
     h=`<div class="pe-vacio"><div class="pe-vacio-ico">${ICO_CHECK2}</div><b>Todo entregado</b><span>Cuando se facturen notas de los vendedores de ruta, aparecen aquí.</span></div>`;
   }else if(!fs.length){
     h=`<div class="pe-vacio"><b>Sin resultados</b><span>No hay notas que coincidan con “${esc(PE.buscar)}”.</span></div>`;
@@ -2425,8 +2480,9 @@ function peRenderLista(){
       h+=`<div class="pe-grid">`;
       lista.forEach(f=>{
         const on=PE.sel.has(f.nro);
-        h+=`<button class="pe-card${on?' on':''}" onclick="peToggle(${f.nro})" aria-pressed="${on}">
-          ${on?`<span class="pe-cok">${ICO_OK_S}</span>`:(vistas.has(f.nro)?'':'<span class="pe-nueva pe-cnueva">nueva</span>')}
+        const ayer=!enM&&f.pospuesta_hasta;
+        h+=`<button class="pe-card${on?' on':''}${enM?' manana':''}" data-nro="${f.nro}" onclick="peTap(${f.nro})" aria-pressed="${on}">
+          ${on?`<span class="pe-cok">${ICO_OK_S}</span>`:(ayer?'<span class="pe-nueva pe-cnueva pe-ayer">de ayer</span>':(vistas.has(f.nro)||enM?'':'<span class="pe-nueva pe-cnueva">nueva</span>'))}
           <span class="pe-cnom">${esc(f.cliente||'Sin nombre')}</span>
           <span class="pe-csub">Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}</span>
           ${(f.envases||[]).length?`<span class="pe-env">${ICO_CAJA_S}${esc(peEnvTexto(f.envases))}</span>`:''}
@@ -2436,7 +2492,7 @@ function peRenderLista(){
     });
   }
   // Notas que ya están en una ruta que se está armando
-  const asig=peAsignadas();
+  const asig=enM?[]:peAsignadas();
   if(asig.length){
     h+=`<div class="pe-sec">En rutas que se preparan</div><div class="pe-grupo">`;
     asig.forEach(f=>{
@@ -2687,7 +2743,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-24.7';
+const VERSION='2026-10-24.8';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

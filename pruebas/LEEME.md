@@ -26,5 +26,5 @@ con la PC 3 minutos adelantada. Es la prueba más importante del dinero.
 
 `prueba-por-entregar.js` — campanita, buscar, escoger, mandar a un rutero,
 montos que siguen a Monica hasta que sale la ruta, aviso de cambios al enviar
-candado de las notas ya enviadas y el aviso "cambió en Monica" cuando la nota se modifica después de salir. Usa la librería real de Supabase contra
+candado de las notas ya enviadas y el aviso "cambió en Monica" cuando la nota se modifica después de salir. También "Para mañana" (mantener presionada una nota, solo maestro) y que regrese sola al otro día. Usa la librería real de Supabase contra
 una base local (Postgres + PostgREST) con `supabase/pendientes_entrega.sql`.

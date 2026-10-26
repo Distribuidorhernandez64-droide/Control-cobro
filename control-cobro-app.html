@@ -372,6 +372,7 @@
   .pm-ic.luna{background:#e9effa;color:#3a7bd5}.pm-ic.luna svg{width:17px;height:17px}
   .pm-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.pm-tx b{font-size:15px;font-weight:900}.pm-tx span{font-size:12px;color:var(--mut);font-weight:700}
   .pm-ir{font-size:22px;color:#c3c7cf;font-weight:700}
+  .pc-ic{width:52px;height:52px;border-radius:16px;background:#e9effa;color:#3a7bd5;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}.pc-ic svg{width:24px;height:24px}
   .pm-cancel{width:100%;margin-top:12px;padding:12px}
   /* Vista previa de la nota */
   .pv{position:fixed;inset:0;z-index:120;background:rgba(20,25,35,0);display:flex;align-items:flex-end;justify-content:center;transition:background .2s}
@@ -2438,7 +2439,7 @@ function peMenuNota(nro){
     <div class="pm-cab"><b>${esc(f.cliente||'Sin nombre')}</b><span>Nota ${f.nro} · ${q(f.total)}</span></div>
     <div class="pm-ops">
       <button class="pm-op" onclick="cerrarModalRecibe();peVer(${f.nro})"><span class="pm-ic">${ICO_OJO}</span><span class="pm-tx"><b>Ver vista previa</b><span>Productos, precios y total</span></span><span class="pm-ir">›</span></button>
-      ${esMaestro()?`<button class="pm-op" onclick="peMover(${f.nro},${!m})"><span class="pm-ic luna">${ICO_LUNA}</span><span class="pm-tx"><b>${m?'Regresar a hoy':'Dejar para mañana'}</b><span>${m?'Vuelve a la lista de hoy':'Sale de hoy y regresa sola mañana'}</span></span><span class="pm-ir">›</span></button>`:''}
+      ${esMaestro()?`<button class="pm-op" onclick="${m?`peMover(${f.nro},false)`:`peConfirmarManana(${f.nro})`}"><span class="pm-ic luna">${ICO_LUNA}</span><span class="pm-tx"><b>${m?'Regresar a hoy':'Dejar para mañana'}</b><span>${m?'Vuelve a la lista de hoy':'Sale de hoy y regresa sola mañana'}</span></span><span class="pm-ir">›</span></button>`:''}
     </div>
     <button class="btn sec pm-cancel" onclick="cerrarModalRecibe()">Cancelar</button>`;
   document.getElementById('modalRecibe').classList.add('open');
@@ -2505,6 +2506,20 @@ function peRenderVista(){
     </div>`;
 }
 
+// Segunda confirmación antes de dejar una nota para mañana
+function peConfirmarManana(nro){
+  if(!esMaestro())return;
+  const f=PE.filas.find(x=>x.nro===nro);if(!f)return;
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div class="pc-ic">${ICO_LUNA}</div>
+    <div style="font-size:18px;font-weight:900;text-align:center;margin-bottom:6px">¿Dejar para mañana?</div>
+    <div style="font-size:13.5px;color:var(--mut);text-align:center;line-height:1.5;margin-bottom:6px"><b style="color:var(--ink)">${esc(f.cliente||'Sin nombre')}</b><br>Nota ${f.nro} · ${q(f.total)}</div>
+    <div style="font-size:13px;color:var(--mut);text-align:center;line-height:1.5;margin-bottom:16px">Sale de la lista de hoy y regresa sola mañana.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn" style="padding:14px;background:#3a7bd5" onclick="peMover(${f.nro},true)">Sí, dejar para mañana</button>
+      <button class="btn sec" style="padding:12px" onclick="cerrarModalRecibe()">Cancelar</button></div>`;
+  document.getElementById('modalRecibe').classList.add('open');
+}
 async function peMover(nro,aManana){
   if(!esMaestro())return;cerrarModalRecibe();
   try{
@@ -2878,7 +2893,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-26.3';
+const VERSION='2026-10-26.4';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

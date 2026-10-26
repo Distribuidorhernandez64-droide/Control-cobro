@@ -258,6 +258,23 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('Anotador: mantener presionada no hace nada', !(await p.isVisible('#modalRecibe.open')));
   await p.evaluate(()=>{window.esMaestro=window.__m;PE.sel.clear();});
 
+  // Tiempo en espera desde que se facturó: la más vieja arriba; roja si lleva más de 1 hora
+  const ahora=Date.now(), fh=ms=>{const d=new Date(ms);const z=n=>String(n).padStart(2,'0');return {fecha:`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`,hora:`${z(d.getHours())}:${z(d.getMinutes())}`};};
+  await rest('POST','pendientes_entrega',[
+    {...fila(21810,'NOTA RECIENTE','lesli',48,10,'00:00','1'),...fh(ahora-10*60000)},
+    {...fila(21811,'NOTA VIEJA','lesli',48,20,'00:00','2'),...fh(ahora-95*60000)},
+    {...fila(21812,'NOTA MEDIA','lesli',48,30,'00:00','3'),...fh(ahora-40*60000)}]);
+  await rest('PATCH','pendientes_entrega?nro=in.(21805,21806,21807)',{estado:'descartada'});
+  await p.evaluate(()=>{PE.filtro='todos';PE.buscar='';peCargar();});await p.waitForTimeout(1500);
+  const orden=await p.$$eval('#peLista .pe-card .pe-cnom',a=>a.map(x=>x.textContent.trim()));
+  ok('La que lleva más tiempo esperando va arriba ('+orden.join(' > ')+')', orden.indexOf('NOTA VIEJA')<orden.indexOf('NOTA MEDIA')&&orden.indexOf('NOTA MEDIA')<orden.indexOf('NOTA RECIENTE'));
+  const esp=n=>p.textContent('.pe-card:has-text("'+n+'") .pe-esp');
+  ok('Muestra el tiempo: 1h 35m / 40m / 10m', (await esp('NOTA VIEJA')).trim()==='1h 35m'&&(await esp('NOTA MEDIA')).trim()==='40m'&&(await esp('NOTA RECIENTE')).trim()==='10m');
+  ok('Más de 1 hora: en rojo', await p.evaluate(()=>document.querySelector('.pe-card:has(.pe-cnom)')&&[...document.querySelectorAll('.pe-card')].find(c=>c.textContent.includes('NOTA VIEJA')).querySelector('.pe-esp').classList.contains('roja')));
+  ok('Menos de 1 hora: color normal', await p.evaluate(()=>[...document.querySelectorAll('.pe-card')].filter(c=>/NOTA (MEDIA|RECIENTE)/.test(c.textContent)).every(c=>!c.querySelector('.pe-esp').classList.contains('roja'))));
+  ok('El encabezado del vendedor cuenta las que llevan +1 h', (await p.textContent('.pe-gtx')).includes('en espera +1 h'));
+  ok('La tarjeta no se hizo más grande (misma altura que sin tiempo)', await p.evaluate(()=>{const c=[...document.querySelectorAll('.pe-card')].find(c=>c.textContent.includes('NOTA VIEJA'));return c.getBoundingClientRect().height<80;}));
+  await p.screenshot({path:SHOTS+'/13-espera.png'});
   // Anotador (tienda): ve la campana, no puede descartar
   ok('Sin errores en la página', errs.length===0);
   if(errs.length)console.log(errs);

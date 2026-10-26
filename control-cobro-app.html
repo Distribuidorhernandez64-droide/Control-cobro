@@ -371,6 +371,10 @@
   .pe-cok svg{width:11px;height:11px}
   .pe-cnueva{position:absolute;top:-6px;right:-3px;margin:0;font-size:9px;padding:0 6px;line-height:15px;border:2px solid #fff}
   .pe-cnom{font-size:13px;font-weight:900;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;letter-spacing:-.1px}
+  .pe-esp{flex-shrink:0;display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:900;color:#868d99}
+  .pe-esp.roja{color:#fff;background:#d4583e;border-radius:6px;padding:1px 4px;font-size:9.5px;gap:1px}
+  .pe-esp svg{width:9px;height:9px}
+  .pe-gesp{font-style:normal;color:#d4583e;font-weight:900}
   .pe-csub{font-size:10.5px;color:#868d99;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .pe-card .pe-env{font-size:10.5px;margin-top:0;gap:4px}
   .pe-card .pe-env svg{width:11px;height:11px}
@@ -2205,6 +2209,7 @@ const ICO_LUPA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><cir
 const ICO_OK_S=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICO_CAJA_S=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/></svg>`;
 const ICO_ALERTA=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><path d="M12 3.5 22 20.5H2L12 3.5Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.6v.2" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+const ICO_RELOJ=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.6"/><path d="M12 7v5.2l3.2 2" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
 const ICO_LUNA=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
@@ -2402,6 +2407,19 @@ async function peMover(nro,aManana){
   }catch(e){toast(String(e&&e.message||'').includes('pospuesta_hasta')?'⚠ Falta correr el SQL de "para mañana" en Supabase':'⚠ Sin conexión',true);}
   peCargar();
 }
+// Cuánto lleva esperando una nota desde que se facturó (hora de Monica, misma zona que el celular)
+function peFechaNota(f){
+  if(!f.fecha||!f.hora)return null;
+  const m=String(f.hora).match(/^(\d{1,2}):(\d{2})/);if(!m)return null;
+  const d=new Date(String(f.fecha).slice(0,10)+'T'+m[1].padStart(2,'0')+':'+m[2]+':00');
+  return isNaN(d.getTime())?null:d.getTime();
+}
+function peEsperaMin(f){const t=peFechaNota(f);return t===null?null:Math.max(0,Math.floor((Date.now()-t)/60000));}
+function peEsperaTxt(min){
+  if(min<1)return 'ahora';if(min<60)return min+'m';
+  const h=Math.floor(min/60);if(h>=24)return Math.floor(h/24)+'d';
+  const r=min%60;return h+'h'+(r?' '+r+'m':'');
+}
 function peToggle(nro){if(PE.sel.has(nro))PE.sel.delete(nro);else PE.sel.add(nro);peRenderLista();}
 function peToggleGrupo(v){
   const fs=peFiltradas().filter(f=>f.vendedor===v);
@@ -2476,11 +2494,14 @@ function peRenderLista(){
     h=`<div class="pe-vacio"><b>Sin resultados</b><span>No hay notas que coincidan con “${esc(PE.buscar)}”.</span></div>`;
   }else{
     const grupos={};fs.forEach(f=>{(grupos[f.vendedor]=grupos[f.vendedor]||[]).push(f);});
-    Object.keys(grupos).sort().forEach(v=>{
-      const lista=grupos[v].sort((a,b)=>a.nro-b.nro), col=peColorVend(v);
+    const cuando=f=>{const t=peFechaNota(f);return t===null?Infinity:t;};
+    const masVieja=v=>Math.min(...grupos[v].map(cuando));
+    Object.keys(grupos).sort((a,b)=>masVieja(a)-masVieja(b)||a.localeCompare(b)).forEach(v=>{
+      const lista=grupos[v].sort((a,b)=>cuando(a)-cuando(b)||a.nro-b.nro), col=peColorVend(v);
+      const largas=enM?0:lista.filter(f=>(peEsperaMin(f)||0)>=60).length;
       const tot=lista.reduce((s,f)=>s+f.total,0), todas=lista.every(f=>PE.sel.has(f.nro));
       h+=`<div class="pe-grupo"><div class="pe-gh"><span class="pe-av" style="background:${col}">${esc((peNombreVend(v)[0]||'?').toUpperCase())}</span>
-        <div class="pe-gtx"><b>${esc(peNombreVend(v))}</b><span>${lista.length} nota${lista.length===1?'':'s'} · ${q(tot)}</span></div>
+        <div class="pe-gtx"><b>${esc(peNombreVend(v))}</b><span>${lista.length} nota${lista.length===1?'':'s'} · ${q(tot)}${largas?` · <i class="pe-gesp">${largas} en espera +1 h</i>`:''}</span></div>
         <button class="pe-todas" onclick="peToggleGrupo('${esc(v).replace(/'/g,"\\'")}')">${todas?'Quitar':'Todas'}</button></div>`;
       h+=`<div class="pe-grid">`;
       lista.forEach(f=>{
@@ -2491,7 +2512,7 @@ function peRenderLista(){
           <span class="pe-cnom">${esc(f.cliente||'Sin nombre')}</span>
           <span class="pe-csub">Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}</span>
           ${(f.envases||[]).length?`<span class="pe-env">${ICO_CAJA_S}${esc(peEnvTexto(f.envases))}</span>`:''}
-          <span class="pe-cpie"><span class="pe-csub">${f.codigo_cliente?'Cód. '+esc(f.codigo_cliente):''}</span><span class="pe-ctot">${q(f.total)}</span></span></button>`;
+          <span class="pe-cpie"><span class="pe-csub">${f.codigo_cliente?'Cód. '+esc(f.codigo_cliente):''}</span>${(()=>{const em=enM?null:peEsperaMin(f);return em===null?'':`<span class="pe-esp${em>=60?' roja':''}" title="En espera desde que se facturó">${ICO_RELOJ}${peEsperaTxt(em)}</span>`;})()}<span class="pe-ctot">${q(f.total)}</span></span></button>`;
       });
       h+=`</div></div>`;
     });
@@ -2748,7 +2769,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-25.1';
+const VERSION='2026-10-26.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

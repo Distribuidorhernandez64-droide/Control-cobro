@@ -27,6 +27,8 @@ create table if not exists public.pendientes_entrega (
 );
 -- Envases que lleva la nota (cajas, vidrio, cilindros), calculados por Facturación rápida
 alter table public.pendientes_entrega add column if not exists envases jsonb;
+-- Vista previa: productos de la nota (código, descripción, cantidad, precio, descuento, comentario) tal como están en Monica
+alter table public.pendientes_entrega add column if not exists detalle jsonb;
 -- 'Para mañana': el maestro deja una nota pendiente para otro día; no sale en la lista de hoy y regresa sola ese día
 alter table public.pendientes_entrega add column if not exists pospuesta_hasta date;
 create index if not exists pendientes_entrega_estado_fecha on public.pendientes_entrega (estado, fecha);

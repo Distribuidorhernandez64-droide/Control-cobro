@@ -255,7 +255,8 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   // El anotador no tiene esta opción
   await p.evaluate(()=>{window.__m=esMaestro;window.esMaestro=()=>false;});
   await presionar('.pe-card:has-text("OTRA NOTA")',800);
-  ok('Anotador: mantener presionada no hace nada', !(await p.isVisible('#modalRecibe.open')));
+  ok('Anotador: el menú solo trae "Ver vista previa" (sin "mañana")', await p.isVisible('#modalRecibe.open')&&(await p.textContent('#modalRecibeBody')).includes('Ver vista previa')&&!(await p.textContent('#modalRecibeBody')).includes('mañana'));
+  await p.click('#modalRecibeBody button.sec');await p.waitForTimeout(200);
   await p.evaluate(()=>{window.esMaestro=window.__m;PE.sel.clear();});
 
   // Tiempo en espera desde que se facturó: la más vieja arriba; roja si lleva más de 1 hora
@@ -275,6 +276,41 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('El encabezado del vendedor cuenta las que llevan +1 h', (await p.textContent('.pe-gtx')).includes('en espera +1 h'));
   ok('La tarjeta no se hizo más grande (misma altura que sin tiempo)', await p.evaluate(()=>{const c=[...document.querySelectorAll('.pe-card')].find(c=>c.textContent.includes('NOTA VIEJA'));return c.getBoundingClientRect().height<80;}));
   await p.screenshot({path:SHOTS+'/13-espera.png'});
+  // Vista previa de la nota (mantener presionada -> Ver vista previa)
+  const DET=[{c:'333',d:'COCA COLA 1LT x12',q:2,p:125.5,x:6,m:''},{c:'999',d:'GALLETA SURTIDA',q:1.5,p:3.3333,x:0,m:'sabor fresa'}];
+  await rest('POST','pendientes_entrega',[{...fila(21813,'TIENDA VISTA','lesli',48,250,'00:00','77',[CAJA(2)]),...fh(Date.now()-5*60000),detalle:DET}]);
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1200);
+  await presionar('.pe-card:has-text("TIENDA VISTA")',800);
+  ok('Menú con "Ver vista previa" y "Dejar para mañana"', (await p.textContent('#modalRecibeBody')).includes('Ver vista previa')&&(await p.textContent('#modalRecibeBody')).includes('Dejar para mañana'));
+  await p.screenshot({path:SHOTS+'/14-menu.png'});
+  await p.click('#modalRecibeBody button:has-text("Ver vista previa")');await p.waitForTimeout(500);
+  let pv=await p.textContent('#peVista');
+  ok('Vista previa abierta con cliente y nota', await p.isVisible('#peVista.open')&&pv.includes('TIENDA VISTA')&&pv.includes('Nota 21813'));
+  ok('Productos con cantidad, precio y descuento', pv.includes('COCA COLA 1LT x12')&&pv.includes('Q125.50 c/u')&&pv.includes('desc. −Q6.00')&&pv.includes('GALLETA SURTIDA')&&pv.includes('1.5'));
+  ok('Importe por línea exacto (2 × 125.50 − 6 = 245.00; 1.5 × 3.3333 = 5.00)', pv.includes('Q245.00')&&pv.includes('Q5.00'));
+  ok('Comentario de la línea', pv.includes('sabor fresa'));
+  ok('Precio con más de 2 decimales se muestra exacto (Q3.3333)', pv.includes('Q3.3333 c/u'));
+  ok('Total Q250.00 sin diferencia (cuadra con Monica)', pv.includes('Q250.00')&&!pv.includes('Diferencia'));
+  ok('Muestra envases y tiempo en espera', pv.includes('2 cajas')&&pv.includes('en espera'));
+  await p.screenshot({path:SHOTS+'/15-vista-previa.png'});
+  // Si la modifican en Monica mientras se ve, se actualiza sola
+  await rest('PATCH','pendientes_entrega?nro=eq.21813',{total:265,detalle:[...DET,{c:'05',d:'PEPSI 2LT',q:1,p:15,x:0,m:''}]});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1200);
+  pv=await p.textContent('#peVista');
+  ok('Se actualiza sola si cambian la nota en Monica', pv.includes('PEPSI 2LT')&&pv.includes('Q265.00')&&pv.includes('3 productos'));
+  // Si la suma no cuadra con Monica, lo dice (no lo esconde)
+  await rest('PATCH','pendientes_entrega?nro=eq.21813',{total:270});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1200);
+  pv=await p.textContent('#peVista');
+  ok('Si la suma no cuadra, muestra la diferencia con el total de Monica', pv.includes('Diferencia con el total de Monica')&&pv.includes('Q5.00')&&pv.includes('Q270.00'));
+  await p.click('#peVista .pv-btn');await p.waitForTimeout(400);
+  ok('"Escoger para ruta" la selecciona y cierra', await p.evaluate(()=>PE.sel.has(21813))&&!(await p.isVisible('#peVista.open')));
+  await p.evaluate(()=>{PE.sel.clear();peRenderLista();});
+  // Sin productos todavía (Facturación rápida no los ha subido)
+  await p.evaluate(()=>peVer(21810));await p.waitForTimeout(400);
+  ok('Sin productos todavía: avisa que aparecen en unos segundos', (await p.textContent('#peVista')).includes('aparecen en unos segundos'));
+  await p.click('#peVista .pv-x');await p.waitForTimeout(400);
+  ok('La X cierra la vista previa', !(await p.isVisible('#peVista.open')));
   // Anotador (tienda): ve la campana, no puede descartar
   ok('Sin errores en la página', errs.length===0);
   if(errs.length)console.log(errs);

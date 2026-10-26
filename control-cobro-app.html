@@ -362,6 +362,52 @@
   .pe-cnom{padding-right:4px}
   .pe-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
   .pe-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:1px;text-align:left;padding:8px 9px 7px;border-radius:11px;border:1px solid #ebe9e3;background:#fbfaf7;font-family:inherit;color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s;min-width:0}
+  /* Menú al mantener presionada una nota */
+  .pm-cab{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+  .pm-cab b{font-size:17px;font-weight:900;line-height:1.25}.pm-cab span{font-size:13px;color:var(--mut);font-weight:700}
+  .pm-ops{display:flex;flex-direction:column;gap:8px}
+  .pm-op{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;border-radius:14px;border:1px solid #ebe9e3;background:#fbfaf7;font-family:inherit;color:var(--ink);cursor:pointer}
+  .pm-op:active{transform:scale(.98);background:#f4f2ec}
+  .pm-ic{width:38px;height:38px;border-radius:11px;background:#1c2433;color:#f8d967;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .pm-ic.luna{background:#e9effa;color:#3a7bd5}.pm-ic.luna svg{width:17px;height:17px}
+  .pm-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.pm-tx b{font-size:15px;font-weight:900}.pm-tx span{font-size:12px;color:var(--mut);font-weight:700}
+  .pm-ir{font-size:22px;color:#c3c7cf;font-weight:700}
+  .pm-cancel{width:100%;margin-top:12px;padding:12px}
+  /* Vista previa de la nota */
+  .pv{position:fixed;inset:0;z-index:120;background:rgba(20,25,35,0);display:flex;align-items:flex-end;justify-content:center;transition:background .2s}
+  .pv.open{background:rgba(20,25,35,.5)}
+  .pv-hoja{width:100%;max-width:560px;max-height:88%;display:flex;flex-direction:column;background:var(--card);border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.18);transform:translateY(100%);transition:transform .22s cubic-bezier(.2,.8,.2,1);padding-bottom:env(safe-area-inset-bottom)}
+  .pv.open .pv-hoja{transform:none}
+  .pv-asa{width:38px;height:4px;border-radius:3px;background:#dcdad4;margin:8px auto 2px}
+  .pv-cab{display:flex;align-items:center;gap:11px;padding:10px 16px 8px}
+  .pv-cab .pe-av{width:38px;height:38px;font-size:15px}
+  .pv-tit{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .pv-tit b{font-size:17px;font-weight:900;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pv-tit span{font-size:12.5px;color:var(--mut);font-weight:700}
+  .pv-x{width:36px;height:36px;border-radius:50%;border:none;background:#f1f0ec;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+  .pv-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px;border-bottom:1px solid #f0eee9}
+  .pv-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#5b6472;background:#f4f3ef;border-radius:8px;padding:5px 9px}
+  .pv-chip.roja{color:#d4583e}.pv-chip.env{color:#b0601a;background:#fdf3e6}
+  .pv-chip svg{width:12px;height:12px}
+  .pv-lista{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 16px}
+  .pv-l{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid #f3f1ec}
+  .pv-l:last-child{border-bottom:none}
+  .pv-q{min-width:34px;height:30px;padding:0 6px;border-radius:9px;background:#1c2433;color:#fff;font-size:13.5px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .pv-d{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .pv-d b{font-size:13.5px;font-weight:800;line-height:1.25;word-break:break-word}
+  .pv-d span{font-size:11.5px;color:#868d99;font-weight:700}
+  .pv-d em{font-size:11.5px;color:#b0601a;font-style:italic;font-weight:600}
+  .pv-dsc{font-style:normal;color:#1f8a52}
+  .pv-i{font-size:14px;font-weight:900;white-space:nowrap;padding-top:5px}
+  .pv-vacio{padding:26px 8px;text-align:center;color:var(--mut);font-size:13.5px;font-weight:700;line-height:1.5}
+  .pv-vacio span{font-size:12px;font-weight:600}
+  .pv-pie{border-top:1px solid #ecebe6;padding:12px 16px 14px;background:#fcfbf9;display:flex;flex-direction:column;gap:6px}
+  .pv-fila{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:#5b6472}
+  .pv-fila.mut{color:var(--mut)}
+  .pv-tot{display:flex;justify-content:space-between;align-items:baseline}
+  .pv-tot span{font-size:13px;font-weight:800;color:var(--mut)}.pv-tot b{font-size:24px;font-weight:900;letter-spacing:-.3px}
+  .pv-btn{margin-top:6px;width:100%;height:48px;border:none;border-radius:14px;background:#1c2433;color:#fff;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer}
+  .pv-btn.quitar{background:#f1f0ec;color:var(--ink)}
   .pe-card{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
   .pe-card.manana{background:#f1f0ec;border-style:dashed}
   .pe-ayer{background:#3a7bd5}
@@ -2201,7 +2247,7 @@ function mostrarBannerHistorial(fecha){
 // campanita; se escogen, se mandan a un rutero y siguen el camino de siempre.
 // Estados: pendiente → asignada (en un viaje que se arma; el monto sigue a
 // Monica) → enviada (salió en ruta; ya no cambia, lo cuida la base de datos).
-const PE={cambios:{},filas:[],cargado:false,edad:null,sel:new Set(),filtro:'todos',buscar:'',abierto:false,error:'',ocupado:false};
+const PE={vista:null,cambios:{},filas:[],cargado:false,edad:null,sel:new Set(),filtro:'todos',buscar:'',abierto:false,error:'',ocupado:false};
 const PE_FRESCO=90; // segundos: si Facturación rápida no reporta en este tiempo, los montos pueden no estar al día
 const ICO_CAMPANA=`<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5Z" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICO_NOTA=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l4 4v14H6z" stroke="#e8902a" stroke-width="1.9" stroke-linejoin="round"/><path d="M15 3v4h4M9 12h7M9 16h5" stroke="#e8902a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -2210,6 +2256,7 @@ const ICO_OK_S=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><pat
 const ICO_CAJA_S=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" stroke="#e8902a" stroke-width="2.2" stroke-linejoin="round"/></svg>`;
 const ICO_ALERTA=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><path d="M12 3.5 22 20.5H2L12 3.5Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.6v.2" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
 const ICO_RELOJ=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.6"/><path d="M12 7v5.2l3.2 2" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+const ICO_OJO=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>`;
 const ICO_LUNA=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
@@ -2253,6 +2300,7 @@ async function peCargar(){
   peReintentarEnviadas();
   peRenderCampana();
   if(PE.abierto)peRenderPanel();
+  if(PE.vista)peRenderVista();
   else if(!vistaDetalle&&!escribiendoAhora())renderZona();
   else if(camb&&!escribiendoAhora()){const sy=window.scrollY;renderZona();window.scrollTo(0,sy);}
 }
@@ -2346,7 +2394,7 @@ function peAbrir(){
   peCargar();
 }
 function peCerrar(sinRender){
-  PE.abierto=false;peMarcarVistas();
+  PE.abierto=false;peMarcarVistas();peVerCerrar();
   const ov=document.getElementById('overlay'),sh=document.getElementById('sheet');
   if(document.activeElement&&document.activeElement.id==='peBuscar')document.activeElement.blur();
   ov.classList.remove('open','pe-modo');ov.style.top='';ov.style.height='';
@@ -2371,7 +2419,7 @@ if(window.visualViewport){
 let _peLP=null,_peLPfue=false;
 function peLPIni(e){
   const c=e.target.closest&&e.target.closest('.pe-card');_peLPfue=false;
-  if(!c||!esMaestro())return;
+  if(!c)return;
   if(_peLP)clearTimeout(_peLP.t);
   const nro=+c.dataset.nro;
   _peLP={x:e.clientX,y:e.clientY,t:setTimeout(()=>{_peLP=null;_peLPfue=true;try{navigator.vibrate&&navigator.vibrate(30);}catch(e){}peMenuNota(nro);},520)};
@@ -2384,18 +2432,79 @@ function peTap(nro){
   peToggle(nro);
 }
 function peMenuNota(nro){
-  if(!esMaestro())return;
   const f=PE.filas.find(x=>x.nro===nro);if(!f||f.estado!=='pendiente')return;
   const m=peEsManana(f);
   document.getElementById('modalRecibeBody').innerHTML=`
-    <div style="font-size:17px;font-weight:900;margin-bottom:2px">${esc(f.cliente||'Sin nombre')}</div>
-    <div style="font-size:13px;color:var(--mut);font-weight:700;margin-bottom:12px">Nota ${f.nro} · ${q(f.total)}</div>
-    <div style="font-size:13.5px;color:var(--mut);margin-bottom:16px;line-height:1.5">${m?'Vuelve a la lista de hoy.':'Sale de la lista de hoy y aparece de nuevo mañana. Si la modifican en Monica, se actualiza igual.'}</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn" style="padding:14px" onclick="peMover(${f.nro},${!m})">${m?'Regresar a hoy':'Dejar para mañana'}</button>
-      <button class="btn sec" style="padding:12px" onclick="cerrarModalRecibe()">Cancelar</button></div>`;
+    <div class="pm-cab"><b>${esc(f.cliente||'Sin nombre')}</b><span>Nota ${f.nro} · ${q(f.total)}</span></div>
+    <div class="pm-ops">
+      <button class="pm-op" onclick="cerrarModalRecibe();peVer(${f.nro})"><span class="pm-ic">${ICO_OJO}</span><span class="pm-tx"><b>Ver vista previa</b><span>Productos, precios y total</span></span><span class="pm-ir">›</span></button>
+      ${esMaestro()?`<button class="pm-op" onclick="peMover(${f.nro},${!m})"><span class="pm-ic luna">${ICO_LUNA}</span><span class="pm-tx"><b>${m?'Regresar a hoy':'Dejar para mañana'}</b><span>${m?'Vuelve a la lista de hoy':'Sale de hoy y regresa sola mañana'}</span></span><span class="pm-ir">›</span></button>`:''}
+    </div>
+    <button class="btn sec pm-cancel" onclick="cerrarModalRecibe()">Cancelar</button>`;
   document.getElementById('modalRecibe').classList.add('open');
 }
+
+// ---- Vista previa de la nota (productos tal como están en Monica) ----
+// Precio por unidad tal como está en Monica (si trae más de 2 decimales, se muestran hasta 4)
+function peQP(n){n=Number(n)||0;const r=Math.round(n*10000)/10000;if(Math.abs(r*100-Math.round(r*100))<1e-6)return q(r);
+  return 'Q'+r.toLocaleString('es-GT',{minimumFractionDigits:2,maximumFractionDigits:4});}
+function peCant(n){n=Number(n)||0;return Number.isInteger(n)?String(n):String(+n.toFixed(3));}
+function peVer(nro){
+  PE.vista=nro;
+  let el=document.getElementById('peVista');
+  if(!el){el=document.createElement('div');el.id='peVista';el.className='pv';
+    el.addEventListener('click',e=>{if(e.target===el)peVerCerrar();});document.body.appendChild(el);}
+  el.innerHTML='<div class="pv-hoja"></div>';
+  peRenderVista();
+  requestAnimationFrame(()=>el.classList.add('open'));
+}
+function peVerCerrar(){
+  PE.vista=null;const el=document.getElementById('peVista');if(!el)return;
+  el.classList.remove('open');setTimeout(()=>{if(!PE.vista&&el.parentNode)el.remove();},220);
+}
+function peVerEscoger(nro){
+  if(!PE.sel.has(nro))PE.sel.add(nro);else PE.sel.delete(nro);
+  peVerCerrar();peRenderLista();
+}
+function peRenderVista(){
+  const el=document.getElementById('peVista');if(!el||!PE.vista)return;
+  const hoja=el.querySelector('.pv-hoja');if(!hoja)return;
+  const nro=PE.vista, f=PE.filas.find(x=>x.nro===nro);
+  const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
+  if(!f){hoja.innerHTML=`<div class="pv-asa"></div><div class="pv-cab"><div class="pv-tit"><b>Nota ${nro}</b></div>${cerrar}</div>
+    <div class="pv-vacio">Esta nota ya no está pendiente (la tomaron para una ruta, la quitaron o la anularon en Monica).</div>`;return;}
+  const det=Array.isArray(f.detalle)?f.detalle:null;
+  const em=peEsManana(f)?null:peEsperaMin(f), env=peEnvTexto(f.envases);
+  const col=peColorVend(f.vendedor);
+  let suma=0;
+  const filas=(det||[]).map(l=>{
+    const imp=Math.round(((Number(l.q)||0)*(Number(l.p)||0)-(Number(l.x)||0))*100)/100;suma+=imp;
+    return `<div class="pv-l">
+      <span class="pv-q">${peCant(l.q)}</span>
+      <span class="pv-d"><b>${esc(l.d||l.c||'')}</b><span>${l.c?'Cód. '+esc(l.c)+' · ':''}${peQP(l.p)} c/u${Number(l.x)>0?` · <i class="pv-dsc">desc. −${q(l.x)}</i>`:''}</span>${l.m?`<em>${esc(l.m)}</em>`:''}</span>
+      <span class="pv-i">${q(imp)}</span></div>`;
+  }).join('');
+  suma=Math.round(suma*100)/100;
+  const dif=det&&det.length?Math.round((f.total-suma)*100)/100:0;
+  const enSel=PE.sel.has(nro), puedeSel=!peEsManana(f)&&f.estado==='pendiente'&&!f.anulada;
+  hoja.innerHTML=`<div class="pv-asa"></div>
+    <div class="pv-cab">
+      <span class="pe-av" style="background:${col}">${esc((peNombreVend(f.vendedor)[0]||'?').toUpperCase())}</span>
+      <div class="pv-tit"><b>${esc(f.cliente||'Sin nombre')}</b><span>Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''} · ${esc(peNombreVend(f.vendedor))}</span></div>${cerrar}</div>
+    <div class="pv-chips">
+      ${f.codigo_cliente?`<span class="pv-chip">Cód. ${esc(f.codigo_cliente)}</span>`:''}
+      ${em===null?(peEsManana(f)?`<span class="pv-chip">${ICO_LUNA} Para mañana</span>`:''):`<span class="pv-chip${em>=60?' roja':''}">${ICO_RELOJ} ${peEsperaTxt(em)} en espera</span>`}
+      ${env?`<span class="pv-chip env">${ICO_CAJA_S} ${esc(env)}</span>`:''}
+    </div>
+    <div class="pv-lista">${det===null?`<div class="pv-vacio">Los productos aparecen en unos segundos, cuando Facturación rápida los sube.<br><span>Si no aparecen: falta correr el SQL de la vista previa o reiniciar Facturación rápida en la PC.</span></div>`
+      :(det.length?filas:'<div class="pv-vacio">Esta nota no tiene productos en Monica.</div>')}</div>
+    <div class="pv-pie">
+      ${dif&&Math.abs(dif)>=0.01?`<div class="pv-fila"><span>Suma de productos</span><b>${q(suma)}</b></div><div class="pv-fila mut"><span>Diferencia con el total de Monica</span><b>${dif<0?'−':''}${q(Math.abs(dif))}</b></div>`:''}
+      <div class="pv-tot"><span>${det?det.length+' producto'+(det.length===1?'':'s'):'Total'}</span><b>${q(f.total)}</b></div>
+      ${puedeSel?`<button class="pv-btn${enSel?' quitar':''}" onclick="peVerEscoger(${nro})">${enSel?'Quitar de la selección':'Escoger para ruta'}</button>`:''}
+    </div>`;
+}
+
 async function peMover(nro,aManana){
   if(!esMaestro())return;cerrarModalRecibe();
   try{
@@ -2769,7 +2878,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-26.2';
+const VERSION='2026-10-26.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

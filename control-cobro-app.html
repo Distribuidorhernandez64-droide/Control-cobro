@@ -372,7 +372,7 @@
   .pe-cnueva{position:absolute;top:-6px;right:-3px;margin:0;font-size:9px;padding:0 6px;line-height:15px;border:2px solid #fff}
   .pe-cnom{font-size:13px;font-weight:900;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;letter-spacing:-.1px}
   .pe-esp{flex-shrink:0;display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:900;color:#868d99}
-  .pe-esp.roja{color:#fff;background:#d4583e;border-radius:6px;padding:1px 4px;font-size:9.5px;gap:1px}
+  .pe-esp.roja{color:#d4583e}
   .pe-esp svg{width:9px;height:9px}
   .pe-gesp{font-style:normal;color:#d4583e;font-weight:900}
   .pe-csub{font-size:10.5px;color:#868d99;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -2769,7 +2769,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-26.1';
+const VERSION='2026-10-26.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

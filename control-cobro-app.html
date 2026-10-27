@@ -2455,7 +2455,7 @@ function peVer(nro){
   let el=document.getElementById('peVista');
   if(!el){el=document.createElement('div');el.id='peVista';el.className='pv';
     el.addEventListener('click',e=>{if(e.target===el)peVerCerrar();});document.body.appendChild(el);}
-  el.innerHTML='<div class="pv-hoja"></div>';
+  el.style.cssText='';el.innerHTML='<div class="pv-hoja"></div>';
   peRenderVista();
   requestAnimationFrame(()=>el.classList.add('open'));
 }
@@ -2463,6 +2463,73 @@ function peVerCerrar(){
   PE.vista=null;const el=document.getElementById('peVista');if(!el)return;
   el.classList.remove('open');setTimeout(()=>{if(!PE.vista&&el.parentNode)el.remove();},220);
 }
+
+// ---- Gestos como app nativa ----
+// · Vista previa: se cierra arrastrándola hacia abajo (desde la manija, el encabezado
+//   o la lista si está arriba del todo).
+// · Por entregar: deslizar hacia la derecha regresa (igual que al salir de un cliente).
+let _pg=null;
+document.addEventListener('touchstart',function(e){
+  _pg=null;
+  if(!PE.abierto||e.touches.length!==1)return;
+  const t=e.touches[0],base={x:t.clientX,y:t.clientY,d:0,on:false,muerto:false,pd:0,pt:0,v:0};
+  if(PE.vista){
+    const pv=document.getElementById('peVista'),hoja=pv&&pv.querySelector('.pv-hoja');
+    if(!hoja||!hoja.contains(e.target))return;
+    const lista=e.target.closest('.pv-lista');
+    if(lista&&lista.scrollTop>0)return;
+    _pg=Object.assign(base,{tipo:'v',el:pv,hoja});return;
+  }
+  const mr=document.getElementById('modalRecibe');
+  if(mr&&mr.classList.contains('open'))return;
+  if(e.target.closest('input,textarea,select'))return;
+  const ch=e.target.closest('.pe-chips');if(ch&&ch.scrollLeft>0)return;
+  _pg=Object.assign(base,{tipo:'p',sh:document.getElementById('sheet'),ov:document.getElementById('overlay')});
+},{passive:true});
+document.addEventListener('touchmove',function(e){
+  const g=_pg;if(!g||g.muerto)return;
+  const t=e.touches[0],dx=t.clientX-g.x,dy=t.clientY-g.y;
+  if(!g.on){
+    if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
+    const ok=g.tipo==='v'?(dy>0&&dy>Math.abs(dx)*1.2):(dx>0&&dx>Math.abs(dy)*1.4);
+    if(!ok){g.muerto=true;return;}
+    g.on=true;g.x=t.clientX;g.y=t.clientY;g.pt=Date.now();g.pd=0;
+    if(g.tipo==='v'){g.hoja.style.transition='none';g.el.style.transition='none';}
+    else{g.sh.style.transition='none';g.ov.style.transition='none';}
+    return;
+  }
+  const d=Math.max(0,g.tipo==='v'?t.clientY-g.y:t.clientX-g.x),ahora=Date.now();
+  g.v=(d-g.pd)/Math.max(1,ahora-g.pt);g.pd=d;g.pt=ahora;g.d=d;
+  if(e.cancelable)e.preventDefault();
+  if(g.tipo==='v'){
+    g.hoja.style.transform='translateY('+d+'px)';
+    g.el.style.background='rgba(20,25,35,'+(.5*(1-Math.min(1,d/(g.hoja.offsetHeight||400))))+')';
+  }else{
+    g.sh.style.transform='translateX('+d+'px)';
+    g.ov.style.background='rgba(31,42,36,'+(.5*(1-Math.min(1,d/window.innerWidth)))+')';
+  }
+},{passive:false});
+function _pgFin(cancelado){
+  const g=_pg;_pg=null;if(!g||!g.on)return;
+  const v=(!cancelado&&Date.now()-g.pt<120)?g.v:0, d=cancelado?0:g.d;
+  if(g.tipo==='v'){
+    const cierra=d>Math.min(140,(g.hoja.offsetHeight||400)*.3)||(v>.4&&d>30);
+    g.hoja.style.transition='transform .22s cubic-bezier(.2,.8,.2,1)';g.el.style.transition='background .22s';
+    if(cierra){g.hoja.style.transform='translateY(100%)';g.el.style.background='rgba(20,25,35,0)';peVerCerrar();}
+    else{g.hoja.style.transform='';g.el.style.background='';
+      setTimeout(()=>{g.hoja.style.transition='';g.el.style.transition='';},240);}
+  }else{
+    const cierra=d>window.innerWidth*.33||(v>.4&&d>40);
+    g.sh.style.transition='transform .2s ease';g.ov.style.transition='background .2s';
+    if(cierra){
+      g.sh.style.transform='translateX(100%)';g.ov.style.background='rgba(31,42,36,0)';
+      setTimeout(()=>{g.sh.style.transition='';g.sh.style.transform='';g.ov.style.transition='';g.ov.style.background='';if(PE.abierto)peCerrar();},200);
+    }else{g.sh.style.transform='';g.ov.style.background='';
+      setTimeout(()=>{g.sh.style.transition='';g.ov.style.transition='';},220);}
+  }
+}
+document.addEventListener('touchend',()=>_pgFin(false),{passive:true});
+document.addEventListener('touchcancel',()=>_pgFin(true),{passive:true});
 function peVerEscoger(nro){
   if(!PE.sel.has(nro))PE.sel.add(nro);else PE.sel.delete(nro);
   peVerCerrar();peRenderLista();
@@ -2893,7 +2960,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-26.4';
+const VERSION='2026-10-27.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

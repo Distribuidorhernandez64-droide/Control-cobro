@@ -318,6 +318,45 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('Sin productos todavía: avisa que aparecen en unos segundos', (await p.textContent('#peVista')).includes('aparecen en unos segundos'));
   await p.click('#peVista .pv-x');await p.waitForTimeout(400);
   ok('La X cierra la vista previa', !(await p.isVisible('#peVista.open')));
+  // Gestos: deslizar hacia abajo cierra la vista previa; deslizar a la derecha regresa de "Por entregar"
+  const cdp=await ctx.newCDPSession(p);
+  const swipe=async(x0,y0,x1,y1,pasos,espera)=>{
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x0,y:y0}]});
+    for(let i=1;i<=pasos;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x0+(x1-x0)*i/pasos,y:y0+(y1-y0)*i/pasos}]});await p.waitForTimeout(espera);}
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(450);
+  };
+  const abrirVista=async()=>{await p.evaluate(()=>peVer(21813));await p.waitForTimeout(500);return p.evaluate(()=>{const r=document.querySelector('#peVista .pv-asa').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};});};
+  let a=await abrirVista();
+  await swipe(a.x,a.y,a.x,a.y+40,8,25);
+  ok('Vista previa: un arrastre corto y lento regresa a su lugar (no cierra)', await p.isVisible('#peVista.open')&&(await p.evaluate(()=>document.querySelector('#peVista .pv-hoja').style.transform))==='');
+  await swipe(a.x,a.y,a.x+8,a.y+260,12,25);
+  ok('Vista previa: arrastrar hacia abajo desde la manija la cierra', !(await p.evaluate(()=>PE.vista))&&!(await p.$('#peVista')));
+  a=await abrirVista();
+  await swipe(a.x,a.y,a.x,a.y+90,6,6);
+  ok('Vista previa: un deslizón rápido hacia abajo también la cierra', !(await p.evaluate(()=>PE.vista)));
+  a=await abrirVista();
+  await swipe(a.x,a.y+60,a.x,a.y+330,12,25);
+  ok('Vista previa: arrastrar desde el encabezado la cierra', !(await p.evaluate(()=>PE.vista)));
+  a=await abrirVista();
+  await swipe(a.x,a.y,a.x,a.y-200,8,20);
+  ok('Vista previa: deslizar hacia arriba no la cierra', await p.isVisible('#peVista.open'));
+  await swipe(a.x,a.y+60,a.x+260,a.y+70,10,20);
+  ok('Vista previa abierta: deslizar a la derecha NO cierra el panel de atrás', await p.evaluate(()=>PE.abierto&&!!PE.vista));
+  await p.screenshot({path:SHOTS+'/16-vista-gestos.png'});
+  await p.click('#peVista .pv-x');await p.waitForTimeout(400);
+  ok('Panel abierto antes de probar el gesto de regresar', await p.evaluate(()=>PE.abierto));
+  await swipe(20,500,70,505,6,20);
+  ok('Panel: un arrastre corto a la derecha no cierra', await p.evaluate(()=>PE.abierto)&&(await p.evaluate(()=>document.getElementById('sheet').style.transform))==='');
+  await swipe(200,500,200,300,8,20);
+  ok('Panel: desplazarse hacia arriba/abajo no lo cierra', await p.evaluate(()=>PE.abierto));
+  await swipe(60,500,300,520,12,25);
+  ok('Panel: deslizar a la derecha lo cierra (regresa a la pantalla anterior)', !(await p.evaluate(()=>PE.abierto))&&!(await p.isVisible('#overlay.open')));
+  ok('Al regresar, no se seleccionó ninguna nota por accidente', (await p.evaluate(()=>PE.sel.size))===0);
+  await p.click('#btnPE');await p.waitForTimeout(700);
+  ok('Se puede volver a abrir y sigue completo', await p.evaluate(()=>PE.abierto)&&(await p.$$('#peLista .pe-card')).length>0&&(await p.evaluate(()=>document.getElementById('sheet').style.transform))==='');
+  await swipe(100,500,330,505,4,4);
+  ok('Panel: un deslizón rápido a la derecha lo cierra', !(await p.evaluate(()=>PE.abierto)));
+  await p.click('#btnPE');await p.waitForTimeout(700);
   // Anotador (tienda): ve la campana, no puede descartar
   ok('Sin errores en la página', errs.length===0);
   if(errs.length)console.log(errs);

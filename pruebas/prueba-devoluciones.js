@@ -184,6 +184,23 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   x=await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Gerson');return v.pedidos.find(x=>x.fac===21902);});
   ok('Deshacer en la ruta vieja: no se deja (ya va con Pedro), sigue "no entregó"', x.estado==='cancelado'&&x.facReg===true&&(await fila(21902)).rutero==='Pedro');
 
+  // ---- Crédito: marca tranquila (no alerta) en la lista de ruteros y en sus viajes ----
+  await p.evaluate(()=>{peCerrar&&PE.abierto&&peCerrar();volverLista();});await p.waitForTimeout(300);
+  ok('Sin créditos: no hay marca', (await p.$$('.cr-chip')).length===0);
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Pedro');const pp=v.pedidos[0];setEst(v.id,pp.id,'credito');setAj(v.id,pp.id,'abono','40');renderZona();});
+  await p.evaluate(()=>volverLista());await p.waitForTimeout(400);
+  let cr=await p.$$eval('.vrow',rs=>rs.map(r=>r.textContent));
+  ok('Lista de ruteros: Pedro dice "Crédito Q60.00" (100 − 40 de abono)', cr.some(x=>x.includes('Pedro')&&x.includes('Crédito Q60.00'))&&!cr.some(x=>x.includes('Gerson')&&x.includes('Crédito')));
+  ok('La marca de crédito es azul suave, no roja', await p.$eval('.cr-chip',e=>getComputedStyle(e).color)==='rgb(58, 111, 184)');
+  await p.screenshot({path:SHOTS+'/c1-lista-credito.png'});
+  await p.evaluate(()=>entrarVendedor('Pedro'));await p.waitForTimeout(400);
+  ok('Dentro de Pedro, el viaje dice "Crédito Q60.00"', (await p.textContent('#zona')).includes('Crédito Q60.00'));
+  await p.screenshot({path:SHOTS+'/c2-viaje-credito.png'});
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Pedro');v.cerrado=true;v.horaRecibido=new Date().toISOString();viajeAbierto=null;renderZona();});
+  ok('Viaje ya recibido (gris) también lo muestra', (await p.textContent('.vcard')).includes('Crédito Q60.00'));
+  await p.screenshot({path:SHOTS+'/c3-viaje-recibido-credito.png'});
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Pedro');v.cerrado=false;renderZona();volverLista();});
+
   // ---- 7) Gesto: si la lista se refresca a media arrastrada, el gesto sigue ----
   await p.evaluate(()=>peAbrir());await p.waitForTimeout(800);
   const cdp=await ctx.newCDPSession(p);

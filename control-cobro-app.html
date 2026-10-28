@@ -186,6 +186,12 @@
   .vrow .l1,.vrow .l2{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .vrow .nm{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .vrow .hr{font-size:12px;color:var(--mut);font-weight:700;flex-shrink:0}
+  .vrow .nmw{display:flex;align-items:center;gap:7px;min-width:0}
+  /* Crédito: solo informa (no es alerta) */
+  .cr-chip{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-size:11px;font-weight:800;color:#3a6fb8;background:#edf3fb;border-radius:8px;padding:2px 7px 2px 6px;line-height:15px;white-space:nowrap;vertical-align:1px}
+  .cr-chip svg{width:12px;height:12px;flex-shrink:0}
+  .vsub .cr-chip{margin-left:6px;font-size:10.5px;padding:1px 6px 1px 5px}
+  .vhead-open .cr-chip{background:rgba(255,255,255,.22);color:#fff;margin-top:4px}
   .vrow .hr.on{color:#e8902a}
   .vrow .sb{font-size:13.5px;color:#7b8391;font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px;min-width:0}
   .vrow .sb svg{flex-shrink:0}
@@ -1624,7 +1630,7 @@ function renderLista(){
       onpointerdown="lpInicio(event,'${j}')" onpointerup="lpFin()" onpointerleave="lpFin()"
       onpointercancel="lpFin()" onpointermove="lpMueve(event)" oncontextmenu="return false">
       <div class="av" style="background:${col}">${esc((r.trim()[0]||'?').toUpperCase())}</div>
-      <div class="mid"><div class="l1"><span class="nm">${esc(r)}</span><span class="hr${on?' on':''}">${hr}</span></div>
+      <div class="mid"><div class="l1"><span class="nmw"><span class="nm">${esc(r)}</span>${credChip(viajes.filter(v=>v&&v.rutero===r))}</span><span class="hr${on?' on':''}">${hr}</span></div>
         <div class="l2"><span class="sb">${sb}</span>${bd}</div>${warn}</div></div>`};
   }).sort((a,b)=>a.prio-b.prio||b.ult-a.ult);
   return peTarjetaLista()+`<div class="vlista">${filas.map(f=>f.html).join('')}</div>`;
@@ -1722,7 +1728,7 @@ function renderZona(){
       const horas=v.horaSalida?`<div class="vsub" style="margin-top:1px"><span class="nw">${hCorta(v.horaSalida)} → ${hCorta(v.horaRecibido)}</span> · <span class="nw">${duracion(v.horaSalida,v.horaRecibido)}</span>${v.recibidoPor?' · <b style="color:'+(v.recibidoPor==='Lesli'?'#3a7bd5':'#2fae74')+'">'+v.recibidoPor+'</b>':''}</div>`:'';
       const marca=v.modificado?'<span class="vstat" style="background:#fdeede;color:var(--bad);margin-right:6px">⚠ modificado</span>':'';
       html+=`<div class="vcard${peModViaje(v)?' pe-vmod':''}"><div class="vcol" onclick="verViaje(${v.id})">
-        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}${(v.envases||'').trim()?' · envase ✓':''}</div>${horas}${peModLinea(v)}</div>
+        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}${(v.envases||'').trim()?' · envase ✓':''}${credChip([v])}</div>${horas}${peModLinea(v)}</div>
         <div class="vr">${marca}<span class="vstat vs-done">Recibido</span><span class="vm">${q(efv)}</span><span class="chev">▸</span></div>
       </div></div>`;
       return;
@@ -1730,7 +1736,7 @@ function renderZona(){
     // CERRADO expandido -> detalle sólo lectura
     if(v.cerrado&&viajeAbierto===v.id){
       html+=`<div class="vcard${peModViaje(v)?' pe-vmod':''}"><div class="vcol" onclick="verViaje(${v.id})">
-        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}</div>${peModLinea(v)}</div>
+        <div class="vl">Viaje ${i+1}<div class="vsub">${v.pedidos.length} pedido${v.pedidos.length===1?'':'s'}${credChip([v])}</div>${peModLinea(v)}</div>
         <div class="vr"><span class="vstat vs-done">Recibido</span><span class="vm">${q(efv)}</span><span class="chev">▾</span></div></div>`;
       html+=renderPedidos(v,false);
       if(v.horaSalida)html+=`<div style="padding:11px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)">Salió ${hhmm(v.horaSalida)} · recibido ${hhmm(v.horaRecibido)} · duró ${duracion(v.horaSalida,v.horaRecibido)}</div>`;
@@ -1743,7 +1749,7 @@ function renderZona(){
     html+=`<div class="vcard abierta" id="viaje-${v.id}" style="border-color:${colorRutero(selRutero)}"><div class="vhead-open" style="background:${colorRutero(selRutero)}">
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/></svg></span>
-        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${peModViaje(v)?`<div class="s pe-modh">${ICO_ALERTA} ${esc(peAvisoTxt(peAvisosDe([v])))}</div>`:''}</div>
+        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${credChip([v])?'<div>'+credChip([v])+'</div>':''}${peModViaje(v)?`<div class="s pe-modh">${ICO_ALERTA} ${esc(peAvisoTxt(peAvisosDe([v])))}</div>`:''}</div>
       </div>
       <span class="badge">${enRuta?'En ruta':'Preparando'}</span></div>`;
     html+=renderPedidos(v,true);
@@ -2293,6 +2299,11 @@ const ICO_RELOJ=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" sty
 const ICO_OJO=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>`;
 const ICO_LUNA=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/></svg>`;
 const ICO_REG=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px;flex-shrink:0"><path d="M9 14 4 9l5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+const ICO_CRED=`<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="18" height="13" rx="2.6" stroke="currentColor" stroke-width="2.2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2.2"/><path d="M7 14.6h3.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+// Créditos de una o varias rutas: solo para saber (cuántos y cuánto quedó a crédito)
+function creditosDe(vs){let n=0,m=0;vs.forEach(v=>{if(v)(v.pedidos||[]).forEach(p=>{if(p&&p.estado==='credito'&&creditoDe(p)>0.001){n++;m+=creditoDe(p);}});});return {n,m:Math.round(m*100)/100};}
+function credChip(vs){const c=creditosDe(vs);if(!c.n)return '';
+  return `<span class="cr-chip" title="${c.n} pedido${c.n===1?'':'s'} a crédito">${ICO_CRED}${c.n>1?c.n+' créditos · ':'Crédito '}${q(c.m)}</span>`;}
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
 // "brenda (pueblo)" -> "Brenda pueblo"
@@ -3185,7 +3196,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-28.1';
+const VERSION='2026-10-28.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

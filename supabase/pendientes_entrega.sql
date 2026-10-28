@@ -39,14 +39,57 @@ alter table public.pendientes_entrega add column if not exists monica_cambio boo
 alter table public.pendientes_entrega add column if not exists monica_total numeric(12,2);
 alter table public.pendientes_entrega add column if not exists monica_anulada boolean not null default false;
 alter table public.pendientes_entrega add column if not exists monica_cambio_en timestamptz;
+-- Devoluciones: productos como están AHORA en Monica de una nota que ya salió (para ver qué se descontó).
+-- Lo que salió queda en 'detalle' y no cambia.
+alter table public.pendientes_entrega add column if not exists monica_detalle jsonb;
+
+-- No la recibieron: la nota que salió en ruta regresa a 'Por entregar' (queda quién la llevó y cuándo regresó)
+alter table public.pendientes_entrega add column if not exists regresada boolean not null default false;
+alter table public.pendientes_entrega add column if not exists regresada_en timestamptz;
+alter table public.pendientes_entrega add column if not exists regreso_rutero text;
+alter table public.pendientes_entrega add column if not exists regreso_viaje text;
 
 -- Guardia: una factura ENVIADA ya no se puede cambiar (ni desde Cobros ni desde Facturación rápida).
--- Única excepción: las columnas del aviso de arriba (para avisar que Monica ya no coincide).
+-- Excepciones:
+--  · las columnas del aviso (para avisar que Monica ya no coincide y qué productos tiene ahora);
+--  · "No se entregó": regresa a pendiente desde la ruta en que iba (solo cambia el estado; queda quién la llevó);
+--  · deshacer ese "No se entregó" (fue un error): vuelve a la MISMA ruta tal como salió.
 create or replace function public.pendientes_guardia() returns trigger
 language plpgsql as $$
-declare libres text[] := array['monica_cambio','monica_total','monica_anulada','monica_cambio_en','cambiado_en'];
+declare libres text[] := array['monica_cambio','monica_total','monica_anulada','monica_cambio_en','monica_detalle','cambiado_en'];
+        regreso text[] := array['estado','regresada','regresada_en','regreso_rutero','regreso_viaje','rutero','viaje_uid',
+                                'monica_cambio','monica_total','monica_anulada','monica_cambio_en','monica_detalle','cambiado_en'];
 begin
   if tg_op = 'UPDATE' then
+    -- No la recibieron: vuelve a 'Por entregar' desde la ruta en que iba
+    if old.estado in ('enviada','asignada') and new.estado = 'pendiente' and new.regresada
+       and new.regreso_viaje is not null and new.regreso_viaje is distinct from old.regreso_viaje then
+      if new.regreso_viaje is distinct from old.viaje_uid then
+        raise exception 'La nota % no va en esa ruta', old.nro;
+      end if;
+      if (to_jsonb(new) - regreso) is distinct from (to_jsonb(old) - regreso) then
+        raise exception 'La nota % solo puede regresar, no cambiar', old.nro;
+      end if;
+      new.regresada_en := now(); new.regreso_rutero := old.rutero;
+      new.rutero := null; new.viaje_uid := null;
+      new.monica_cambio := false; new.monica_total := null; new.monica_anulada := false;
+      new.monica_cambio_en := null; new.monica_detalle := null;
+      new.cambiado_en := now();
+      return new;
+    end if;
+    -- Deshacer "No se entregó": solo a la misma ruta, sin tocar lo que salió
+    if old.estado = 'pendiente' and old.regresada and new.estado = 'enviada' then
+      if old.anulada or new.viaje_uid is distinct from old.regreso_viaje then
+        raise exception 'La nota % ya no puede volver a esa ruta', old.nro;
+      end if;
+      if (to_jsonb(new) - regreso) is distinct from (to_jsonb(old) - regreso) then
+        raise exception 'La nota % solo puede volver como salió', old.nro;
+      end if;
+      new.regresada := false; new.rutero := old.regreso_rutero;
+      new.regresada_en := null; new.regreso_rutero := null; new.regreso_viaje := null;
+      new.cambiado_en := now();
+      return new;
+    end if;
     if old.estado = 'enviada' then
       if (to_jsonb(new) - libres) is distinct from (to_jsonb(old) - libres) then
         raise exception 'La nota % ya salió en ruta y no se puede cambiar', old.nro;
@@ -65,6 +108,7 @@ begin
     end if;
     if new.estado = 'asignada' and old.estado <> 'asignada' then
       new.asignada_en := now();
+      new.regreso_viaje := null;   -- ya va en otra ruta: el regreso anterior no se puede deshacer
     end if;
   end if;
   new.cambiado_en := now();

@@ -28,3 +28,9 @@ con la PC 3 minutos adelantada. Es la prueba más importante del dinero.
 montos que siguen a Monica hasta que sale la ruta, aviso de cambios al enviar
 candado de las notas ya enviadas y el aviso "cambió en Monica" cuando la nota se modifica después de salir. También "Para mañana" (mantener presionada una nota, solo maestro) y que regrese sola al otro día. Tiempo en espera de cada nota y la vista previa de la nota (productos, precios, total) al mantenerla presionada. Usa la librería real de Supabase contra
 una base local (Postgres + PostgREST) con `supabase/pendientes_entrega.sql`.
+
+`prueba-devoluciones.js` — si en Monica bajan cantidades de una nota que ya salió, la ruta (mientras no se
+reciba) lo descuenta sola en "Devolución" a precio de salida, se ajusta si Monica cambia otra vez, respeta lo
+escrito a mano, no descuenta cambios de precio y no toca rutas ya recibidas. "No se entregó" regresa la nota a
+Por entregar (tarjeta "regresó · rutero"), se puede deshacer solo si nadie la volvió a mandar, y avisa
+"regresó y la anularon" si después la anulan en Monica. Necesita la misma base local que `prueba-por-entregar.js`.

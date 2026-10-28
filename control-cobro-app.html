@@ -388,7 +388,7 @@
   .pv-x{width:36px;height:36px;border-radius:50%;border:none;background:#f1f0ec;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
   .pv-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px;border-bottom:1px solid #f0eee9}
   .pv-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#5b6472;background:#f4f3ef;border-radius:8px;padding:5px 9px}
-  .pv-chip.roja{color:#d4583e}.pv-chip.env{color:#b0601a;background:#fdf3e6}
+  .pv-chip.roja{color:#d4583e}.pv-chip.env{color:#b0601a;background:#fdf3e6}.pv-chip.reg{color:#5b6b82;background:#e9eef5}
   .pv-chip svg{width:12px;height:12px}
   .pv-lista{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 16px}
   .pv-l{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid #f3f1ec}
@@ -459,6 +459,30 @@
   .pe-modh{font-weight:900!important;color:#fff3b0!important;display:flex;align-items:center;gap:4px;margin-top:2px}
   .pe-modl{color:var(--bad)!important;font-weight:800}
   .pe-modr{color:var(--bad);font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:4px;margin-top:3px}
+  .t-reg{background:#e9eef5;color:#5b6b82;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px;margin-left:4px}
+  .pe-regl{color:#6b7a90!important;font-weight:700}
+  .pe-vercam{cursor:pointer}.pe-vercam u{font-weight:900;text-underline-offset:2px;white-space:nowrap}
+  .pe-card.reg{background:#f2f4f7;border-color:#dfe3ea}
+  .pe-card.reg .pe-cnom{color:#4a5568}
+  .pe-card.reg.on{background:#fff4cc;border-color:var(--ink)}
+  .pe-regb{background:#7a8aa3}
+  .pe-regp{flex-shrink:1;min-width:0;display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:900;color:#6b7a90;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:74px}
+  .pe-regp svg{width:9px;height:9px;flex-shrink:0}
+  .pm-reg{color:#5b6b82!important;display:flex;align-items:center;gap:4px}
+  .pm-nota{margin-top:10px;font-size:12.5px;color:var(--mut);font-weight:600;text-align:center;line-height:1.4}
+  .dv-cuerpo{max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+  .dv-t{font-size:11px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);margin:12px 0 2px;display:flex;align-items:center;gap:4px}
+  .dv-t.mal{color:var(--bad)}
+  .dv-l{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid #f1efea;font-size:13.5px;font-weight:700}
+  .dv-l>span{min-width:0;line-height:1.3}.dv-l>b{white-space:nowrap;font-weight:900}
+  .dv-q{font-style:normal;display:inline-block;min-width:36px;font-weight:900;color:var(--bad)}
+  .dv-q.mas{color:#5b6472}
+  .dv-tot{margin-top:12px;padding:9px 12px;border-radius:12px;background:#f7f6f2}
+  .dv-tot .dv-l{border-bottom:none;padding:3px 0;font-size:13px;color:#5b6472}
+  .dv-l.ok>b{color:#1f8a52}.dv-l.mal>b{color:var(--bad)}
+  .dv-tot .dv-l.fuerte{font-size:14.5px;color:var(--ink);padding-top:6px;margin-top:3px;border-top:1px solid #e8e6e0}.dv-l.fuerte>b{font-size:17px}
+  .dv-av{margin:8px 0 2px;padding:10px 12px;border-radius:12px;background:#fbe9e4;color:#a8432d;font-size:13px;font-weight:700;line-height:1.4}
+  .dv-av.gris{background:#f1f0ec;color:#5b6472}
   .t-fac{background:#fdf0e1;color:#b0601a;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
 </style>
 </head>
@@ -1422,7 +1446,15 @@ function abrirPed(vid,pid){if(!esMaestro())return;const el=document.getElementBy
   document.querySelectorAll('.pbox').forEach(b=>{if(b!==el)b.classList.remove('open');});el.classList.toggle('open');}
 function cerrarPed(vid,pid){const el=document.getElementById('pb-'+vid+'-'+pid);if(el)el.classList.remove('open');renderZona();}
 function setEst(vid,pid,est){if(!esMaestro())return;const vv=viajes.find(x=>x.id===vid);const p=vv.pedidos.find(x=>x.id===pid);
-  p.estado=est;if(est!=='pagado'){p.devolucion=0;p.descuento=0;p.vuelto=0;}if(est!=='credito')p.abono=0;tocar(vv);renderZona();
+  const antes=p.estado;
+  p.estado=est;if(est!=='pagado'){p.devolucion=0;p.descuento=0;p.vuelto=0;p.devMon=0;}if(est!=='credito')p.abono=0;tocar(vv);
+  // Nota de Monica que ya salió: si no la recibieron regresa a "Por entregar"; si fue un error, vuelve a la ruta
+  if(p.fac&&p.facEnv&&(vv.entradaLista||vv.horaSalida)&&antes!==est){
+    if(est==='cancelado'&&!p.facReg)peRegresar(vv,p);
+    else if(antes==='cancelado'&&p.facReg)peDeshacerRegreso(vv,p);
+  }
+  if(est==='pagado')peAplicarDevoluciones(true);
+  renderZona();
   const el=document.getElementById('pb-'+vid+'-'+pid);if(el)el.classList.add('open');}
 function setAj(vid,pid,campo,val){if(!esMaestro())return;const v=viajes.find(x=>x.id===vid);const p=v.pedidos.find(x=>x.id===pid);
   p[campo]=Math.max(0,parseFloat(val)||0);
@@ -1447,7 +1479,7 @@ function pedidoSub(p){
 }
 function pedTag(p){
   if(p.estado==='credito')return '<span class="tag t-cred">crédito</span>';
-  if(p.estado==='cancelado')return '<span class="tag t-canc">no entreg.</span>';
+  if(p.estado==='cancelado')return p.facReg?'':'<span class="tag t-canc">no entreg.</span>';
   if(ajusteDe(p)>0)return '<span class="tag t-dev">ajuste</span>';
   return '';
 }
@@ -1462,6 +1494,7 @@ function renderPedidos(v,editable){
   return v.pedidos.map(p=>{
     const puedeBorrar=puedeBorrarV&&!p.facEnv, puedeEditar=puedeBorrarV&&!p.fac;
     const prob=p.estado!=='pagado'||ajusteDe(p)>0;
+    const av=peAvisoPedido(v,p);
     const ef=efectivoDe(p);
     let montoShow;
     if(p.estado==='credito')montoShow=`<span style="color:var(--credit)">${q(creditoDe(p))}</span><div class="sub" style="color:var(--credit)">a crédito</div>`;
@@ -1473,7 +1506,7 @@ function renderPedidos(v,editable){
     let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}" ${swipeAttrs} ${editable?`onclick="abrirPed(${v.id},${p.id})"`:''}>
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:38px;height:38px;border-radius:50%;background:#eef0f3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="#9aa1ad" stroke-width="1.8"/><path d="M5 19c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5" stroke="#9aa1ad" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-        <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${p.facAnul?'<span class="tag t-canc">anulada en Monica</span>':''}${peCambioDe(p)?'<span class="tag t-mod">'+ICO_ALERTA+' cambió en Monica</span>':''}<div class="sub">${pedidoSub(p)}</div>${peCambioDe(p)?'<div class="sub pe-modl">'+esc(peCambioTxt(p,peCambioDe(p)))+'</div>':''}</div>
+        <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${av.tags}<div class="sub">${pedidoSub(p)}</div>${av.linea}</div>
       </div>
       <div class="pm${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'total')"`:''}>${montoShow}</div></div></div>`;
     if(editable){
@@ -1484,7 +1517,7 @@ function renderPedidos(v,editable){
           <div class="chip ${p.estado==='cancelado'?'on':''}" onclick="event.stopPropagation();setEst(${v.id},${p.id},'cancelado')">No se entregó</div>
         </div>
         ${p.estado==='pagado'?`<div class="ajustes">
-          <div><label class="fld">Devolución</label><input inputmode="decimal" value="${p.devolucion||''}" placeholder="0" onclick="event.stopPropagation()" onchange="setAj(${v.id},${p.id},'devolucion',this.value)"></div>
+          <div><label class="fld">Devolución${(p.devMon||0)>0?` <span style="color:#1f8a52">(Monica ${q(p.devMon)})</span>`:''}</label><input inputmode="decimal" value="${p.devolucion||''}" placeholder="0" onclick="event.stopPropagation()" onchange="setAj(${v.id},${p.id},'devolucion',this.value)"></div>
           <div><label class="fld">Descuento</label><input inputmode="decimal" value="${p.descuento||''}" placeholder="0" onclick="event.stopPropagation()" onchange="setAj(${v.id},${p.id},'descuento',this.value)"></div>
           <div><label class="fld">Vuelto pend.</label><input inputmode="decimal" value="${p.vuelto||''}" placeholder="0" onclick="event.stopPropagation()" onchange="setAj(${v.id},${p.id},'vuelto',this.value)"></div>
         </div>`:''}
@@ -1585,8 +1618,8 @@ function renderLista(){
       prio=2;hr=hCorta(e.rec.map(v=>v.horaRecibido).filter(Boolean).sort().pop());
       sb=`${ICO_CHECK2}${e.rec.length} viaje${e.rec.length===1?'':'s'} · ${q(e.ent)}`;
     }else{prio=3;sb='<i>Sin viajes hoy</i>';}
-    const nMod=peModificadasDe(r);
-    const warn=nMod?`<b class="pe-modr">${ICO_ALERTA} ${nMod} cambió en Monica</b>`:'';
+    const avR=peModificadasDe(r);
+    const warn=avR.total?`<b class="pe-modr">${ICO_ALERTA} ${esc(peAvisoTxt(avR))}</b>`:'';
     return {prio,ult:e.ult,html:`<div class="vrow" onclick="if(!_lpFue)entrarVendedor('${j}')"
       onpointerdown="lpInicio(event,'${j}')" onpointerup="lpFin()" onpointerleave="lpFin()"
       onpointercancel="lpFin()" onpointermove="lpMueve(event)" oncontextmenu="return false">
@@ -1710,7 +1743,7 @@ function renderZona(){
     html+=`<div class="vcard abierta" id="viaje-${v.id}" style="border-color:${colorRutero(selRutero)}"><div class="vhead-open" style="background:${colorRutero(selRutero)}">
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/></svg></span>
-        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${peModViaje(v)?`<div class="s pe-modh">${ICO_ALERTA} ${peModViaje(v)} cambió en Monica</div>`:''}</div>
+        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${peModViaje(v)?`<div class="s pe-modh">${ICO_ALERTA} ${esc(peAvisoTxt(peAvisosDe([v])))}</div>`:''}</div>
       </div>
       <span class="badge">${enRuta?'En ruta':'Preparando'}</span></div>`;
     html+=renderPedidos(v,true);
@@ -2259,6 +2292,7 @@ const ICO_ALERTA=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" st
 const ICO_RELOJ=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.6"/><path d="M12 7v5.2l3.2 2" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
 const ICO_OJO=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>`;
 const ICO_LUNA=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/></svg>`;
+const ICO_REG=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px;flex-shrink:0"><path d="M9 14 4 9l5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
 // "brenda (pueblo)" -> "Brenda pueblo"
@@ -2268,7 +2302,8 @@ function peHora(h){if(!h)return '';const m=String(h).match(/^(\d{1,2}):(\d{2})/)
 function peVistas(){try{return new Set(JSON.parse(localStorage.getItem('cc_pe_vistas')||'[]'));}catch(e){return new Set();}}
 function peMarcarVistas(){try{const s=peVistas();PE.filas.forEach(f=>s.add(f.nro));localStorage.setItem('cc_pe_vistas',JSON.stringify([...s].slice(-800)));}catch(e){}}
 // Nota ya puesta en algún viaje de este aparato
-function pePedidoDe(nro){for(const v of viajes){if(!v)continue;const p=(v.pedidos||[]).find(x=>x&&x.fac===nro);if(p)return {v,p};}return null;}
+// (un pedido "no se entregó" cuya nota regresó a Por entregar ya no cuenta: la nota vuelve a estar libre)
+function pePedidoDe(nro){for(const v of viajes){if(!v)continue;const p=(v.pedidos||[]).find(x=>x&&x.fac===nro&&!x.facReg);if(p)return {v,p};}return null;}
 function peHoyF(){return new Date().toLocaleDateString('en-CA');}
 function peMananaF(){const d=new Date();d.setDate(d.getDate()+1);return d.toLocaleDateString('en-CA');}
 // Nota que el maestro dejó para otro día: no sale en la lista de hoy y regresa sola ese día
@@ -2298,7 +2333,9 @@ async function peCargar(){
   await peLeerEdad();
   PE.ocupado=false;
   peSeguirMonica();
+  peAplicarDevoluciones();
   peReintentarEnviadas();
+  peSincRegresos();
   peRenderCampana();
   if(PE.abierto)peRenderPanel();
   if(PE.vista)peRenderVista();
@@ -2308,25 +2345,201 @@ async function peCargar(){
 // Notas que YA salieron en ruta y que en Monica fueron modificadas después (solo es un aviso; lo que salió no cambia)
 async function peCargarCambios(){
   try{
-    const r=await sb.from('pendientes_entrega').select('nro,total,total_enviado,monica_total,monica_anulada,monica_cambio_en').eq('estado','enviada').eq('monica_cambio',true).gte('enviada_en',HOY);
-    if(r.error)return; // todavía no se corrió el SQL del aviso: no pasa nada
+    const base='nro,total,total_enviado,monica_total,monica_anulada,monica_cambio_en';
+    const pedir=cols=>sb.from('pendientes_entrega').select(cols).eq('estado','enviada').eq('monica_cambio',true).gte('enviada_en',HOY);
+    // con los productos (lo que salió y cómo está ahora en Monica) para ver qué se devolvió
+    let r=PE.sinDev?null:await pedir(base+',detalle,monica_detalle');
+    if(r&&r.error&&/monica_detalle/.test(r.error.message||''))PE.sinDev=true;   // falta el SQL de devoluciones
+    if(!r||r.error)r=await pedir(base);
+    if(r.error)return false; // todavía no se corrió el SQL del aviso: no pasa nada
     const m={};(r.data||[]).forEach(f=>{m[f.nro]=f;});
     const dif=JSON.stringify(m)!==JSON.stringify(PE.cambios);PE.cambios=m;return dif;
   }catch(e){}
   return false;
 }
-function peModViaje(v){return (v.pedidos||[]).filter(p=>peCambioDe(p)).length;}
-function peModLinea(v){const n=peModViaje(v);return n?`<div class="pe-modv">${ICO_ALERTA} ${n} cambió en Monica</div>`:'';}
-function peModificadasDe(r){
-  let n=0;viajes.forEach(v=>{if(v&&v.rutero===r)(v.pedidos||[]).forEach(p=>{if(peCambioDe(p))n++;});});return n;
+// Avisos de una o varias rutas: notas que cambiaron en Monica después de salir (y cuánto se devolvió),
+// y notas que regresaron sin entregar y después las anularon en Monica.
+function peRegAnulada(p){if(!p||!p.facReg)return false;const f=PE.filas.find(x=>x.nro===p.fac);return !!(f&&f.regresada&&f.anulada);}
+function peAvisosDe(vs){
+  const a={n:0,dev:0,anul:0,total:0};
+  vs.forEach(v=>{if(!v)return;(v.pedidos||[]).forEach(p=>{
+    if(!p||!p.fac)return;
+    if(p.facReg){if(peRegAnulada(p))a.anul++;return;}
+    if(peCambioDe(p)){a.n++;a.dev+=p.devMon||0;}
+  });});
+  a.dev=peR2(a.dev);a.total=a.n+a.anul;return a;
 }
-function peCambioDe(p){return p&&p.fac&&p.facEnv?PE.cambios[p.fac]:null;}
-// Línea que explica qué cambió: "Salió Q500.00 · Monica ahora Q450.00"
-function peCambioTxt(p,c){
+function peAvisoTxt(a){
+  const t=[];
+  if(a.n)t.push(a.n+(a.n===1?' cambió':' cambiaron')+' en Monica'+(a.dev>0?' · devolución −'+q(a.dev):''));
+  if(a.anul)t.push(a.anul+(a.anul===1?' regresó y la anularon':' regresaron y las anularon'));
+  return t.join(' · ');
+}
+function peModViaje(v){return peAvisosDe([v]).total;}
+function peModLinea(v){const a=peAvisosDe([v]);return a.total?`<div class="pe-modv">${ICO_ALERTA} ${esc(peAvisoTxt(a))}</div>`:'';}
+function peModificadasDe(r){return peAvisosDe(viajes.filter(v=>v&&v.rutero===r));}
+function peCambioDe(p){return p&&p.fac&&p.facEnv&&!p.facReg?PE.cambios[p.fac]:null;}
+const peR2=n=>Math.round((Number(n)||0)*100)/100;
+// Línea que explica qué cambió: "Salió Q500.00 · Monica ahora Q450.00 · devolución −Q50.00 ya descontada"
+function peCambioTxt(p,c,v){
   if(c.monica_anulada)return 'Salió '+q(p.total)+' · anulada en Monica';
+  const ya=p.devMon||0,d=peDiffMonica(c,p.total);
+  // devolución: el monto ya se ve arriba ("devolución Q46.00"); aquí solo si falta descontar algo
+  if(d&&Math.abs(d.dev-ya)>0.001)return 'Monica: devolución −'+q(d.dev)+' sin descontar'+(v&&v.cerrado?' (ruta ya recibida)':'');
+  if(ya>0&&!(d&&d.precio.length))return 'Devolución de Monica ya descontada';
   const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
-  if(mt!==null&&Math.abs(mt-(p.total||0))>0.001)return 'Salió '+q(p.total)+' · Monica ahora '+q(mt);
-  return 'Modificada en Monica (mismo total '+q(p.total)+')';
+  return (mt!==null&&Math.abs(mt-(p.total||0))>0.001)?'Salió '+q(p.total)+' · Monica ahora '+q(mt):'Modificada en Monica (mismo total '+q(p.total)+')';
+}
+// ---- Devoluciones: qué cambió en Monica después de que la nota salió ----
+// Compara los productos con que salió la nota contra como están AHORA en Monica (por código de producto):
+// · bajó la cantidad o quitaron el producto -> devolución, valorada al precio con que salió;
+// · cambió el precio o el descuento (sin bajar la cantidad) -> solo aviso, la cuenta no cambia;
+// · agregaron producto o subió la cantidad -> solo aviso.
+// Devuelve null si no hay productos para comparar o si no cuadran con sus totales (no se adivina nada).
+function peDiffMonica(c,totalSalio){
+  if(!c||c.monica_anulada)return null;
+  const s=c.detalle,m=c.monica_detalle;
+  if(!Array.isArray(s)||!s.length||!Array.isArray(m))return null;
+  const val=l=>(Number(l.q)||0)*(Number(l.p)||0)-(Number(l.x)||0);
+  if(Math.abs(peR2(s.reduce((a,l)=>a+val(l),0))-peR2(totalSalio))>0.011)return null;
+  const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
+  if(mt!==null&&Math.abs(peR2(m.reduce((a,l)=>a+val(l),0))-peR2(mt))>0.011)return null;
+  const agr=ls=>{const o=new Map();ls.forEach(l=>{const k=l.c?'c:'+l.c:'d:'+(l.d||'');
+    const g=o.get(k)||{c:l.c||'',d:l.d||l.c||'',q:0,G:0,X:0};g.q+=Number(l.q)||0;g.G+=(Number(l.q)||0)*(Number(l.p)||0);g.X+=Number(l.x)||0;o.set(k,g);});return o;};
+  const S=agr(s),M=agr(m),menos=[],precio=[],mas=[],E=1e-6;
+  S.forEach((g,k)=>{
+    const h=M.get(k),qn=h?h.q:0,Ps=g.q>E?g.G/g.q:0;
+    if(qn<g.q-E){const r=g.q-qn,todo=qn<=E;
+      const monto=todo?peR2(g.G-g.X):peR2(Math.max(0,r*Ps-(g.X-h.X)));
+      menos.push({c:g.c,d:g.d,q:r,todo,monto});}
+    else if(qn>g.q+E)mas.push({c:g.c,d:g.d,q:qn-g.q});
+    if(h&&qn>E&&g.q>E){const Pn=h.G/qn;
+      if(Math.abs(Pn-Ps)>0.00005)precio.push({c:g.c,d:g.d,tipo:'precio',antes:Ps,ahora:Pn});
+      else if(qn>=g.q-E&&Math.abs(h.X-g.X)>0.005)precio.push({c:g.c,d:g.d,tipo:'desc',antes:g.X,ahora:h.X});}
+  });
+  M.forEach((h,k)=>{if(!S.has(k)&&h.q>E)mas.push({c:h.c,d:h.d,q:h.q,nuevo:true});});
+  const dev=Math.max(0,Math.min(peR2(totalSalio),peR2(menos.reduce((a,x)=>a+x.monto,0))));
+  return {dev,menos,precio,mas};
+}
+// Si en Monica descontaron producto de una nota que ya salió, la ruta (mientras no se reciba) lo descuenta sola
+// en "Devolución". Se guarda cuánto puso el sistema (devMon) para no sumarlo dos veces y para ajustarlo si
+// Monica cambia otra vez. Lo que alguien escriba a mano en Devolución se respeta.
+function peAplicarDevoluciones(sinRender){
+  let algo=false;
+  viajes.forEach(v=>{
+    if(!v||!(v.entradaLista||v.horaSalida)||v.cerrado)return;
+    let tv=false;
+    (v.pedidos||[]).forEach(p=>{
+      if(!p||!p.fac||!p.facEnv||p.facReg||p.estado!=='pagado')return;
+      const c=PE.cambios[p.fac];if(!c)return;
+      const d=peDiffMonica(c,p.total);if(!d)return;
+      const ya=p.devMon||0;if(Math.abs(ya-d.dev)<0.001)return;
+      p.devolucion=peR2(Math.max(0,(p.devolucion||0)-ya+d.dev));p.devMon=d.dev;
+      logAudit('DEVOLUCIÓN DESDE MONICA',`${p.nombre} · nota ${p.fac} (${v.rutero}): ${ya?q(ya)+' → ':''}${q(d.dev)}${d.menos.length?' — '+d.menos.map(x=>peCant(x.q)+' '+x.d).join(', '):''}`);
+      if(p.snapEf!==undefined&&Math.abs(p.snapEf-efectivoDe(p))>0.001){p.snapEf=efectivoDe(p);v.modificado=true;}
+      tv=true;
+    });
+    if(tv){tocar(v);algo=true;}
+  });
+  if(!algo)return false;
+  if(!sinRender){try{recalc();}catch(e){}if(!escribiendoAhora()){const sy=window.scrollY;renderZona();window.scrollTo(0,sy);}}
+  guardarAhora('devolución desde Monica');
+  return true;
+}
+// Detalle de lo que cambió en Monica (se abre tocando el aviso del pedido)
+function peVerCambio(vid,pid){
+  const v=viajes.find(x=>x.id===vid),p=v&&(v.pedidos||[]).find(x=>x.id===pid);if(!p)return;
+  const c=peCambioDe(p);if(!c)return;
+  const d=peDiffMonica(c,p.total);
+  const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
+  const L=(a,b,cl)=>`<div class="dv-l${cl?' '+cl:''}"><span>${a}</span><b>${b}</b></div>`;
+  let h='';
+  if(c.monica_anulada)h+=`<div class="dv-av">La anularon en Monica después de que salió. Aquí no se cambió nada.</div>`;
+  else if(!d)h+=`<div class="dv-av gris">${Array.isArray(c.detalle)&&c.detalle.length?'No se pueden comparar los productos con el total. Revise la nota en Monica.':'Esta nota salió sin productos guardados; no se puede ver qué cambió. Revise la nota en Monica.'}</div>`;
+  else{
+    if(d.menos.length)h+=`<div class="dv-t">Devolvió</div>`+d.menos.map(x=>L(`<i class="dv-q">−${peCant(x.q)}</i>${esc(x.d)}${x.c?` <span style="color:var(--mut);font-size:11.5px">· ${esc(x.c)}</span>`:''}`,'−'+q(x.monto))).join('');
+    if(d.precio.length)h+=`<div class="dv-t mal">${ICO_ALERTA} Cambió ${d.precio.every(x=>x.tipo==='desc')?'el descuento':'el precio'} · no se descuenta</div>`+d.precio.map(x=>L(esc(x.d),x.tipo==='desc'?`desc. ${q(x.antes)} → ${q(x.ahora)}`:`${peQP(x.antes)} → ${peQP(x.ahora)}`)).join('');
+    if(d.mas.length)h+=`<div class="dv-t">Agregaron · no se cobra aquí</div>`+d.mas.map(x=>L(`<i class="dv-q mas">+${peCant(x.q)}</i>${esc(x.d)}`,'')).join('');
+    if(!d.menos.length&&!d.precio.length&&!d.mas.length)h+=`<div class="dv-av gris">Los productos están igual que cuando salió.</div>`;
+  }
+  const sinDesc=d&&Math.abs(d.dev-(p.devMon||0))>0.001;
+  h+=`<div class="dv-tot">${L('Salió',q(p.total))}${mt!==null&&!c.monica_anulada?L('Monica ahora',q(mt)):''}
+    ${(p.devMon||0)>0?L('Devolución descontada','−'+q(p.devMon),'ok'):''}${sinDesc?L('Devolución según Monica (sin descontar)','−'+q(d.dev),'mal'):''}
+    ${p.estado==='pagado'?L('Se cobra',q(efectivoDe(p)),'fuerte'):''}</div>`;
+  if(sinDesc)h+=`<div class="pm-nota">${v.cerrado?'La ruta ya se había recibido: no se descontó sola. Si hay que corregir, reabra la ruta.':p.estado!=='pagado'?'El pedido no está como "Pagó completo": no se descontó solo.':''}</div>`;
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div class="pm-cab"><b>${esc(p.nombre)}</b><span>Nota ${p.fac} · ${esc(v.rutero)}${c.monica_cambio_en?' · cambiada '+hhmm(c.monica_cambio_en):''}</span></div>
+    <div class="dv-cuerpo">${h}</div>
+    <button class="btn sec pm-cancel" onclick="cerrarModalRecibe()">Cerrar</button>`;
+  document.getElementById('modalRecibe').classList.add('open');
+}
+// Tags y línea de aviso de un pedido que viene de Monica (en la ruta)
+function peAvisoPedido(v,p){
+  if(!p||!p.fac)return {tags:'',linea:''};
+  if(p.facReg){
+    if(peRegAnulada(p))return {tags:`<span class="tag t-mod">${ICO_ALERTA} regresó y la anularon</span>`,linea:''};
+    return {tags:`<span class="tag t-reg">${ICO_REG} ${p.facRegPend?'regresando… (sin internet)':'regresó a Por entregar'}</span>`,linea:''};
+  }
+  let tags=p.facAnul?'<span class="tag t-canc">anulada en Monica</span>':'';
+  const c=peCambioDe(p);if(!c)return {tags,linea:''};
+  const d=peDiffMonica(c,p.total);
+  tags+=`<span class="tag t-mod">${ICO_ALERTA} ${d&&d.dev>0?'devolución':d&&d.precio.length?'cambió precio':'cambió en Monica'}</span>`;
+  return {tags,linea:`<div class="sub pe-modl pe-vercam" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${esc(peCambioTxt(p,c,v))} · <u>Ver qué cambió</u></div>`};
+}
+
+// ---- No se entregó: la nota regresa a "Por entregar" ----
+async function peRegresar(v,p){
+  p.facReg=true;p.facRegPend=true;tocar(v);
+  logAudit('NO SE ENTREGÓ',`${p.nombre} · nota ${p.fac} (${v.rutero}): regresa a Por entregar`);
+  guardarAhora('nota no entregada');
+  await peSincRegreso(v,p,true);
+}
+async function peSincRegreso(v,p,avisar){
+  if(!p||!p.facRegPend)return;
+  try{
+    const r=await sb.from('pendientes_entrega').update({estado:'pendiente',regresada:true,regreso_viaje:v.uid})
+      .eq('nro',p.fac).in('estado',['enviada','asignada']).eq('viaje_uid',v.uid).select('nro');
+    if(r.error){
+      if(/regres/.test(r.error.message||'')&&avisar)toast('Falta correr el SQL nuevo en Supabase: la nota no regresó a Por entregar',true);
+      return;                                   // sin internet o falta el SQL: se reintenta solo
+    }
+    if(!(r.data||[]).length){
+      // ¿ya la regresó otro aparato? Si no, esta nota no va en esta ruta en la nube: no se puede regresar desde aquí
+      const x=await sb.from('pendientes_entrega').select('estado,regresada').eq('nro',p.fac).maybeSingle();
+      if(x.error)return;
+      if(!(x.data&&x.data.estado==='pendiente'&&x.data.regresada)){
+        p.facReg=false;p.facRegPend=false;tocar(v);
+        if(avisar)toast('La nota '+p.fac+' no va en esta ruta en el sistema; no se pudo regresar a Por entregar',true);
+        return;
+      }
+    }
+    p.facRegPend=false;tocar(v);
+    if(avisar)toast('Nota '+p.fac+' regresó a Por entregar');
+    peCargar();
+  }catch(e){}
+}
+function peSincRegresos(){
+  viajes.forEach(v=>{if(v)(v.pedidos||[]).forEach(p=>{if(p&&p.facReg&&p.facRegPend)peSincRegreso(v,p,false);});});
+}
+// Se marcó "no se entregó" por error: la nota vuelve a esta misma ruta (si nadie la volvió a mandar)
+async function peDeshacerRegreso(v,p){
+  if(p.facRegPend){p.facReg=false;p.facRegPend=false;tocar(v);return;}   // nunca llegó a regresar en la nube
+  const volver=m=>{p.estado='cancelado';p.devolucion=0;p.descuento=0;p.vuelto=0;p.abono=0;p.devMon=0;tocar(v);renderZona();toast(m,true);};
+  try{
+    const x=await sb.from('pendientes_entrega').select('estado,regresada,regreso_viaje,anulada,total').eq('nro',p.fac).maybeSingle();
+    if(x.error||!x.data)return volver('Sin conexión: no se pudo regresar la nota a esta ruta');
+    const f=x.data;
+    if(f.estado!=='pendiente'||!f.regresada||f.regreso_viaje!==v.uid)return volver('La nota '+p.fac+' ya se mandó en otra ruta; aquí queda como no entregada');
+    if(f.anulada)return volver('La nota '+p.fac+' ya la anularon en Monica');
+    if(Math.abs(Number(f.total)-(p.total||0))>0.001)return volver('La nota '+p.fac+' cambió en Monica mientras estaba regresada: mándela otra vez desde Por entregar');
+    const r=await sb.from('pendientes_entrega').update({estado:'enviada',viaje_uid:v.uid,regresada:false}).eq('nro',p.fac).eq('estado','pendiente').select('nro');
+    if(r.error||!(r.data||[]).length)return volver('No se pudo regresar la nota a esta ruta');
+    p.facReg=false;tocar(v);
+    logAudit('SÍ SE ENTREGÓ',`${p.nombre} · nota ${p.fac} (${v.rutero}): vuelve a la ruta`);
+    guardarAhora('nota sí se entregó');
+    toast('Nota '+p.fac+' vuelve a esta ruta');
+    renderZona();peCargar();
+  }catch(e){volver('Sin conexión: no se pudo regresar la nota a esta ruta');}
 }
 // Mientras el viaje no sale, los montos siguen a Monica (si allá modifican la nota)
 function peSeguirMonica(){
@@ -2356,7 +2569,7 @@ async function peReintentarEnviadas(){
   for(const v of viajes){
     if(!v||!(v.entradaLista||v.cerrado))continue;
     for(const p of (v.pedidos||[])){
-      if(p&&p.fac&&p.facEnv&&asig.has(p.fac)){
+      if(p&&p.fac&&p.facEnv&&!p.facReg&&asig.has(p.fac)){
         try{await sb.from('pendientes_entrega').update({estado:'enviada',total_enviado:p.total,rutero:v.rutero,viaje_uid:v.uid}).eq('nro',p.fac).eq('estado','asignada');}catch(e){}
       }
     }
@@ -2436,11 +2649,12 @@ function peMenuNota(nro){
   const f=PE.filas.find(x=>x.nro===nro);if(!f||f.estado!=='pendiente')return;
   const m=peEsManana(f);
   document.getElementById('modalRecibeBody').innerHTML=`
-    <div class="pm-cab"><b>${esc(f.cliente||'Sin nombre')}</b><span>Nota ${f.nro} · ${q(f.total)}</span></div>
+    <div class="pm-cab"><b>${esc(f.cliente||'Sin nombre')}</b><span>Nota ${f.nro} · ${q(f.total)}</span>${f.regresada?`<span class="pm-reg">${ICO_REG} Regresó${f.regreso_rutero?' · la llevó '+esc(f.regreso_rutero):''}${f.regresada_en?' · '+hhmm(f.regresada_en):''}</span>`:''}</div>
     <div class="pm-ops">
       <button class="pm-op" onclick="cerrarModalRecibe();peVer(${f.nro})"><span class="pm-ic">${ICO_OJO}</span><span class="pm-tx"><b>Ver vista previa</b><span>Productos, precios y total</span></span><span class="pm-ir">›</span></button>
       ${esMaestro()?`<button class="pm-op" onclick="${m?`peMover(${f.nro},false)`:`peConfirmarManana(${f.nro})`}"><span class="pm-ic luna">${ICO_LUNA}</span><span class="pm-tx"><b>${m?'Regresar a hoy':'Dejar para mañana'}</b><span>${m?'Vuelve a la lista de hoy':'Sale de hoy y regresa sola mañana'}</span></span><span class="pm-ir">›</span></button>`:''}
     </div>
+    ${f.regresada?'<div class="pm-nota">No la recibieron. Mándela otra vez escogiéndola, déjela para mañana, o anúlela en Monica y se quita sola.</div>':''}
     <button class="btn sec pm-cancel" onclick="cerrarModalRecibe()">Cancelar</button>`;
   document.getElementById('modalRecibe').classList.add('open');
 }
@@ -2468,8 +2682,14 @@ function peVerCerrar(){
 // · Vista previa: se cierra arrastrándola hacia abajo (desde la manija, el encabezado
 //   o la lista si está arriba del todo).
 // · Por entregar: deslizar hacia la derecha regresa (igual que al salir de un cliente).
+// Los movimientos se escuchan en el elemento que se tocó: si la lista se refresca a media
+// arrastrada (llegan datos de Monica), el gesto no se pierde.
 let _pg=null;
+function _pgSoltar(g){if(g&&g.tgt){g.tgt.removeEventListener('touchmove',_pgMueve);g.tgt.removeEventListener('touchend',_pgFinOk);g.tgt.removeEventListener('touchcancel',_pgFinCancel);}}
+function _pgFinOk(){_pgFin(false);}
+function _pgFinCancel(){_pgFin(true);}
 document.addEventListener('touchstart',function(e){
+  if(_pg)_pgSoltar(_pg);
   _pg=null;
   if(!PE.abierto||e.touches.length!==1)return;
   const t=e.touches[0],base={x:t.clientX,y:t.clientY,d:0,on:false,muerto:false,pd:0,pt:0,v:0};
@@ -2478,15 +2698,16 @@ document.addEventListener('touchstart',function(e){
     if(!hoja||!hoja.contains(e.target))return;
     const lista=e.target.closest('.pv-lista');
     if(lista&&lista.scrollTop>0)return;
-    _pg=Object.assign(base,{tipo:'v',el:pv,hoja});return;
+    _pg=Object.assign(base,{tipo:'v',el:pv,hoja,tgt:e.target});_pgEscuchar(_pg);return;
   }
   const mr=document.getElementById('modalRecibe');
   if(mr&&mr.classList.contains('open'))return;
   if(e.target.closest('input,textarea,select'))return;
   const ch=e.target.closest('.pe-chips');if(ch&&ch.scrollLeft>0)return;
-  _pg=Object.assign(base,{tipo:'p',sh:document.getElementById('sheet'),ov:document.getElementById('overlay')});
+  _pg=Object.assign(base,{tipo:'p',sh:document.getElementById('sheet'),ov:document.getElementById('overlay'),tgt:e.target});_pgEscuchar(_pg);
 },{passive:true});
-document.addEventListener('touchmove',function(e){
+function _pgEscuchar(g){g.tgt.addEventListener('touchmove',_pgMueve,{passive:false});g.tgt.addEventListener('touchend',_pgFinOk,{passive:true});g.tgt.addEventListener('touchcancel',_pgFinCancel,{passive:true});}
+function _pgMueve(e){
   const g=_pg;if(!g||g.muerto)return;
   const t=e.touches[0],dx=t.clientX-g.x,dy=t.clientY-g.y;
   if(!g.on){
@@ -2508,16 +2729,16 @@ document.addEventListener('touchmove',function(e){
     g.sh.style.transform='translateX('+d+'px)';
     g.ov.style.background='rgba(31,42,36,'+(.5*(1-Math.min(1,d/window.innerWidth)))+')';
   }
-},{passive:false});
+}
 function _pgFin(cancelado){
-  const g=_pg;_pg=null;if(!g||!g.on)return;
+  const g=_pg;_pg=null;_pgSoltar(g);if(!g||!g.on)return;
   const v=(!cancelado&&Date.now()-g.pt<120)?g.v:0, d=cancelado?0:g.d;
   if(g.tipo==='v'){
     const cierra=d>Math.min(140,(g.hoja.offsetHeight||400)*.3)||(v>.4&&d>30);
     g.hoja.style.transition='transform .22s cubic-bezier(.2,.8,.2,1)';g.el.style.transition='background .22s';
     if(cierra){g.hoja.style.transform='translateY(100%)';g.el.style.background='rgba(20,25,35,0)';peVerCerrar();}
     else{g.hoja.style.transform='';g.el.style.background='';
-      setTimeout(()=>{g.hoja.style.transition='';g.el.style.transition='';},240);}
+      setTimeout(()=>{g.hoja.style.transition='';g.el.style.transition='';if(PE.vistaPend)peRenderVista();},240);}
   }else{
     const cierra=d>window.innerWidth*.33||(v>.4&&d>40);
     g.sh.style.transition='transform .2s ease';g.ov.style.transition='background .2s';
@@ -2528,21 +2749,22 @@ function _pgFin(cancelado){
       setTimeout(()=>{g.sh.style.transition='';g.ov.style.transition='';},220);}
   }
 }
-document.addEventListener('touchend',()=>_pgFin(false),{passive:true});
-document.addEventListener('touchcancel',()=>_pgFin(true),{passive:true});
+
 function peVerEscoger(nro){
   if(!PE.sel.has(nro))PE.sel.add(nro);else PE.sel.delete(nro);
   peVerCerrar();peRenderLista();
 }
 function peRenderVista(){
   const el=document.getElementById('peVista');if(!el||!PE.vista)return;
+  if(_pg&&_pg.on&&_pg.tipo==='v'){PE.vistaPend=true;return;}
+  PE.vistaPend=false;
   const hoja=el.querySelector('.pv-hoja');if(!hoja)return;
   const nro=PE.vista, f=PE.filas.find(x=>x.nro===nro);
   const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   if(!f){hoja.innerHTML=`<div class="pv-asa"></div><div class="pv-cab"><div class="pv-tit"><b>Nota ${nro}</b></div>${cerrar}</div>
     <div class="pv-vacio">Esta nota ya no está pendiente (la tomaron para una ruta, la quitaron o la anularon en Monica).</div>`;return;}
   const det=Array.isArray(f.detalle)?f.detalle:null;
-  const em=peEsManana(f)?null:peEsperaMin(f), env=peEnvTexto(f.envases);
+  const em=(peEsManana(f)||f.regresada)?null:peEsperaMin(f), env=peEnvTexto(f.envases);
   const col=peColorVend(f.vendedor);
   let suma=0;
   const filas=(det||[]).map(l=>{
@@ -2561,6 +2783,7 @@ function peRenderVista(){
       <div class="pv-tit"><b>${esc(f.cliente||'Sin nombre')}</b><span>Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''} · ${esc(peNombreVend(f.vendedor))}</span></div>${cerrar}</div>
     <div class="pv-chips">
       ${f.codigo_cliente?`<span class="pv-chip">Cód. ${esc(f.codigo_cliente)}</span>`:''}
+      ${f.regresada?`<span class="pv-chip reg">${ICO_REG} Regresó${f.regreso_rutero?' · '+esc(f.regreso_rutero):''}</span>`:''}
       ${em===null?(peEsManana(f)?`<span class="pv-chip">${ICO_LUNA} Para mañana</span>`:''):`<span class="pv-chip${em>=60?' roja':''}">${ICO_RELOJ} ${peEsperaTxt(em)} en espera</span>`}
       ${env?`<span class="pv-chip env">${ICO_CAJA_S} ${esc(env)}</span>`:''}
     </div>
@@ -2686,10 +2909,11 @@ function peRenderLista(){
   }else{
     const grupos={};fs.forEach(f=>{(grupos[f.vendedor]=grupos[f.vendedor]||[]).push(f);});
     const cuando=f=>{const t=peFechaNota(f);return t===null?Infinity:t;};
-    const masVieja=v=>Math.min(...grupos[v].map(cuando));
+    // las que regresaron sin entregar van al final del grupo (esperan que alguien decida, no son urgentes)
+    const masVieja=v=>Math.min(...grupos[v].map(f=>f.regresada?Infinity:cuando(f)));
     Object.keys(grupos).sort((a,b)=>masVieja(a)-masVieja(b)||a.localeCompare(b)).forEach(v=>{
-      const lista=grupos[v].sort((a,b)=>cuando(a)-cuando(b)||a.nro-b.nro), col=peColorVend(v);
-      const largas=enM?0:lista.filter(f=>(peEsperaMin(f)||0)>=60).length;
+      const lista=grupos[v].sort((a,b)=>(!!a.regresada-!!b.regresada)||cuando(a)-cuando(b)||a.nro-b.nro), col=peColorVend(v);
+      const largas=enM?0:lista.filter(f=>!f.regresada&&(peEsperaMin(f)||0)>=60).length;
       const tot=lista.reduce((s,f)=>s+f.total,0), todas=lista.every(f=>PE.sel.has(f.nro));
       h+=`<div class="pe-grupo"><div class="pe-gh"><span class="pe-av" style="background:${col}">${esc((peNombreVend(v)[0]||'?').toUpperCase())}</span>
         <div class="pe-gtx"><b>${esc(peNombreVend(v))}</b><span>${lista.length} nota${lista.length===1?'':'s'} · ${q(tot)}${largas?` · <i class="pe-gesp">${largas} en espera +1 h</i>`:''}</span></div>
@@ -2698,12 +2922,13 @@ function peRenderLista(){
       lista.forEach(f=>{
         const on=PE.sel.has(f.nro);
         const ayer=!enM&&f.pospuesta_hasta;
-        h+=`<button class="pe-card${on?' on':''}${enM?' manana':''}" data-nro="${f.nro}" onclick="peTap(${f.nro})" aria-pressed="${on}">
-          ${on?`<span class="pe-cok">${ICO_OK_S}</span>`:(ayer?'<span class="pe-nueva pe-cnueva pe-ayer">de ayer</span>':(vistas.has(f.nro)||enM?'':'<span class="pe-nueva pe-cnueva">nueva</span>'))}
+        const reg=!!f.regresada;
+        h+=`<button class="pe-card${on?' on':''}${enM?' manana':''}${reg?' reg':''}" data-nro="${f.nro}" onclick="peTap(${f.nro})" aria-pressed="${on}">
+          ${on?`<span class="pe-cok">${ICO_OK_S}</span>`:reg?`<span class="pe-nueva pe-cnueva pe-regb">regresó${f.regreso_rutero?' · '+esc(f.regreso_rutero):''}</span>`:(ayer?'<span class="pe-nueva pe-cnueva pe-ayer">de ayer</span>':(vistas.has(f.nro)||enM?'':'<span class="pe-nueva pe-cnueva">nueva</span>'))}
           <span class="pe-cnom">${esc(f.cliente||'Sin nombre')}</span>
           <span class="pe-csub">Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}</span>
           ${(f.envases||[]).length?`<span class="pe-env">${ICO_CAJA_S}${esc(peEnvTexto(f.envases))}</span>`:''}
-          <span class="pe-cpie"><span class="pe-csub">${f.codigo_cliente?'Cód. '+esc(f.codigo_cliente):''}</span>${(()=>{const em=enM?null:peEsperaMin(f);return em===null?'':`<span class="pe-esp${em>=60?' roja':''}" title="En espera desde que se facturó">${ICO_RELOJ}${peEsperaTxt(em)}</span>`;})()}<span class="pe-ctot">${q(f.total)}</span></span></button>`;
+          <span class="pe-cpie"><span class="pe-csub">${f.codigo_cliente?'Cód. '+esc(f.codigo_cliente):''}</span>${reg?'':(()=>{const em=enM?null:peEsperaMin(f);return em===null?'':`<span class="pe-esp${em>=60?' roja':''}" title="En espera desde que se facturó">${ICO_RELOJ}${peEsperaTxt(em)}</span>`;})()}<span class="pe-ctot">${q(f.total)}</span></span></button>`;
       });
       h+=`</div></div>`;
     });
@@ -2948,7 +3173,7 @@ function peAplicarYEnviar(vid){
 }
 // Después de guardar la ruta enviada: las notas quedan selladas
 async function peSellar(v){
-  const ps=(v.pedidos||[]).filter(p=>p&&p.fac);
+  const ps=(v.pedidos||[]).filter(p=>p&&p.fac&&!p.facReg);
   for(const p of ps){
     try{await sb.from('pendientes_entrega').update({estado:'enviada',total_enviado:p.total,rutero:v.rutero,viaje_uid:v.uid}).eq('nro',p.fac).eq('estado','asignada');}catch(e){}
   }
@@ -2960,7 +3185,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-27.1';
+const VERSION='2026-10-28.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

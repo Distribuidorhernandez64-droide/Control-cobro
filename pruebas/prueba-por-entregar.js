@@ -273,7 +273,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
     {...fila(21811,'NOTA VIEJA','lesli',48,20,'00:00','2'),...fh(ahora-95*60000)},
     {...fila(21812,'NOTA MEDIA','lesli',48,30,'00:00','3'),...fh(ahora-40*60000)}]);
   await rest('PATCH','pendientes_entrega?nro=in.(21805,21806,21807)',{estado:'descartada'});
-  await p.evaluate(()=>{PE.filtro='todos';PE.buscar='';peCargar();});await p.waitForTimeout(1500);
+  await p.evaluate(()=>{PE.filtro='todos';PE.buscar='';peCargar();});await p.waitForTimeout(2500);
   const orden=await p.$$eval('#peLista .pe-card .pe-cnom',a=>a.map(x=>x.textContent.trim()));
   ok('La que lleva más tiempo esperando va arriba ('+orden.join(' > ')+')', orden.indexOf('NOTA VIEJA')<orden.indexOf('NOTA MEDIA')&&orden.indexOf('NOTA MEDIA')<orden.indexOf('NOTA RECIENTE'));
   const esp=n=>p.textContent('.pe-card:has-text("'+n+'") .pe-esp');

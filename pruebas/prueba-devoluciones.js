@@ -184,6 +184,27 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   x=await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Gerson');return v.pedidos.find(x=>x.fac===21902);});
   ok('Deshacer en la ruta vieja: no se deja (ya va con Pedro), sigue "no entregó"', x.estado==='cancelado'&&x.facReg===true&&(await fila(21902)).rutero==='Pedro');
 
+  // ---- El otro usuario también puede marcar "No se entregó" (y nada más) ----
+  await p.evaluate(()=>{PE.sel=new Set([21904]);return peAsignar('Rosa');});await p.waitForTimeout(1500);
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Rosa');return terminarPedidos(v.id);});await p.waitForTimeout(2500);
+  await p.evaluate(()=>{window.__m=esMaestro;window.esMaestro=()=>false;entrarVendedor('Rosa');});await p.waitForTimeout(500);
+  await p.click('.ped:has-text("TIENDA NUEVA")');await p.waitForTimeout(300);
+  m=await p.textContent('#modalRecibeBody');
+  ok('Otro usuario: al tocar la nota solo ofrece "No se entregó"', m.includes('No se entregó')&&!m.includes('Crédito')&&!m.includes('Devolución'));
+  await p.screenshot({path:SHOTS+'/n1-otro-usuario-menu.png'});
+  await p.click('#modalRecibeBody .pm-op');await p.waitForTimeout(1800);
+  let f4=await fila(21904);
+  ok('Otro usuario: "No se entregó" regresa la nota a Por entregar', f4.estado==='pendiente'&&f4.regresada===true&&f4.regreso_rutero==='Rosa');
+  x=await p.evaluate(()=>viajes.find(x=>x.rutero==='Rosa').pedidos[0]);
+  ok('Otro usuario: el pedido queda en Q0 (no entregó)', x.estado==='cancelado'&&x.facReg===true);
+  await p.click('.ped:has-text("TIENDA NUEVA")');await p.waitForTimeout(300);
+  ok('Otro usuario: puede deshacerlo ("Sí se entregó")', (await p.textContent('#modalRecibeBody')).includes('Sí se entregó'));
+  await p.click('#modalRecibeBody .pm-op');await p.waitForTimeout(2000);
+  f4=await fila(21904);
+  ok('Otro usuario: deshacer vuelve la nota a la ruta', f4.estado==='enviada'&&f4.rutero==='Rosa');
+  ok('Otro usuario: no puede poner crédito', await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Rosa');setEst(v.id,v.pedidos[0].id,'credito');return v.pedidos[0].estado;})==='pagado');
+  await p.evaluate(()=>{window.esMaestro=window.__m;volverLista();});await p.waitForTimeout(300);
+
   // ---- Crédito: marca tranquila (no alerta) en la lista de ruteros y en sus viajes ----
   await p.evaluate(()=>{peCerrar&&PE.abierto&&peCerrar();volverLista();});await p.waitForTimeout(300);
   ok('Sin créditos: no hay marca', (await p.$$('.cr-chip')).length===0);

@@ -1451,7 +1451,8 @@ function verViaje(vid){viajeAbierto=viajeAbierto===vid?null:vid;renderZona();}
 function abrirPed(vid,pid){if(!esMaestro())return;const el=document.getElementById('pb-'+vid+'-'+pid);
   document.querySelectorAll('.pbox').forEach(b=>{if(b!==el)b.classList.remove('open');});el.classList.toggle('open');}
 function cerrarPed(vid,pid){const el=document.getElementById('pb-'+vid+'-'+pid);if(el)el.classList.remove('open');renderZona();}
-function setEst(vid,pid,est){if(!esMaestro())return;const vv=viajes.find(x=>x.id===vid);const p=vv.pedidos.find(x=>x.id===pid);
+function setEst(vid,pid,est){const vv=viajes.find(x=>x.id===vid);const p=vv&&vv.pedidos.find(x=>x.id===pid);if(!p)return;
+  if(!esMaestro()&&!(peNoEntPuede(vv,p)&&(est==='cancelado'||(est==='pagado'&&p.estado==='cancelado'))))return;
   const antes=p.estado;
   p.estado=est;if(est!=='pagado'){p.devolucion=0;p.descuento=0;p.vuelto=0;p.devMon=0;}if(est!=='credito')p.abono=0;tocar(vv);
   // Nota de Monica que ya salió: si no la recibieron regresa a "Por entregar"; si fue un error, vuelve a la ruta
@@ -1501,6 +1502,7 @@ function renderPedidos(v,editable){
     const puedeBorrar=puedeBorrarV&&!p.facEnv, puedeEditar=puedeBorrarV&&!p.fac;
     const prob=p.estado!=='pagado'||ajusteDe(p)>0;
     const av=peAvisoPedido(v,p);
+    const noEnt=!editable&&!esMaestro()&&peNoEntPuede(v,p);   // el otro usuario: solo "No se entregó"
     const ef=efectivoDe(p);
     let montoShow;
     if(p.estado==='credito')montoShow=`<span style="color:var(--credit)">${q(creditoDe(p))}</span><div class="sub" style="color:var(--credit)">a crédito</div>`;
@@ -1509,7 +1511,7 @@ function renderPedidos(v,editable){
     else montoShow=q(ef);
     const btnX=puedeBorrar?`<button onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})" title="Quitar" style="margin-left:8px;width:30px;height:30px;border:none;border-radius:8px;background:#fdeede;color:#d4583e;font-size:17px;font-weight:900;flex-shrink:0;cursor:pointer">×</button>`:'';
     const swipeAttrs = puedeBorrar?`data-swipe="1" data-vid="${v.id}" data-pid="${p.id}"`:'';
-    let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}" ${swipeAttrs} ${editable?`onclick="abrirPed(${v.id},${p.id})"`:''}>
+    let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}" ${swipeAttrs} ${editable?`onclick="abrirPed(${v.id},${p.id})"`:noEnt?`onclick="peNoEntMenu(${v.id},${p.id})"`:''}>
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:38px;height:38px;border-radius:50%;background:#eef0f3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="#9aa1ad" stroke-width="1.8"/><path d="M5 19c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5" stroke="#9aa1ad" stroke-width="1.8" stroke-linecap="round"/></svg></span>
         <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${av.tags}<div class="sub">${pedidoSub(p)}</div>${av.linea}</div>
@@ -2499,6 +2501,21 @@ function peAvisoPedido(v,p){
 }
 
 // ---- No se entregó: la nota regresa a "Por entregar" ----
+// El otro usuario (no maestro) también puede marcarlo, solo en notas de Monica de una ruta que salió y no se ha recibido.
+function peNoEntPuede(v,p){return !modoLectura&&!!sesion&&!!(v&&p&&p.fac&&p.facEnv&&(v.entradaLista||v.horaSalida)&&!v.cerrado);}
+function peNoEntMenu(vid,pid){
+  const v=viajes.find(x=>x.id===vid),p=v&&(v.pedidos||[]).find(x=>x.id===pid);if(!p||!peNoEntPuede(v,p))return;
+  const ya=p.estado==='cancelado';
+  if(ya&&!p.facReg){toast('Este pedido lo marcó el maestro; pídale que lo cambie',true);return;}
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div class="pm-cab"><b>${esc(p.nombre)}</b><span>Nota ${p.fac} · ${q(p.total)} · ${esc(v.rutero)}</span></div>
+    <div class="pm-ops">${ya
+      ?`<button class="pm-op" onclick="cerrarModalRecibe();setEst(${v.id},${p.id},'pagado')"><span class="pm-ic">${ICO_OK_S.replace('#fff','currentColor')}</span><span class="pm-tx"><b>Sí se entregó</b><span>Vuelve a esta ruta como salió</span></span><span class="pm-ir">›</span></button>`
+      :`<button class="pm-op" onclick="cerrarModalRecibe();setEst(${v.id},${p.id},'cancelado')"><span class="pm-ic luna">${ICO_REG}</span><span class="pm-tx"><b>No se entregó</b><span>Queda en Q0 y la nota regresa a Por entregar</span></span><span class="pm-ir">›</span></button>`}
+    </div>
+    <button class="btn sec pm-cancel" onclick="cerrarModalRecibe()">Cancelar</button>`;
+  document.getElementById('modalRecibe').classList.add('open');
+}
 async function peRegresar(v,p){
   p.facReg=true;p.facRegPend=true;tocar(v);
   logAudit('NO SE ENTREGÓ',`${p.nombre} · nota ${p.fac} (${v.rutero}): regresa a Por entregar`);
@@ -3196,7 +3213,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-28.2';
+const VERSION='2026-10-28.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

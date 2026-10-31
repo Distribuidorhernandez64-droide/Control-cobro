@@ -66,10 +66,11 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   ok('Lo que salió sigue igual (Q163.50)', x.total===163.5);
   await p.evaluate(()=>entrarVendedor('Gerson'));await p.waitForTimeout(500);
   let z=await p.textContent('#zona');
-  ok('El pedido dice "devolución" y cuánto ya se descontó', z.includes('devolución Q46.00')&&z.includes('Devolución de Monica ya descontada'));
+  ok('El pedido dice "devolución" y cuánto ya se descontó', z.includes('devolución Q46.00')&&z.includes('Ver qué cambió ›')&&!z.includes('ya descontada'));
   ok('El viaje muestra "1 cambió en Monica · devolución −Q46.00"', z.includes('1 cambió en Monica · devolución −Q46.00'));
   await p.screenshot({path:SHOTS+'/d1-viaje-devolucion.png'});
-  await p.click('.pe-vercam');await p.waitForTimeout(400);
+  ok('Sin etiqueta "ajuste" de más (ya dice "devolución")', !(await p.textContent('.ped:has-text("TIENDA ROSA")')).includes('ajuste'));
+  await p.click('.pe-verl');await p.waitForTimeout(400);
   let m=await p.textContent('#modalRecibeBody');
   ok('"Ver qué cambió": producto, cantidad y monto devuelto', m.includes('Devolvió')&&m.includes('−0.5')&&m.includes('tiky jumbo 3lt 6ud')&&m.includes('−Q46.00'));
   ok('"Ver qué cambió": salió / Monica ahora / se cobra', m.includes('Salió')&&m.includes('Q163.50')&&m.includes('Monica ahora')&&m.includes('Se cobra')&&m.includes('Q117.50')&&m.includes('Gerson'));

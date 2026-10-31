@@ -467,6 +467,7 @@
   .pe-modr{color:var(--bad);font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:4px;margin-top:3px}
   .t-reg{background:#e9eef5;color:#5b6b82;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px;margin-left:4px}
   .pe-regl{color:#6b7a90!important;font-weight:700}
+  .pe-verl{cursor:pointer;color:var(--bad)!important;font-weight:800;font-size:12.5px!important;margin-top:2px}
   .pe-vercam{cursor:pointer}.pe-vercam u{font-weight:900;text-underline-offset:2px;white-space:nowrap}
   .pe-card.reg{background:#f2f4f7;border-color:#dfe3ea}
   .pe-card.reg .pe-cnom{color:#4a5568}
@@ -1487,7 +1488,7 @@ function pedidoSub(p){
 function pedTag(p){
   if(p.estado==='credito')return '<span class="tag t-cred">crédito</span>';
   if(p.estado==='cancelado')return p.facReg?'':'<span class="tag t-canc">no entreg.</span>';
-  if(ajusteDe(p)>0)return '<span class="tag t-dev">ajuste</span>';
+  if(ajusteDe(p)>0&&!(p.devMon>0&&!(p.descuento>0)&&!(p.vuelto>0)&&(p.devolucion||0)<=p.devMon+0.001))return '<span class="tag t-dev">ajuste</span>';
   return '';
 }
 
@@ -2497,6 +2498,8 @@ function peAvisoPedido(v,p){
   const c=peCambioDe(p);if(!c)return {tags,linea:''};
   const d=peDiffMonica(c,p.total);
   tags+=`<span class="tag t-mod">${ICO_ALERTA} ${d&&d.dev>0?'devolución':d&&d.precio.length?'cambió precio':'cambió en Monica'}</span>`;
+  const ya=p.devMon||0, limpio=d&&ya>0&&Math.abs(d.dev-ya)<=0.001&&!d.precio.length;
+  if(limpio)return {tags,linea:`<div class="sub pe-verl" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">Ver qué cambió ›</div>`};
   return {tags,linea:`<div class="sub pe-modl pe-vercam" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${esc(peCambioTxt(p,c,v))} · <u>Ver qué cambió</u></div>`};
 }
 
@@ -3213,7 +3216,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-28.3';
+const VERSION='2026-10-31.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

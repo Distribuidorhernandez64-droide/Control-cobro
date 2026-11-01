@@ -442,6 +442,31 @@
   .pe-tit h2{margin:0;font-size:19px;font-weight:900;letter-spacing:-.2px}
   .pe-cerrar{width:34px;height:34px;border-radius:50%;border:none;background:#f1f0ec;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
   .pe-cerrar:active{transform:scale(.92)}
+  .pe-tbtns{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .pe-consb{display:none;align-items:center;gap:6px;height:34px;padding:0 12px 0 10px;border-radius:17px;border:none;background:#1c2433;color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;animation:pop .18s}
+  .pe-consb.ver{display:inline-flex}.pe-consb:active{transform:scale(.95)}
+  .pe-consb svg{width:16px;height:16px;flex-shrink:0}
+  /* Consolidado de las notas escogidas (mismas reglas que el de Facturación rápida) */
+  .pv-hoja.alta{max-height:94%}
+  .cs-docs{display:flex;flex-wrap:wrap;gap:5px;padding:0 16px 10px}
+  .cs-doc{font-size:11.5px;font-weight:700;color:#5b6472;background:#f4f3ef;border-radius:7px;padding:3px 8px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cs-doc b{color:var(--ink);font-weight:900;margin-right:4px}
+  .cs-solo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px;border-top:1px solid #f0eee9;border-bottom:1px solid #f0eee9;font-size:13px;font-weight:800;color:#5b6472}
+  .cs-sw{position:relative;width:42px;height:25px;border-radius:13px;background:#d9d6ce;border:none;cursor:pointer;flex-shrink:0;transition:background .15s;padding:0}
+  .cs-sw::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+  .cs-sw.on{background:#1f8a52}.cs-sw.on::after{transform:translateX(17px)}
+  .cs-lista{padding:6px 16px 10px}
+  .cs-l{display:flex;align-items:baseline;gap:12px;padding:7px 0 3px}
+  .cs-l.gap{margin-top:8px;padding-top:12px;border-top:1px solid #e6e3dc}
+  .cs-q{min-width:46px;text-align:right;font-size:14.5px;font-weight:900;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .cs-n{font-size:14px;font-weight:800;line-height:1.25;word-break:break-word}
+  .cs-s{display:flex;justify-content:space-between;gap:10px;margin-left:58px;padding:2px 0;font-size:12.5px;font-weight:600;color:#6b7280;border-bottom:1px dashed #efede8}
+  .cs-s:last-child{border-bottom:none}
+  .cs-s span{min-width:0;word-break:break-word}.cs-s b{font-weight:800;color:#3f4652;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cs-sec{margin:16px 0 2px;font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:var(--mut)}
+  .cs-av{font-size:12px;font-weight:700;color:#b0601a;line-height:1.35}
+  .cs-btns{display:flex;gap:8px;margin-top:2px}
+  .cs-btns .pv-btn{margin-top:0;flex:1}
   .pe-sheet .pe-buscar{height:44px;border-radius:12px;background:#f4f3ef;border:1px solid transparent;padding:0 6px 0 12px;transition:border-color .15s,background .15s}
   .pe-sheet .pe-buscar:focus-within{background:var(--card);border-color:#d9d6ce}
   .pe-sheet .pe-buscar input{font-size:16px;font-weight:700}
@@ -2307,6 +2332,7 @@ const ICO_CRED=`<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="
 function creditosDe(vs){let n=0,m=0;vs.forEach(v=>{if(v)(v.pedidos||[]).forEach(p=>{if(p&&p.estado==='credito'&&creditoDe(p)>0.001){n++;m+=creditoDe(p);}});});return {n,m:Math.round(m*100)/100};}
 function credChip(vs){const c=creditosDe(vs);if(!c.n)return '';
   return `<span class="cr-chip" title="${c.n} pedido${c.n===1?'':'s'} a crédito">${ICO_CRED}${c.n>1?c.n+' créditos · ':'Crédito '}${q(c.m)}</span>`;}
+const ICO_CONS=`<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="4" width="14" height="17" rx="2.5" stroke="currentColor" stroke-width="2.1"/><path d="M9 4.2V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5v.7" stroke="currentColor" stroke-width="2.1"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
 // "brenda (pueblo)" -> "Brenda pueblo"
@@ -2501,6 +2527,131 @@ function peAvisoPedido(v,p){
   const ya=p.devMon||0, limpio=d&&ya>0&&Math.abs(d.dev-ya)<=0.001&&!d.precio.length;
   if(limpio)return {tags,linea:`<div class="sub pe-verl" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">Ver qué cambió ›</div>`};
   return {tags,linea:`<div class="sub pe-modl pe-vercam" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${esc(peCambioTxt(p,c,v))} · <u>Ver qué cambió</u></div>`};
+}
+
+// ---- Consolidado de carga de las notas escogidas ----
+// Mismas reglas que el Consolidado de Facturación rápida (monConsArmar): solo productos con guiones (se pueden ver
+// todos), nunca Laky/azúcar/Acticlor/cloro/Ilgua/detergente, grupo 1, grupo 2 y lo demás alfabético, cada nota de
+// sabor en su renglón y Bonificaciones aparte al final. Los productos vienen de Monica (los sube Facturación rápida).
+const CS_EXCLUIR=[/laky/,/azucar/,/acticlor/,/cloro/,/ilgua/,/detergente/];
+const CS_ORDEN=[
+  [1,s=>/pepsi/.test(s)&&/1 1\/4/.test(s)],
+  [1,s=>/coca/.test(s)&&/(^|[^\d.\/])1 ?lt\b/.test(s)],
+  [1,s=>/coca/.test(s)&&/retornable/.test(s)],
+  [1,s=>/pepsi/.test(s)&&/retornable/.test(s)],
+  [2,s=>/coca/.test(s)&&/12 ?(onz|oz)\b/.test(s)],
+  [2,s=>/coca/.test(s)&&/1\/2 ?lt/.test(s)],
+  [2,s=>/pepsi/.test(s)&&/1\/2/.test(s)],
+  [2,s=>/tiky/.test(s)&&/vidrio/.test(s)],
+  [2,s=>/orange/.test(s)&&/vidrio/.test(s)],
+  [2,s=>/gallo/.test(s)&&/vidrio/.test(s)&&!/paqueton|taconuda/.test(s)],
+  [2,s=>/quezalteca/.test(s)],
+];
+function csNorm(s){let o='';for(const ch of String(s||'')){const n=ch.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();o+=n.length===1?n:(ch.toLowerCase()[0]||' ');}return o;}
+const csN=s=>csNorm(s).replace(/^[\s\-_.*]+/,'').trim();
+const csNombre=s=>String(s||'').replace(/^[\s\-_.*]+/,'').trim();
+const csR2=n=>Math.round(n*100)/100;
+const csF2=n=>Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+function csArmar(notas,solo){
+  const m=new Map();
+  for(const n of notas)for(const l of (n.detalle||[])){
+    const d=String(l.d||''),k=csN(d);
+    if(solo&&!d.trimStart().startsWith('-'))continue;
+    if(CS_EXCLUIR.some(rx=>rx.test(k)))continue;
+    let x=m.get(l.c);if(!x){x={codigo:l.c,nombre:csNombre(d),k,cantidad:0,lista:[]};m.set(l.c,x);}
+    x.cantidad=csR2(x.cantidad+(+l.q||0));
+    const c=csNombre(l.m||'');if(c)x.lista.push([c,csR2(+l.q||0)]);
+  }
+  const alfa=(a,b)=>a.k.localeCompare(b.k,'es');
+  const todos=[...m.values()].filter(x=>x.cantidad);
+  todos.forEach(x=>{const i=CS_ORDEN.findIndex(([,f])=>f(x.k));x.rank=i<0?99:i;x.grupo=i<0?3:CS_ORDEN[i][0];});
+  return {principal:todos.filter(x=>!/bonificacion/.test(x.k)).sort((a,b)=>a.rank-b.rank||alfa(a,b)),bonif:todos.filter(x=>/bonificacion/.test(x.k)).sort(alfa)};
+}
+// Nombre corto para WhatsApp (igual que Facturación rápida)
+function csCorto(s){let w=csNombre(s).split(/\s+/).filter(Boolean);
+  while(w.length>1&&/^(cliente|clte|gco\.?|tienda|tiendita|abarroteria|abarrotería|variedades|y|tiendas)$/i.test(w[0]))w.shift();
+  const t=w.slice(0,2).join(' ');return t.length>18?t.slice(0,18).trim():t;}
+function peConsNotas(){const por={};PE.filas.forEach(f=>por[f.nro]=f);return (PE.consNros||[]).map(n=>por[n]).filter(Boolean);}
+function peConsAbrir(){if(!PE.sel.size)return;PE.consNros=[...PE.sel];if(PE.consSolo===undefined)PE.consSolo=true;peVer('cons');}
+function peConsSolo(){PE.consSolo=!PE.consSolo;peRenderVista();}
+function peRenderCons(hoja){
+  const notas=peConsNotas(), sin=notas.filter(n=>!Array.isArray(n.detalle)), con=notas.filter(n=>Array.isArray(n.detalle));
+  const {principal,bonif}=csArmar(con,PE.consSolo);
+  const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
+  const fila=x=>`<div class="cs-l"><span class="cs-q">${csF2(x.cantidad)}</span><span class="cs-n">${esc(x.nombre)}</span></div>`
+    +x.lista.map(([c,qq])=>`<div class="cs-s"><span>${esc(c)}</span><b>${csF2(qq)}</b></div>`).join('');
+  let g=null,cuerpo='';
+  principal.forEach(x=>{const gap=g!==null&&x.grupo!==g;g=x.grupo;cuerpo+=gap?fila(x).replace('class="cs-l"','class="cs-l gap"'):fila(x);});
+  if(bonif.length)cuerpo+=`<div class="cs-sec">Bonificaciones</div>`+bonif.map(fila).join('');
+  if(!principal.length&&!bonif.length)cuerpo=`<div class="pv-vacio">${notas.length?(PE.consSolo?'Estas notas no llevan productos con guiones (cajas).':'No hay productos para el consolidado.'):'Ya no hay notas escogidas.'}</div>`;
+  const nprod=principal.length+bonif.length;
+  hoja.innerHTML=`<div class="pv-asa"></div>
+    <div class="pv-cab"><div class="pv-tit"><b>Consolidado de carga</b><span>${con.length} nota${con.length===1?'':'s'} · ${nprod} producto${nprod===1?'':'s'}</span></div>${cerrar}</div>
+    <div class="cs-docs">${notas.map(n=>`<span class="cs-doc"${Array.isArray(n.detalle)?'':' style="opacity:.45;text-decoration:line-through"'}><b>${n.nro}</b>${esc(csNombre(n.cliente))}</span>`).join('')}</div>
+    <div class="cs-solo"><span>Solo cajas (con guiones)</span><button class="cs-sw${PE.consSolo?' on':''}" onclick="peConsSolo()" aria-label="Solo cajas" aria-pressed="${!!PE.consSolo}"></button></div>
+    <div class="pv-lista cs-lista">${cuerpo}</div>
+    <div class="pv-pie">${sin.length?`<div class="cs-av">Sin productos todavía: ${sin.map(n=>n.nro).join(', ')} (no se cuentan).</div>`:''}
+      <div class="cs-btns"><button class="pv-btn quitar" id="csTxt" onclick="peConsCopiar()">Copiar texto</button><button class="pv-btn" onclick="peConsPdf()">PDF</button></div></div>`;
+}
+function peConsTexto(){
+  const notas=peConsNotas().filter(n=>Array.isArray(n.detalle)),{principal,bonif}=csArmar(notas,PE.consSolo),ah=new Date(),out=[];
+  out.push('*CONSOLIDADO DE CARGA*',ah.toLocaleDateString('es-GT')+' '+ah.toTimeString().slice(0,5),
+    `${notas.length} ${notas.length===1?'nota':'notas'}: ${notas.map(n=>csCorto(n.cliente)).join(', ')}`,'');
+  const fila=x=>{out.push(`${csF2(x.cantidad)}  ${x.nombre}`);x.lista.forEach(([c,qq])=>out.push(`      ${c}  Cant. = ${csF2(qq)}`));};
+  let g=null;for(const x of principal){if(g!==null&&x.grupo!==g)out.push('');g=x.grupo;fila(x);}
+  if(bonif.length){out.push('','*BONIFICACIONES*');bonif.forEach(fila);}
+  return out.join('\n');
+}
+async function peConsCopiar(){
+  const t=peConsTexto();let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true;}catch(e){
+    const a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();
+    try{ok=document.execCommand('copy');}catch(e2){}a.remove();}
+  const b=document.getElementById('csTxt');
+  if(ok&&b){b.textContent='✓ Copiado';setTimeout(()=>{if(b.isConnected)b.textContent='Copiar texto';},2000);}else if(!ok)toast('No se pudo copiar',true);
+}
+// PDF: carta, márgenes como el Recuento (izq 4.5, der 5.5, arriba 1, abajo 6.5 cm), igual que Facturación rápida
+let _csPdfLib=null;
+function csCargarPdf(){
+  if(window.jspdf)return Promise.resolve();
+  if(!_csPdfLib)_csPdfLib=new Promise((ok,mal)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';sc.onload=()=>ok();sc.onerror=()=>{_csPdfLib=null;mal(new Error('sin internet'));};document.head.appendChild(sc);});
+  return _csPdfLib;
+}
+async function peConsPdf(){
+  const notas=peConsNotas().filter(n=>Array.isArray(n.detalle));
+  if(!notas.length){toast('No hay notas con productos',true);return;}
+  try{await csCargarPdf();}catch(e){toast('No se pudo cargar el PDF. Revisá internet',true);return;}
+  const {principal,bonif}=csArmar(notas,PE.consSolo);
+  const cm=v=>v*72/2.54;
+  const doc=new jspdf.jsPDF({unit:'pt',format:'letter'});const W=612,H=792,L=cm(4.5),R=W-cm(5.5),TOP=cm(1),BOT=H-cm(6.5);
+  const T=(s,x,y,o={})=>{doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9.5);const c=o.c||[20,20,20];doc.setTextColor(c[0],c[1],c[2]);doc.text(String(s),x,y,o.r?{align:'right'}:undefined);};
+  const corta=(s,w,sz)=>{doc.setFont('helvetica','normal');doc.setFontSize(sz||9.5);let t=String(s);while(t.length>3&&doc.getTextWidth(t)>w)t=t.slice(0,-1);return t===String(s)?t:t.trimEnd()+'…';};
+  const gris=[105,105,105],QX=L+32,NX=L+40,LH=11.1;let y;
+  const ah=new Date(),cuando=ah.toLocaleDateString('es-GT')+'  '+ah.toTimeString().slice(0,5),cuenta=`${notas.length} ${notas.length===1?'nota':'notas'}`;
+  const nombres=notas.map(n=>`${n.nro} ${csNombre(n.cliente)}`).join('  ·  ');
+  const cab=primera=>{y=TOP+10;
+    T('DISTRIBUIDORA HERNANDEZ',L,y,{b:1,s:8.6,c:[70,70,70]});T(cuando,R,y,{s:8.5,c:gris,r:1});y+=primera?16:13;
+    T(primera?'Consolidado de carga':'Consolidado de carga  (continuación)',L,y,{b:1,s:primera?13:10});T(cuenta,R,y,{b:1,s:primera?10.5:9,r:1});
+    if(primera){y+=11;doc.setFont('helvetica','normal');doc.setFontSize(7.6);doc.setTextColor(95);const lin=doc.splitTextToSize(nombres,R-L);doc.text(lin,L,y);y+=(lin.length-1)*8.8;}
+    y+=7;doc.setDrawColor(40);doc.setLineWidth(.9);doc.line(L,y,R,y);y+=12;
+    T('CANT.',QX,y,{b:1,s:6.8,c:gris,r:1});T('PRODUCTO',NX,y,{b:1,s:6.8,c:gris});y+=4;doc.setDrawColor(200);doc.setLineWidth(.4);doc.line(L,y,R,y);y+=10;};
+  const nueva=h=>{if(y+h>BOT){doc.addPage();cab(false);}};
+  const fila=x=>{nueva(LH*(1+x.lista.length));
+    T(csF2(x.cantidad),QX,y,{b:1,r:1});T(corta(x.nombre,R-NX),NX,y);y+=LH;
+    x.lista.forEach(([c,qq])=>{T(corta(`${c}   Cantidad = ${csF2(qq)}`,R-NX-12,8.6),NX+12,y-1,{s:8.6,c:[85,85,85]});y+=LH-1.2;});};
+  const titulo=t=>{nueva(LH*2+6);y+=3;T(t,L,y,{b:1,s:7.6,c:gris});y+=3.5;doc.setDrawColor(205);doc.setLineWidth(.4);doc.line(L,y,R,y);y+=9.5;};
+  cab(true);
+  let g=null;
+  for(const x of principal){if(g!==null&&x.grupo!==g){doc.setDrawColor(150);doc.setLineWidth(.4);doc.line(L,y-8.2,R,y-8.2);y+=2.5;}g=x.grupo;fila(x);}
+  if(bonif.length){titulo('BONIFICACIONES');bonif.forEach(fila);}
+  const np=doc.getNumberOfPages();
+  if(np>1)for(let i=1;i<=np;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7.4);doc.setTextColor(120);doc.text(`Consolidado de carga  ·  Página ${i} de ${np}`,W/2,BOT+16,{align:'center'});}
+  const nombre=`Consolidado ${notas.map(n=>n.nro).join(' ')}`.slice(0,90)+'.pdf';
+  const blob=doc.output('blob');
+  // En el celular: menú de compartir (WhatsApp, guardar en Archivos, imprimir…); si no se puede, se descarga
+  try{const file=new File([blob],nombre,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Consolidado de carga'});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+  doc.save(nombre);
 }
 
 // ---- No se entregó: la nota regresa a "Por entregar" ----
@@ -2790,6 +2941,7 @@ function peRenderVista(){
   if(_pg&&_pg.on&&_pg.tipo==='v'){PE.vistaPend=true;return;}
   PE.vistaPend=false;
   const hoja=el.querySelector('.pv-hoja');if(!hoja)return;
+  if(PE.vista==='cons'){hoja.classList.add('alta');return peRenderCons(hoja);}
   const nro=PE.vista, f=PE.filas.find(x=>x.nro===nro);
   const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   if(!f){hoja.innerHTML=`<div class="pv-asa"></div><div class="pv-cab"><div class="pv-tit"><b>Nota ${nro}</b></div>${cerrar}</div>
@@ -2910,7 +3062,7 @@ function peRenderPanel(){
   // El esqueleto (con el buscador) se arma UNA vez: así el teclado no se cierra al refrescar
   if(!document.getElementById('peBuscar')){
     sh.innerHTML=`<div class="pe-cab">
-        <div class="pe-tit"><div><h2>Por entregar</h2><div id="peEst"></div></div><button class="pe-cerrar" onclick="peCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div>
+        <div class="pe-tit"><div><h2>Por entregar</h2><div id="peEst"></div></div><div class="pe-tbtns"><button id="peConsBtn" class="pe-consb" onclick="peConsAbrir()" aria-label="Consolidado de las notas escogidas">${ICO_CONS}Consolidado</button><button class="pe-cerrar" onclick="peCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
         <div class="pe-buscar">${ICO_LUPA}<input id="peBuscar" type="text" inputmode="search" placeholder="Cliente, nota o código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" value="${esc(PE.buscar)}" oninput="peBuscar(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
           <button id="peLimpiar" class="pe-limpiar${PE.buscar?' ver':''}" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="peLimpiar()" aria-label="Borrar búsqueda"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg></button></div>
         <div class="pe-chips" id="peChips"></div>
@@ -2981,6 +3133,7 @@ function peRenderLista(){
   peRenderBarra();
 }
 function peRenderBarra(){
+  const cb=document.getElementById('peConsBtn');if(cb)cb.classList.toggle('ver',PE.sel.size>0);
   const b=document.getElementById('peBarra');if(!b)return;
   if(!PE.sel.size){b.innerHTML='';return;}
   const fs=PE.filas.filter(f=>PE.sel.has(f.nro)), tot=fs.reduce((s,f)=>s+f.total,0);
@@ -3216,7 +3369,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-10-31.1';
+const VERSION='2026-11-01.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

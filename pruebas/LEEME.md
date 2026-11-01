@@ -34,3 +34,8 @@ reciba) lo descuenta sola en "Devolución" a precio de salida, se ajusta si Moni
 escrito a mano, no descuenta cambios de precio y no toca rutas ya recibidas. "No se entregó" regresa la nota a
 Por entregar (tarjeta "regresó · rutero"), se puede deshacer solo si nadie la volvió a mandar, y avisa
 "regresó y la anularon" si después la anulan en Monica. Necesita la misma base local que `prueba-por-entregar.js`.
+
+`prueba-consolidado.js` — en Por entregar, al escoger notas aparece "Consolidado" arriba: mismo armado que el
+Consolidado de Facturación rápida (solo guiones, excluidos, grupo 1/2, alfabético, sabores por renglón,
+Bonificaciones aparte), "Solo cajas" se puede apagar, Copiar texto y PDF. Necesita jsPDF local:
+`JSPDF=/ruta/jspdf.umd.min.js` (npm i jspdf@2.5.1).

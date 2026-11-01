@@ -49,11 +49,11 @@ const ALERTAS=[
   };
   // Maestro
   const {p,errs}=await abrir('cesar','19881987');
-  ok('Campanita de alertas visible para el maestro',await p.isVisible('#btnAL'));
-  ok('Número rojo con 2 alertas nuevas (no cuenta vistas ni no vigentes)',(await p.textContent('#alBadge'))==='2'&&await p.isVisible('#alBadge'));
-  ok('Campanita activa (no gris)',await p.evaluate(()=>document.getElementById('btnAL').classList.contains('hay')));
-  await p.screenshot({path:'/tmp/al-cab.png',clip:{x:0,y:0,width:390,height:120}}).catch(()=>{});
-  await p.click('#btnAL');await p.waitForTimeout(500);
+  await p.waitForTimeout(300);
+  ok('No hay segunda campanita en el encabezado',!(await p.$('#btnAL')));
+  ok('Tarjeta "2 cambios para revisar" (no cuenta vistas ni no vigentes)',(await p.textContent('.al-aviso').catch(()=>'')).includes('2 cambios para revisar'));
+  await p.screenshot({path:'/tmp/al-cab.png',clip:{x:0,y:0,width:390,height:420}}).catch(()=>{});
+  await p.click('.al-aviso');await p.waitForTimeout(500);
   ok('Abre el panel de alertas',await p.isVisible('#alPanel .al-lista'));
   const txt=await p.textContent('#alPanel');
   ok('Muestra Santa Ana con su descuento',txt.includes('tienda santa ana')&&txt.includes('desc. Q2.00'));
@@ -62,15 +62,17 @@ const ALERTAS=[
   ok('Nuevas marcadas con la raya roja',(await p.$$('#alPanel .al-fila.nueva')).length===2);
   ok('Al abrir quedan vistas en la nube',await p.evaluate(()=>window.__DB.alertas.filter(a=>a.vigente&&!a.visto_en).length===0));
   ok('Se anota quién la vio',await p.evaluate(()=>window.__DB.alertas.find(a=>a.clave==='b|22211|401').visto_por==='César'));
-  ok('La campanita se apaga (gris, sin número)',!(await p.isVisible('#alBadge'))&&!(await p.evaluate(()=>document.getElementById('btnAL').classList.contains('hay'))));
+
   await p.screenshot({path:'/tmp/al-panel.png'}).catch(()=>{});
   await p.click('#alPanel .pe-cerrar');await p.waitForTimeout(200);
   ok('Cierra el panel',!(await p.isVisible('#alPanel .al-lista')));
+  ok('Ya vistas: la tarjeta desaparece (no queda nada)',!(await p.$('.al-aviso')));
   // Llega una nueva
   await p.evaluate(h=>{window.__DB.alertas.push({clave:'p|9|z',tipo:'precio',fecha:h,hora:'15:00',nro:9,cliente:'Nueva',que:'pepsi · 1 × Q45.00 → Q40.00',quien:'caja',monto:5,vigente:true,visto_en:null});return alCargar();},hoy);
-  ok('Alerta nueva vuelve a encender la campanita con 1',(await p.textContent('#alBadge'))==='1');
+  await p.waitForTimeout(200);
+  ok('Alerta nueva: vuelve la tarjeta con 1 cambio',(await p.textContent('.al-aviso').catch(()=>'')).includes('1 cambio para revisar'));
   // PDF
-  await p.click('#btnAL');await p.waitForTimeout(400);
+  await p.click('.al-aviso');await p.waitForTimeout(400);
   const pdfOk=await p.evaluate(async()=>{let n=null;await csCargarPdf();if(!window.jspdf)return 'sin jspdf';const O=window.jspdf.jsPDF;window.jspdf.jsPDF=function(...a){const d=new O(...a);d.save=x=>{n=x;};return d;};navigator.canShare=null;await alPdf();window.jspdf.jsPDF=O;return n;}).catch(e=>'err '+e.message);
   ok('PDF se genera ('+pdfOk+')',typeof pdfOk==='string'&&pdfOk.startsWith('Alertas'));
   ok('Sin errores de la página (maestro)',errs.length===0);if(errs.length)console.log(errs);
@@ -78,7 +80,7 @@ const ALERTAS=[
   const o=await abrir('rolvin','0000');
   const usuarios=await o.p.evaluate(()=>USUARIOS.filter(u=>u.rol!=='maestro').map(u=>[u.usuario,u.pass]));
   if(usuarios.length){await o.p.close();const q=await abrir(usuarios[0][0],usuarios[0][1]);
-    ok('El otro usuario NO ve la campanita de alertas',!(await q.p.isVisible('#btnAL')));
+    await q.p.waitForTimeout(300);ok('El otro usuario NO ve la tarjeta de alertas',!(await q.p.$('.al-aviso')));
     ok('El otro usuario no lee alertas',await q.p.evaluate(()=>AL.filas.length===0));
   }else ok('Hay un usuario no maestro para probar',false);
   await b.close();srv.close();

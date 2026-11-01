@@ -295,6 +295,33 @@
   .pebell.sacude svg{animation:peSacude .7s ease}
   @keyframes pePulso{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
   @keyframes peSacude{0%,100%{transform:rotate(0)}20%{transform:rotate(-16deg)}40%{transform:rotate(13deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(5deg)}}
+  /* ===== Alertas de Facturación rápida (solo maestro) ===== */
+  .pebell.al-bell{color:#a3a9b3}
+  .pebell.al-bell.hay{color:#1c2433}
+  .pebell.al-bell.hay .pebd{animation:pePulso 1.8s ease-in-out infinite}
+  .pebell.al-bell.hay svg{animation:peSacude .9s ease 2}
+  .al-ov{display:none}
+  .al-ov.open{display:flex;flex-direction:column;position:fixed;inset:0;z-index:400;background:var(--bg);animation:pop .18s}
+  .al-cab{flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;background:var(--card);border-bottom:1px solid var(--line);padding:max(16px,env(safe-area-inset-top)) 16px 14px}
+  .al-cab h2{margin:0;font-size:19px;font-weight:900;letter-spacing:-.2px}
+  .al-sub{font-size:12.5px;font-weight:700;color:var(--mut);margin-top:2px}
+  .al-lista{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 14px calc(24px + env(safe-area-inset-bottom))}
+  .al-dia{display:flex;justify-content:space-between;align-items:baseline;margin:16px 4px 8px;font-size:12px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
+  .al-dia b{color:var(--bad)}
+  .al-fila{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 14px 12px;margin-bottom:8px;box-shadow:var(--shadow);position:relative}
+  .al-fila.nueva{border-color:#f0c2b6}
+  .al-fila.nueva::before{content:"";position:absolute;left:-1px;top:14px;width:4px;height:20px;border-radius:0 4px 4px 0;background:var(--bad)}
+  .al-tipo{font-size:10.5px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:#a3a9b3;margin-bottom:3px}
+  .al-l1,.al-l2{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .al-cli{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14.5px}
+  .al-cli b{font-weight:900}.al-cli span{font-size:12.5px;font-weight:700;color:var(--mut)}
+  .al-m{flex-shrink:0;font-size:15px;font-weight:900;color:var(--bad);font-variant-numeric:tabular-nums}
+  .al-m.gris{color:var(--ink)}
+  .al-l2{margin-top:3px;font-size:12.5px;font-weight:600;color:#5b6472}
+  .al-l2>span:first-child{min-width:0}
+  .al-q{flex-shrink:0;font-size:11.5px;font-weight:700;color:var(--mut);white-space:nowrap}
+  .al-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:70px 20px;text-align:center;color:var(--mut);font-size:13.5px;font-weight:600}
+  .al-vacio b{font-size:17px;font-weight:900;color:var(--ink)}
   .pe-aviso{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;color:var(--ink)}
   .pe-aviso:active{background:#f4f3ef}
   .pe-aviso-ico{width:44px;height:44px;border-radius:13px;background:#fdf0e1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -534,6 +561,7 @@
 <div id="avisoVersion" onclick="recargarApp()" style="display:none;background:#e8902a;color:#fff;text-align:center;font-size:13px;font-weight:800;padding:9px 12px;cursor:pointer">Hay una versión nueva de la app · <u>Tocá para actualizar</u></div>
 <header>
   <div class="htop"><h1>Control de Cobro <span id="syncDot" class="dot ok" title="guardado"></span> <button id="btnActualizar" onclick="actualizarYa()" title="Actualizar" style="background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button> <span class="solo-maestro" style="position:relative;display:inline-block;vertical-align:middle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#1c2433" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><input type="date" id="fechaHist" max="" onchange="verDia(this.value)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer"></span></h1><div style="display:flex;gap:7px;align-items:center">
+    <button id="btnAL" class="pebell al-bell solo-maestro" onclick="alAbrir()" aria-label="Alertas"><span id="alIco"></span><span class="pebd" id="alBadge"></span></button>
     <button id="btnPE" class="pebell" onclick="peAbrir()" aria-label="Por entregar"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5Z" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><span class="pebd" id="peBadge"></span></button>
     <button class="rep solo-maestro" style="display:flex;align-items:center;gap:6px" onclick="abrirAuditoria()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 18V10M12 18V5M18 18v-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>Reporte</button>
   </div></div>
@@ -592,6 +620,7 @@ function cerrarSesion(){
 function aplicarPermisos(){
   const mostrar=esMaestro();
   document.querySelectorAll('.solo-maestro').forEach(el=>{el.style.display=mostrar?'':'none';});
+  if(mostrar)try{alCargar();}catch(e){}
 }
 
 // ===== Conexión a la nube (Supabase) =====
@@ -2758,6 +2787,108 @@ async function peReintentarEnviadas(){
   }
 }
 
+// ===== Alertas de Facturación rápida (1/11/2026) — solo el maestro =====
+// La PC sube a la tabla 'alertas' lo importante (cambio de vendedor, más de Q2, descuento en 1 bandeja o menos,
+// más del 5%, precio bajado después de facturar). Campanita gris si no hay nada nuevo, roja con número si hay.
+// Al abrirla se marcan vistas (también se apaga en la PC).
+const AL={filas:[],nuevas:new Set(),abierto:false,ok:false};
+const AL_TIT={vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar'};
+const ICO_AL='<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 7v4.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="13.9" r="1.15" fill="currentColor"/></svg>';
+function alDesde(){const d=new Date();d.setDate(d.getDate()-6);return d.toLocaleDateString('en-CA');}
+function alQ(n){return 'Q'+Math.abs(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+async function alCargar(){
+  try{if(!esMaestro()||typeof AL==='undefined')return;}catch(e){return;}
+  try{
+    const r=await sb.from('alertas').select('clave,tipo,fecha,hora,nro,cliente,que,quien,monto,visto_en').gte('fecha',alDesde()).eq('vigente',true).order('fecha',{ascending:false}).order('hora',{ascending:false});
+    if(r.error)throw r.error;
+    AL.filas=r.data||[];AL.ok=true;
+  }catch(e){AL.ok=false;}
+  alRenderCampana();
+  if(AL.abierto)alRenderPanel();
+}
+function alRenderCampana(){
+  const b=document.getElementById('btnAL'),bd=document.getElementById('alBadge');if(!b||!bd)return;
+  const n=AL.filas.filter(f=>!f.visto_en).length;
+  bd.textContent=n>99?'99+':String(n);bd.style.display=n?'flex':'none';
+  b.classList.toggle('hay',n>0);
+  b.setAttribute('aria-label',n?n+' alertas nuevas':'Alertas');
+}
+async function alAbrir(){
+  if(!esMaestro())return;
+  AL.abierto=true;AL.nuevas=new Set(AL.filas.filter(f=>!f.visto_en).map(f=>f.clave));
+  let p=document.getElementById('alPanel');
+  if(!p){p=document.createElement('div');p.id='alPanel';document.body.appendChild(p);}
+  p.className='al-ov open';document.body.classList.add('pe-bloqueo');
+  alRenderPanel();
+  await alCargar();
+  // Ya las vio: se marcan vistas (la campanita se apaga aquí y en la PC)
+  const ks=AL.filas.filter(f=>!f.visto_en).map(f=>f.clave);
+  ks.forEach(k=>AL.nuevas.add(k));
+  if(ks.length){
+    try{const r=await sb.from('alertas').update({visto_en:new Date().toISOString(),visto_por:sesion?sesion.nombre:'?'}).in('clave',ks).is('visto_en',null);
+      if(!r.error){const ah=new Date().toISOString();AL.filas.forEach(f=>{if(ks.includes(f.clave)&&!f.visto_en)f.visto_en=ah;});}}catch(e){}
+    alRenderCampana();alRenderPanel();
+  }
+}
+function alCerrar(){
+  AL.abierto=false;const p=document.getElementById('alPanel');if(p){p.className='al-ov';p.innerHTML='';}
+  if(!(PE&&PE.abierto))document.body.classList.remove('pe-bloqueo');
+  AL.nuevas=new Set();
+}
+function alDia(f){const hoy=new Date().toLocaleDateString('en-CA'),d=new Date();d.setDate(d.getDate()-1);
+  return f===hoy?'Hoy':f===d.toLocaleDateString('en-CA')?'Ayer':f.slice(8,10)+'/'+f.slice(5,7);}
+function alRenderPanel(){
+  const p=document.getElementById('alPanel');if(!p||!AL.abierto)return;
+  const fs=AL.filas,perd=fs.filter(f=>f.tipo!=='vendedor').reduce((s,f)=>s+Number(f.monto||0),0);
+  let cuerpo='';
+  if(!AL.ok&&!fs.length)cuerpo='<div class="al-vacio"><b>No se pudo leer</b><span>Revisá el internet o que la PC tenga Facturación abierta.</span></div>';
+  else if(!fs.length)cuerpo=`<div class="al-vacio"><svg width="44" height="44" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#2fae74" stroke-width="2"/><path d="M8 12.5l2.7 2.7L16 10" stroke="#2fae74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Sin alertas</b><span>No hubo nada que te afecte.</span></div>`;
+  else{
+    const dias=[...new Set(fs.map(f=>f.fecha))];
+    cuerpo=dias.map(d=>{const ls=fs.filter(f=>f.fecha===d),m=ls.filter(f=>f.tipo!=='vendedor').reduce((s,f)=>s+Number(f.monto||0),0);
+      return `<div class="al-dia"><span>${alDia(d)}</span><span>${ls.length} ${ls.length===1?'alerta':'alertas'}${m>0.004?` · <b>−${alQ(m)}</b>`:''}</span></div>`+ls.map(f=>`
+      <div class="al-fila${AL.nuevas.has(f.clave)?' nueva':''}">
+        <div class="al-tipo">${esc(AL_TIT[f.tipo]||f.tipo)}</div>
+        <div class="al-l1"><span class="al-cli"><b>${esc(f.cliente||'')}</b> <span>· nota ${f.nro}</span></span><span class="al-m${f.tipo==='vendedor'?' gris':''}">${f.tipo==='vendedor'?alQ(f.monto):'−'+alQ(f.monto)}</span></div>
+        <div class="al-l2"><span>${esc(f.que||'')}</span><span class="al-q">${esc(f.quien||'—')} · ${esc(f.hora||'')}</span></div>
+      </div>`).join('');}).join('');
+  }
+  p.innerHTML=`<div class="al-cab"><div><h2>Alertas</h2><div class="al-sub">${fs.length?`${fs.length} en 7 días${perd>0.004?` · −${alQ(perd)}`:''}`:'Últimos 7 días'}</div></div>
+    <div class="pe-tbtns">${fs.length?`<button class="pe-consb ver" onclick="alPdf()">PDF</button>`:''}<button class="pe-cerrar" onclick="alCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
+    <div class="al-lista">${cuerpo}</div>`;
+}
+async function alPdf(){
+  const fs=AL.filas;if(!fs.length)return;
+  try{await csCargarPdf();}catch(e){toast('No se pudo cargar el PDF. Revisá internet',true);return;}
+  const doc=new jspdf.jsPDF({unit:'pt',format:'letter'});const W=612,L=40,R=572,BOT=745;let y=0;
+  const T=(s,x,yy,o={})=>{doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9);const c=o.c||[30,30,30];doc.setTextColor(c[0],c[1],c[2]);doc.text(String(s),x,yy,o.r?{align:'right'}:undefined);};
+  const corta=(s,w,sz,b)=>{doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz);let t=String(s);while(t.length>3&&doc.getTextWidth(t)>w)t=t.slice(0,-1);return t===String(s)?t:t.trimEnd()+'…';};
+  const gris=[120,120,120],rojo=[180,40,40],perd=fs.filter(f=>f.tipo!=='vendedor').reduce((s,f)=>s+Number(f.monto||0),0);
+  const fl=f=>f.slice(8,10)+'/'+f.slice(5,7)+'/'+f.slice(0,4),dias=[...new Set(fs.map(f=>f.fecha))];
+  const rango=dias.length===1?fl(dias[0]):`${fl(dias[dias.length-1])} al ${fl(dias[0])}`;
+  const cab=()=>{y=46;T('Distribuidora Hernández',L,y,{b:1,s:13});T(`Alertas · ${rango}`,L,y+15,{s:10,c:gris});
+    T(`${fs.length} ${fs.length===1?'alerta':'alertas'}`,R,y,{b:1,s:11,r:1});if(perd>0.004)T('-'+alQ(perd),R,y+15,{b:1,s:10,c:rojo,r:1});
+    doc.setDrawColor(210);doc.setLineWidth(.6);doc.line(L,y+26,R,y+26);y+=50;};
+  cab();
+  for(const d of dias){
+    for(const t of Object.keys(AL_TIT)){const ls=fs.filter(f=>f.fecha===d&&f.tipo===t);if(!ls.length)continue;
+      if(y+40>BOT){doc.addPage();cab();}
+      T(`${dias.length>1?fl(d)+' · ':''}${AL_TIT[t].toUpperCase()} · ${ls.length}`,L,y,{b:1,s:8,c:gris});y+=14;
+      for(const f of ls){if(y+26>BOT){doc.addPage();cab();}
+        T(String(f.nro),L,y,{b:1});T(corta(f.cliente||'',120,9,1),L+40,y,{b:1});
+        T(corta(String(f.que||'').replace(/→/g,'->').replace(/−/g,'-'),222,8.6),L+168,y,{s:8.6});
+        T(corta(`${f.quien||'-'} · ${f.hora||''}`,70,8.2),R-64,y,{s:8.2,c:gris,r:1});
+        T(f.tipo==='vendedor'?alQ(f.monto):'-'+alQ(f.monto),R,y,{b:1,r:1,c:f.tipo==='vendedor'?[30,30,30]:rojo});
+        doc.setDrawColor(235);doc.setLineWidth(.4);doc.line(L,y+7,R,y+7);y+=19;}
+      y+=10;}}
+  const np=doc.getNumberOfPages();
+  for(let i=1;i<=np;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(150);doc.text(`${i} / ${np}`,W/2,772,{align:'center'});}
+  const nombre=`Alertas ${dias[dias.length-1]}${dias.length>1?' a '+dias[0]:''}.pdf`,blob=doc.output('blob');
+  try{const file=new File([blob],nombre,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Alertas'});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+  doc.save(nombre);
+}
+
 function peRenderCampana(){
   const b=document.getElementById('btnPE'),bd=document.getElementById('peBadge');if(!b||!bd)return;
   b.style.display=modoLectura?'none':'';
@@ -3369,7 +3500,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-01.1';
+const VERSION='2026-11-01.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});
@@ -3412,6 +3543,11 @@ async function iniciar(){
   // Por entregar: revisa la nube cada 10 s (solo con la app a la vista)
   peCargar();
   setInterval(()=>{if(document.visibilityState==='visible')peCargar();},10000);
+  // Alertas de Facturación rápida (solo maestro): cada 30 s con la app a la vista
+  {const ic=document.getElementById('alIco');if(ic)ic.outerHTML=ICO_AL;}
+  alCargar();
+  setInterval(()=>{if(document.visibilityState==='visible')alCargar();},30000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')alCargar();});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')peCargar();});
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',ajustarBarraTeclado);

@@ -299,6 +299,10 @@
   .al-aviso .pe-aviso-ico{background:#fdeeea}
   .al-aviso .al-av-sub{font-size:12.5px;font-weight:700;color:#868d99}
   .al-aviso .al-av-sub b{color:var(--bad);font-weight:900}
+  .al-aviso.visto{box-shadow:none;background:#fbfaf8}
+  .al-aviso.visto .pe-aviso-ico{background:#f1f0ec;opacity:.75;filter:grayscale(1)}
+  .al-aviso.visto .pe-aviso-tx b{color:#8a909b;font-weight:800}
+  .al-aviso.visto .al-av-sub,.al-aviso.visto .al-av-sub b{color:#a3a9b3}
   .al-ov{display:none}
   .al-ov.open{display:flex;flex-direction:column;position:fixed;inset:0;z-index:400;background:var(--bg);animation:pop .18s}
   .al-cab{flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;background:var(--card);border-bottom:1px solid var(--line);padding:max(16px,env(safe-area-inset-top)) 16px 14px}
@@ -2807,17 +2811,21 @@ async function alCargar(){
 function alNuevas(){return AL.filas.filter(f=>!f.visto_en);}
 // Se vuelve a pintar la lista solo si cambió cuántas hay nuevas (para que la tarjeta aparezca o se vaya)
 function alRenderCampana(){
-  const n=alNuevas().length;if(n===AL.n)return;
+  const hoy=new Date().toLocaleDateString('en-CA'),n=alNuevas().length+'|'+AL.filas.filter(f=>f.fecha===hoy).length;if(n===AL.n)return;
   try{if(vistaDetalle||(PE&&PE.abierto)||AL.abierto||(typeof escribiendoAhora==='function'&&escribiendoAhora()))return;AL.n=n;renderZona();}catch(e){}
 }
+// Sin nada hoy: no aparece nada. Con algo nuevo: tarjeta activa. Ya visto: la tarjeta se queda apagada (opaca) para volver a verlo.
 function alTarjeta(){
   try{if(modoLectura||!esMaestro())return '';}catch(e){return '';}
-  const ns=alNuevas();if(!ns.length)return '';
-  const hoy=new Date().toLocaleDateString('en-CA'),m=ns.filter(f=>f.tipo!=='vendedor').reduce((s,f)=>s+Number(f.monto||0),0);
-  const cuando=ns.every(f=>f.fecha===hoy)?'Hoy':'Estos días';
-  return `<button class="pe-aviso al-aviso" onclick="alAbrir()">
+  const hoy=new Date().toLocaleDateString('en-CA'),ns=alNuevas(),hs=AL.filas.filter(f=>f.fecha===hoy);
+  const suma=ls=>ls.filter(f=>f.tipo!=='vendedor').reduce((s,f)=>s+Number(f.monto||0),0);
+  let cls='',tit,sub;
+  if(ns.length){const m=suma(ns);tit=`${ns.length} ${ns.length===1?'cambio':'cambios'} para revisar`;sub=`${ns.every(f=>f.fecha===hoy)?'Hoy':'Estos días'}${m>0.004?` · <b>−${alQ(m)}</b>`:''}`;}
+  else if(hs.length){const m=suma(hs);cls=' visto';tit=`${hs.length} ${hs.length===1?'cambio':'cambios'} hoy · revisado${hs.length===1?'':'s'}`;sub=`Tocá para verlos otra vez${m>0.004?` · −${alQ(m)}`:''}`;}
+  else return '';
+  return `<button class="pe-aviso al-aviso${cls}" onclick="alAbrir()">
     <span class="pe-aviso-ico">${ICO_AL}</span>
-    <span class="pe-aviso-tx"><b>${ns.length} ${ns.length===1?'cambio':'cambios'} para revisar</b><span class="al-av-sub">${cuando}${m>0.004?` · <b>−${alQ(m)}</b>`:''}</span></span>
+    <span class="pe-aviso-tx"><b>${tit}</b><span class="al-av-sub">${sub}</span></span>
     <span class="pe-aviso-ir">›</span></button>`;
 }
 async function alAbrir(){
@@ -3507,7 +3515,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-01.3';
+const VERSION='2026-11-01.4';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

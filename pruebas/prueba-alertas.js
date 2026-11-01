@@ -66,11 +66,16 @@ const ALERTAS=[
   await p.screenshot({path:'/tmp/al-panel.png'}).catch(()=>{});
   await p.click('#alPanel .pe-cerrar');await p.waitForTimeout(200);
   ok('Cierra el panel',!(await p.isVisible('#alPanel .al-lista')));
-  ok('Ya vistas: la tarjeta desaparece (no queda nada)',!(await p.$('.al-aviso')));
+  await p.waitForTimeout(100);
+  ok('Ya vistas: la tarjeta se queda apagada ("3 cambios hoy · revisados")',(await p.$('.al-aviso.visto'))&&(await p.textContent('.al-aviso')).includes('3 cambios hoy · revisados'));
+  await p.screenshot({path:'/tmp/al-visto.png',clip:{x:0,y:180,width:390,height:110}}).catch(()=>{});
+  // Un día sin alertas: no aparece nada
+  const sinNada=await p.evaluate(()=>{const g=AL.filas;AL.filas=[];AL.n=-1;alRenderCampana();const r=!document.querySelector('.al-aviso');AL.filas=g;AL.n=-1;alRenderCampana();return r;});
+  ok('Sin alertas hoy: no aparece nada',sinNada);
   // Llega una nueva
   await p.evaluate(h=>{window.__DB.alertas.push({clave:'p|9|z',tipo:'precio',fecha:h,hora:'15:00',nro:9,cliente:'Nueva',que:'pepsi · 1 × Q45.00 → Q40.00',quien:'caja',monto:5,vigente:true,visto_en:null});return alCargar();},hoy);
   await p.waitForTimeout(200);
-  ok('Alerta nueva: vuelve la tarjeta con 1 cambio',(await p.textContent('.al-aviso').catch(()=>'')).includes('1 cambio para revisar'));
+  ok('Alerta nueva: vuelve la tarjeta con 1 cambio',(await p.textContent('.al-aviso').catch(()=>'')).includes('1 cambio para revisar')&&!(await p.$('.al-aviso.visto')));
   // PDF
   await p.click('.al-aviso');await p.waitForTimeout(400);
   const pdfOk=await p.evaluate(async()=>{let n=null;await csCargarPdf();if(!window.jspdf)return 'sin jspdf';const O=window.jspdf.jsPDF;window.jspdf.jsPDF=function(...a){const d=new O(...a);d.save=x=>{n=x;};return d;};navigator.canShare=null;await alPdf();window.jspdf.jsPDF=O;return n;}).catch(e=>'err '+e.message);

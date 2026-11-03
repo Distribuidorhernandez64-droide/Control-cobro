@@ -341,7 +341,7 @@
   .al-l2>span:first-child{min-width:0}
   .al-q{flex-shrink:0;font-size:11.5px;font-weight:700;color:var(--mut);white-space:nowrap}
   .al-fila.al-tap{cursor:pointer}.al-fila.al-tap:active{background:#f7f6f3}
-  .al-ver{color:var(--green);font-weight:800}
+  .al-ojo{vertical-align:-3px;margin-left:3px;color:#9aa1ad}
   .al-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:70px 20px;text-align:center;color:var(--mut);font-size:13.5px;font-weight:600}
   .al-vacio b{font-size:17px;font-weight:900;color:var(--ink)}
   .pe-aviso{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;color:var(--ink)}
@@ -2911,7 +2911,7 @@ function alRenderPanel(){
       <div class="al-fila${AL.nuevas.has(f.clave)?' nueva':''}${alTieneDet(f)?' al-tap':''}"${alTieneDet(f)?` onclick="alVerDet('${esc(f.clave).replace(/'/g,'')}')"`:''}>
         <div class="al-tipo">${esc(AL_TIT[f.tipo]||f.tipo)}</div>
         <div class="al-l1"><span class="al-cli"><b>${esc(f.cliente||'')}</b> <span>· ${alDoc(f)} ${f.nro}</span></span><span class="al-m${alGris(f)?' gris':''}">${alGris(f)?alQ(f.monto):'−'+alQ(f.monto)}</span></div>
-        <div class="al-l2"><span>${esc(f.que||'')}${alTieneDet(f)?' · <b class="al-ver">ver productos</b>':''}</span><span class="al-q">${esc(alQuien(f))}</span></div>
+        <div class="al-l2"><span>${esc(f.que||'')}${alTieneDet(f)?' '+`<svg class='al-ojo' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-label='ver productos'><path d='M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z'/><circle cx='12' cy='12' r='2.8'/></svg>`:''}</span><span class="al-q">${esc(alQuien(f))}</span></div>
       </div>`).join('');}).join('');
   }
   p.innerHTML=`<div class="al-cab"><div><h2>Cambios</h2><div class="al-sub">${fs.length?`${fs.length} en 7 días${perd>0.004?` · −${alQ(perd)}`:''}`:'Últimos 7 días'}</div></div>
@@ -3691,7 +3691,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-02.4';
+const VERSION='2026-11-02.5';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

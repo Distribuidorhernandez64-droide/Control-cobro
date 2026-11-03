@@ -80,7 +80,7 @@ const ALERTAS=[
   await p.evaluate(h=>{window.__DB.alertas.push({clave:'a|factura1|22300',tipo:'anulada',fecha:h,hora:'16:00',nro:22300,cliente:'NANCY SAJAR',que:'Anularon la nota de entrega',quien:'caja',monto:164,vigente:true,visto_en:null,
     detalle:[{c:'01',d:'----coca-cola 12onz 24ud',q:2,p:82,x:0}]});return alCargar();},hoy);
   await p.click('#btnAL');await p.waitForTimeout(400);
-  ok('La anulación dice "ver productos"',(await p.textContent('#alPanel')).includes('ver productos'));
+  ok('La anulación lleva el ojito',!!(await p.$('#alPanel .al-ojo')));
   await p.click('.al-fila.al-tap');await p.waitForTimeout(400);
   const vt=await p.textContent('#alVista').catch(()=>'');
   ok('Muestra los productos de lo anulado',vt.includes('NANCY SAJAR')&&vt.includes('coca-cola 12onz')&&vt.includes('anulada')&&vt.includes('Q164.00'));

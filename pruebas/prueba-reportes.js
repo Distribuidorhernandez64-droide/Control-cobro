@@ -67,12 +67,23 @@ window.supabase={createClient:()=>({
   ok('Si la PC no contesta, lo dice',(await p.textContent('#rpEst')).includes('La PC no respondió'));
   await p.evaluate(()=>{});
   ok('Sin errores de la página',errs.length===0);if(errs.length)console.log(errs);
-  // Celular: Enviar texto del consolidado usa compartir
+  // Consolidado: "Copiar texto" copia (no abre compartir)
   const c=await abrir('cesar','19881987',true);
-  const comp=await c.p.evaluate(async()=>{let dado=null;navigator.share=async o=>{dado=o;};peConsTexto=()=>'*CONSOLIDADO*\n3  coca';await peConsCopiar();return [csPuedeCompartir(),dado&&dado.text];});
-  ok('Celular: "Enviar texto" abre compartir con el texto',comp[0]===true&&comp[1]==='*CONSOLIDADO*\n3  coca');
-  const pc=await p.evaluate(()=>csPuedeCompartir());
-  ok('PC: sigue siendo "Copiar texto"',pc===false);
+  const comp=await c.p.evaluate(async()=>{let dado=null,copiado=null;navigator.share=async o=>{dado=o;};
+    Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{copiado=t;}},configurable:true});
+    peConsTexto=()=>'*CONSOLIDADO*\n3  coca';await peConsCopiar();return [dado,copiado];});
+  ok('Consolidado: "Copiar texto" copia el texto y no abre compartir',comp[0]===null&&comp[1]==='*CONSOLIDADO*\n3  coca');
+  // Ruta en curso: mantener presionada la nota → lo que lleva
+  await c.p.evaluate(()=>{window.__DB.pendientes_entrega=[{nro:22246,estado:'enviada',cliente:'VICTORIA VARGAS',vendedor:'silvia (pueblo)',hora:'14:40',total:240,total_enviado:240,rutero:'Yesi',
+    detalle:[{c:'01',d:'----coca-cola 12onz 24ud',q:0.5,p:82,x:0,m:''},{c:'336',d:'----pepsi retornable 2lt 8ud',q:2,p:74,x:4,m:'2 naranja'}]}];});
+  const html=await c.p.evaluate(()=>renderPedidos({id:1,rutero:'Yesi',entradaLista:true,horaSalida:'14:52',pedidos:[{id:9,nombre:'VICTORIA VARGAS',total:240,estado:'pagado',fac:22246,facEnv:true}]},false));
+  ok('La nota en ruta se puede mantener presionada',/rtLPIni\(event,22246,'Yesi'\)/.test(html));
+  await c.p.evaluate(()=>peVerRuta(22246,'Yesi'));await c.p.waitForTimeout(500);
+  const vt=await c.p.textContent('#peVista').catch(()=>'');
+  ok('Muestra lo que lleva: productos, cantidades y total',vt.includes('VICTORIA VARGAS')&&vt.includes('pepsi retornable')&&vt.includes('En ruta · Yesi')&&vt.includes('Q240.00')&&!vt.includes('Escoger para ruta'));
+  await c.p.screenshot({path:'/tmp/rt-vista.png'}).catch(()=>{});
+  await c.p.evaluate(()=>peVerCerrar());await c.p.waitForTimeout(300);
+  ok('Se cierra',!(await c.p.$('#peVista.open')));
   // Anotador
   const usuarios=await p.evaluate(()=>USUARIOS.filter(u=>u.rol!=='maestro').map(u=>[u.usuario,u.pass]));
   const q=await abrir(usuarios[0][0],usuarios[0][1]);

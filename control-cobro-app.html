@@ -313,6 +313,7 @@
   .rp-card .pv-btn{margin-top:2px}.rp-card .pv-btn:disabled{opacity:.6}
   .rp-est{margin:14px 4px;font-size:13px;font-weight:700;color:var(--mut);text-align:center;min-height:18px}
   .rp-est.mal{color:var(--bad)}
+  .ped.lp{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .al-ov{display:none}
   .al-ov.open{display:flex;flex-direction:column;position:fixed;inset:0;z-index:400;background:var(--bg);animation:pop .18s}
   .al-cab{flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;background:var(--card);border-bottom:1px solid var(--line);padding:max(16px,env(safe-area-inset-top)) 16px 14px}
@@ -1578,7 +1579,7 @@ function renderPedidos(v,editable){
     else montoShow=q(ef);
     const btnX=puedeBorrar?`<button onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})" title="Quitar" style="margin-left:8px;width:30px;height:30px;border:none;border-radius:8px;background:#fdeede;color:#d4583e;font-size:17px;font-weight:900;flex-shrink:0;cursor:pointer">×</button>`:'';
     const swipeAttrs = puedeBorrar?`data-swipe="1" data-vid="${v.id}" data-pid="${p.id}"`:'';
-    let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}" ${swipeAttrs} ${editable?`onclick="abrirPed(${v.id},${p.id})"`:noEnt?`onclick="peNoEntMenu(${v.id},${p.id})"`:''}>
+    let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}${p.fac?' lp':''}" ${swipeAttrs} ${p.fac?`onpointerdown="rtLPIni(event,${Number(p.fac)},'${esc(String(v.rutero||'')).replace(/'/g,'')}')" onpointerup="rtLPFin()" onpointerleave="rtLPFin()" onpointercancel="rtLPFin()" onpointermove="rtLPMueve(event)" oncontextmenu="return false"`:''} ${editable?`onclick="if(rtLPFue())return;abrirPed(${v.id},${p.id})"`:noEnt?`onclick="if(rtLPFue())return;peNoEntMenu(${v.id},${p.id})"`:''}>
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:38px;height:38px;border-radius:50%;background:#eef0f3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="#9aa1ad" stroke-width="1.8"/><path d="M5 19c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5" stroke="#9aa1ad" stroke-width="1.8" stroke-linecap="round"/></svg></span>
         <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${av.tags}<div class="sub">${pedidoSub(p)}</div>${av.linea}</div>
@@ -2632,7 +2633,7 @@ function peRenderCons(hoja){
     <div class="cs-solo"><span>Solo cajas (con guiones)</span><button class="cs-sw${PE.consSolo?' on':''}" onclick="peConsSolo()" aria-label="Solo cajas" aria-pressed="${!!PE.consSolo}"></button></div>
     <div class="pv-lista cs-lista">${cuerpo}</div>
     <div class="pv-pie">${sin.length?`<div class="cs-av">Sin productos todavía: ${sin.map(n=>n.nro).join(', ')} (no se cuentan).</div>`:''}
-      <div class="cs-btns"><button class="pv-btn quitar" id="csTxt" onclick="peConsCopiar()">${csPuedeCompartir()?'Enviar texto':'Copiar texto'}</button><button class="pv-btn" onclick="peConsPdf()">PDF</button></div></div>`;
+      <div class="cs-btns"><button class="pv-btn quitar" id="csTxt" onclick="peConsCopiar()">Copiar texto</button><button class="pv-btn" onclick="peConsPdf()">PDF</button></div></div>`;
 }
 function peConsTexto(){
   const notas=peConsNotas().filter(n=>Array.isArray(n.detalle)),{principal,bonif}=csArmar(notas,PE.consSolo),ah=new Date(),out=[];
@@ -2643,8 +2644,7 @@ function peConsTexto(){
   if(bonif.length){out.push('','*BONIFICACIONES*');bonif.forEach(fila);}
   return out.join('\n');
 }
-// En el celular: "Enviar texto" abre el menú de compartir (WhatsApp directo). En la PC: copia al portapapeles.
-const csPuedeCompartir=()=>!!(navigator.share&&(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))));
+// Copiar texto: portapapeles; si el teléfono no lo deja, respaldo que también sirve en iPhone.
 function csCopiarViejo(t){
   // Respaldo (iPhone incluido): textarea visible fuera de pantalla, seleccionado con setSelectionRange
   const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.contentEditable='true';
@@ -2654,12 +2654,9 @@ function csCopiarViejo(t){
 }
 async function peConsCopiar(){
   const t=peConsTexto(),b=document.getElementById('csTxt');
-  if(csPuedeCompartir()){
-    try{await navigator.share({text:t});return;}catch(e){if(e&&e.name==='AbortError')return;}
-  }
   let ok=false;
   try{await navigator.clipboard.writeText(t);ok=true;}catch(e){ok=csCopiarViejo(t);}
-  if(ok&&b){b.textContent='✓ Copiado';setTimeout(()=>{if(b.isConnected)b.textContent=csPuedeCompartir()?'Enviar texto':'Copiar texto';},2000);}else if(!ok)toast('No se pudo copiar',true);
+  if(ok&&b){b.textContent='✓ Copiado';setTimeout(()=>{if(b.isConnected)b.textContent='Copiar texto';},2000);}else if(!ok)toast('No se pudo copiar',true);
 }
 // PDF: carta, márgenes como el Recuento (izq 4.5, der 5.5, arriba 1, abajo 6.5 cm), igual que Facturación rápida
 let _csPdfLib=null;
@@ -2815,7 +2812,7 @@ async function peReintentarEnviadas(){
 // con punto rojo y número si hay algo sin ver; en gris suave si ya se vio hoy; no aparece si hoy no hubo nada.
 // Al abrirla se marcan vistas (también en la PC).
 const AL={filas:[],nuevas:new Set(),abierto:false,ok:false};
-const AL_TIT={anulada:'Anulación',vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar',quitado:'Producto eliminado después de facturar'};
+const AL_TIT={anulada:'Anulación',vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar'};
 // En anulaciones y cambio de vendedor el monto es el total del documento (no lo que se dejó de cobrar)
 const alGris=f=>f.tipo==='vendedor'||f.tipo==='anulada';
 const alDoc=f=>String(f.clave||'').startsWith('a|factura|')?'ticket':'nota';
@@ -3130,8 +3127,22 @@ function peVer(nro){
   peRenderVista();
   requestAnimationFrame(()=>el.classList.add('open'));
 }
+// Nota de Monica dentro de una ruta: mantener presionada → lo que lleva (productos tal como salieron)
+let _rtLP=null,_rtLPfue=false;
+function rtLPIni(e,nro,rutero){if(!nro)return;_rtLPfue=false;if(_rtLP)clearTimeout(_rtLP.t);
+  _rtLP={x:e.clientX,y:e.clientY,t:setTimeout(()=>{_rtLP=null;_rtLPfue=true;try{navigator.vibrate&&navigator.vibrate(30);}catch(e){}peVerRuta(nro,rutero);},520)};}
+function rtLPMueve(e){if(_rtLP&&Math.hypot(e.clientX-_rtLP.x,e.clientY-_rtLP.y)>10){clearTimeout(_rtLP.t);_rtLP=null;}}
+function rtLPFin(){if(_rtLP){clearTimeout(_rtLP.t);_rtLP=null;}}
+function rtLPFue(){if(_rtLPfue){_rtLPfue=false;return true;}return false;}
+async function peVerRuta(nro,rutero){
+  PE.rutaFila={nro,cargando:true,rutero};peVer(nro);
+  try{const r=await sb.from('pendientes_entrega').select('*').eq('nro',nro).maybeSingle();
+    PE.rutaFila=r.data?Object.assign({},r.data,{rutaDe:rutero||r.data.rutero}):{nro,noHay:true};}
+  catch(e){PE.rutaFila={nro,error:true};}
+  if(PE.vista===nro)peRenderVista();
+}
 function peVerCerrar(){
-  PE.vista=null;const el=document.getElementById('peVista');if(!el)return;
+  PE.rutaFila=null;PE.vista=null;const el=document.getElementById('peVista');if(!el)return;
   el.classList.remove('open');setTimeout(()=>{if(!PE.vista&&el.parentNode)el.remove();},220);
 }
 
@@ -3148,7 +3159,7 @@ function _pgFinCancel(){_pgFin(true);}
 document.addEventListener('touchstart',function(e){
   if(_pg)_pgSoltar(_pg);
   _pg=null;
-  if(!PE.abierto||e.touches.length!==1)return;
+  if(!(PE.abierto||PE.vista)||e.touches.length!==1)return;
   const t=e.touches[0],base={x:t.clientX,y:t.clientY,d:0,on:false,muerto:false,pd:0,pt:0,v:0};
   if(PE.vista){
     const pv=document.getElementById('peVista'),hoja=pv&&pv.querySelector('.pv-hoja');
@@ -3217,12 +3228,12 @@ function peRenderVista(){
   PE.vistaPend=false;
   const hoja=el.querySelector('.pv-hoja');if(!hoja)return;
   if(PE.vista==='cons'){hoja.classList.add('alta');return peRenderCons(hoja);}
-  const nro=PE.vista, f=PE.filas.find(x=>x.nro===nro);
+  const nro=PE.vista, rf=PE.rutaFila&&PE.rutaFila.nro===nro?PE.rutaFila:null, f=rf?(rf.cliente!==undefined?rf:null):PE.filas.find(x=>x.nro===nro);
   const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   if(!f){hoja.innerHTML=`<div class="pv-asa"></div><div class="pv-cab"><div class="pv-tit"><b>Nota ${nro}</b></div>${cerrar}</div>
-    <div class="pv-vacio">Esta nota ya no está pendiente (la tomaron para una ruta, la quitaron o la anularon en Monica).</div>`;return;}
+    <div class="pv-vacio">${rf?(rf.cargando?'Cargando productos…':rf.error?'No se pudo leer. Revisá el internet.':'Esta nota no tiene productos guardados.'):'Esta nota ya no está pendiente (la tomaron para una ruta, la quitaron o la anularon en Monica).'}</div>`;return;}
   const det=Array.isArray(f.detalle)?f.detalle:null;
-  const em=(peEsManana(f)||f.regresada)?null:peEsperaMin(f), env=peEnvTexto(f.envases);
+  const em=(rf||peEsManana(f)||f.regresada)?null:peEsperaMin(f), env=peEnvTexto(f.envases);
   const col=peColorVend(f.vendedor);
   let suma=0;
   const filas=(det||[]).map(l=>{
@@ -3240,6 +3251,7 @@ function peRenderVista(){
       <span class="pe-av" style="background:${col}">${esc((peNombreVend(f.vendedor)[0]||'?').toUpperCase())}</span>
       <div class="pv-tit"><b>${esc(f.cliente||'Sin nombre')}</b><span>Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''} · ${esc(peNombreVend(f.vendedor))}</span></div>${cerrar}</div>
     <div class="pv-chips">
+      ${rf?`<span class="pv-chip">${ICO_CAMION_S} En ruta${rf.rutaDe?' · '+esc(rf.rutaDe):''}</span>`:''}
       ${f.codigo_cliente?`<span class="pv-chip">Cód. ${esc(f.codigo_cliente)}</span>`:''}
       ${f.regresada?`<span class="pv-chip reg">${ICO_REG} Regresó${f.regreso_rutero?' · '+esc(f.regreso_rutero):''}</span>`:''}
       ${em===null?(peEsManana(f)?`<span class="pv-chip">${ICO_LUNA} Para mañana</span>`:''):`<span class="pv-chip${em>=60?' roja':''}">${ICO_RELOJ} ${peEsperaTxt(em)} en espera</span>`}
@@ -3249,7 +3261,7 @@ function peRenderVista(){
       :(det.length?filas:'<div class="pv-vacio">Esta nota no tiene productos en Monica.</div>')}</div>
     <div class="pv-pie">
       ${dif&&Math.abs(dif)>=0.01?`<div class="pv-fila"><span>Suma de productos</span><b>${q(suma)}</b></div><div class="pv-fila mut"><span>Diferencia con el total de Monica</span><b>${dif<0?'−':''}${q(Math.abs(dif))}</b></div>`:''}
-      <div class="pv-tot"><span>${det?det.length+' producto'+(det.length===1?'':'s'):'Total'}</span><b>${q(f.total)}</b></div>
+      <div class="pv-tot"><span>${det?det.length+' producto'+(det.length===1?'':'s'):'Total'}</span><b>${q(rf&&f.total_enviado!=null?f.total_enviado:f.total)}</b></div>
       ${puedeSel?`<button class="pv-btn${enSel?' quitar':''}" onclick="peVerEscoger(${nro})">${enSel?'Quitar de la selección':'Escoger para ruta'}</button>`:''}
     </div>`;
 }
@@ -3644,7 +3656,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-02.1';
+const VERSION='2026-11-02.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

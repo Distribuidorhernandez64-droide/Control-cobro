@@ -80,11 +80,23 @@ const ALERTAS=[
   await p.evaluate(h=>{window.__DB.alertas.push({clave:'a|factura1|22300',tipo:'anulada',fecha:h,hora:'16:00',nro:22300,cliente:'NANCY SAJAR',que:'Anularon la nota de entrega',quien:'caja',monto:164,vigente:true,visto_en:null,
     detalle:[{c:'01',d:'----coca-cola 12onz 24ud',q:2,p:82,x:0}]});return alCargar();},hoy);
   await p.click('#btnAL');await p.waitForTimeout(400);
-  ok('La anulación lleva el ojito',!!(await p.$('#alPanel .al-ojo')));
-  await p.click('.al-fila.al-tap');await p.waitForTimeout(400);
+  ok('Sin ojito: todas se abren manteniendo presionado',!(await p.$('#alPanel .al-ojo')));
+  const fila=await p.$('.al-fila.al-tap');const bx=await fila.boundingBox();
+  await p.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await p.mouse.down();await p.mouse.up();await p.waitForTimeout(300);
+  ok('Un toque NO abre la nota',!(await p.$('#alVista.open')));
+  await p.mouse.down();await p.waitForTimeout(700);await p.mouse.up();await p.waitForTimeout(400);
   const vt=await p.textContent('#alVista').catch(()=>'');
   ok('Muestra los productos de lo anulado',vt.includes('NANCY SAJAR')&&vt.includes('coca-cola 12onz')&&vt.includes('anulada')&&vt.includes('Q164.00'));
   await p.screenshot({path:'/tmp/al-anul.png'}).catch(()=>{});
+  // Otra alerta (no anulada): también trae la nota, con el producto de la alerta marcado
+  await p.evaluate(h=>{alVerCerrar();window.__DB.alertas.push({clave:'d|22316|900',tipo:'tope',fecha:h,hora:'13:15',nro:22316,cliente:'ERICKA BARRIOS 2',que:'deporade 625ml uva · compró 1.5 · Q100.00 c/u · desc. Q2.50 c/u',quien:'tienda2',monto:3.75,vigente:true,visto_en:null,
+    detalle:[{c:'900',d:'---deporade 625ml uva 24ud',q:1.5,p:100,x:3.75,a:1},{c:'01',d:'----coca-cola 12onz 24ud',q:1,p:82,x:0,a:0}]});return alCargar();},hoy);
+  await p.waitForTimeout(300);
+  await p.evaluate(()=>alVerDet('d|22316|900'));await p.waitForTimeout(400);
+  const v2=await p.textContent('#alVista').catch(()=>'');
+  ok('Alerta de descuento: muestra la nota completa y el total',v2.includes('ERICKA BARRIOS 2')&&v2.includes('coca-cola 12onz')&&v2.includes('Nota 22316')&&!v2.includes('anulada')&&v2.includes('Q228.25'));
+  ok('El producto de la alerta va marcado',(await p.$$('#alVista .pv-l.al-marca')).length===1);
+  await p.screenshot({path:'/tmp/al-nota.png'}).catch(()=>{});
   await p.evaluate(()=>{alVerCerrar();alCerrar();});await p.waitForTimeout(300);
   // PDF
   await p.click('#btnAL');await p.waitForTimeout(400);

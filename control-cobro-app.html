@@ -340,8 +340,9 @@
   .al-l2{margin-top:3px;font-size:12.5px;font-weight:600;color:#5b6472}
   .al-l2>span:first-child{min-width:0}
   .al-q{flex-shrink:0;font-size:11.5px;font-weight:700;color:var(--mut);white-space:nowrap}
-  .al-fila.al-tap{cursor:pointer}.al-fila.al-tap:active{background:#f7f6f3}
-  .al-ojo{vertical-align:-3px;margin-left:3px;color:#9aa1ad}
+  .al-fila.al-tap{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.al-fila.al-tap:active{background:#f7f6f3}
+  #alVista .pv-l.al-marca .pv-d b{color:var(--bad)}
+  #alVista .pv-l.al-marca .pv-q{background:var(--bad)}
   .al-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:70px 20px;text-align:center;color:var(--mut);font-size:13.5px;font-weight:600}
   .al-vacio b{font-size:17px;font-weight:900;color:var(--ink)}
   .pe-aviso{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;color:var(--ink)}
@@ -2872,7 +2873,13 @@ async function alAbrir(){
   }
 }
 // Anulación: tocarla muestra los productos que tenía (misma vista que Por entregar)
-function alTieneDet(f){return f.tipo==='anulada'&&Array.isArray(f.detalle)&&f.detalle.length>0;}
+function alTieneDet(f){return Array.isArray(f.detalle)&&f.detalle.length>0;}
+// Mantener presionada la tarjeta (no un toque, para que no se abra por error) → la nota completa
+let _alLP=null;
+function alLPIni(e,clave){if(_alLP)clearTimeout(_alLP.t);
+  _alLP={x:e.clientX,y:e.clientY,t:setTimeout(()=>{_alLP=null;try{navigator.vibrate&&navigator.vibrate(30);}catch(e){}alVerDet(clave);},480)};}
+function alLPMueve(e){if(_alLP&&Math.hypot(e.clientX-_alLP.x,e.clientY-_alLP.y)>10){clearTimeout(_alLP.t);_alLP=null;}}
+function alLPFin(){if(_alLP){clearTimeout(_alLP.t);_alLP=null;}}
 function alVerDet(clave){
   const f=AL.filas.find(x=>x.clave===clave);if(!f||!alTieneDet(f))return;
   let el=document.getElementById('alVista');
@@ -2880,14 +2887,14 @@ function alVerDet(clave){
     el.addEventListener('click',e=>{if(e.target===el)alVerCerrar();});document.body.appendChild(el);}
   let suma=0;
   const filas=f.detalle.map(l=>{const imp=Math.round(((Number(l.q)||0)*(Number(l.p)||0)-(Number(l.x)||0))*100)/100;suma+=imp;
-    return `<div class="pv-l"><span class="pv-q">${peCant(l.q)}</span>
+    return `<div class="pv-l${l.a?' al-marca':''}"><span class="pv-q">${peCant(l.q)}</span>
       <span class="pv-d"><b>${esc(l.d||l.c||'')}</b><span>${l.c?'Cód. '+esc(l.c)+' · ':''}${peQP(l.p)} c/u${Number(l.x)>0?` · <i class="pv-dsc">desc. −${q(l.x)}</i>`:''}</span></span>
       <span class="pv-i">${q(imp)}</span></div>`;}).join('');
   el.innerHTML=`<div class="pv-hoja"><div class="pv-asa"></div>
-    <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${alDoc(f)==='ticket'?'Ticket':'Nota'} ${f.nro} · anulada${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
+    <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${alDoc(f)==='ticket'?'Ticket':'Nota'} ${f.nro}${f.tipo==='anulada'?' · anulada':''}${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
       <button class="pv-x" onclick="alVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button></div>
     <div class="pv-lista">${filas}</div>
-    <div class="pv-pie"><div class="pv-tot"><span>${f.detalle.length} producto${f.detalle.length===1?'':'s'}</span><b>${q(f.monto)}</b></div></div></div>`;
+    <div class="pv-pie"><div class="pv-tot"><span>${f.detalle.length} producto${f.detalle.length===1?'':'s'}</span><b>${q(alGris(f)?f.monto:Math.round(suma*100)/100)}</b></div></div></div>`;
   requestAnimationFrame(()=>el.classList.add('open'));
 }
 function alVerCerrar(){const el=document.getElementById('alVista');if(!el)return;el.classList.remove('open');setTimeout(()=>{if(el.parentNode&&!el.classList.contains('open'))el.remove();},220);}
@@ -2908,10 +2915,10 @@ function alRenderPanel(){
     const dias=[...new Set(fs.map(f=>f.fecha))];
     cuerpo=dias.map(d=>{const ls=fs.filter(f=>f.fecha===d),m=ls.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0);
       return `<div class="al-dia"><span>${alDia(d)}</span><span>${ls.length} ${ls.length===1?'alerta':'alertas'}${m>0.004?` · <b>−${alQ(m)}</b>`:''}</span></div>`+ls.map(f=>`
-      <div class="al-fila${AL.nuevas.has(f.clave)?' nueva':''}${alTieneDet(f)?' al-tap':''}"${alTieneDet(f)?` onclick="alVerDet('${esc(f.clave).replace(/'/g,'')}')"`:''}>
+      <div class="al-fila${AL.nuevas.has(f.clave)?' nueva':''}${alTieneDet(f)?' al-tap':''}"${alTieneDet(f)?` onpointerdown="alLPIni(event,'${esc(f.clave).replace(/'/g,'')}')" onpointerup="alLPFin()" onpointerleave="alLPFin()" onpointercancel="alLPFin()" onpointermove="alLPMueve(event)" oncontextmenu="return false"`:''}>
         <div class="al-tipo">${esc(AL_TIT[f.tipo]||f.tipo)}</div>
         <div class="al-l1"><span class="al-cli"><b>${esc(f.cliente||'')}</b> <span>· ${alDoc(f)} ${f.nro}</span></span><span class="al-m${alGris(f)?' gris':''}">${alGris(f)?alQ(f.monto):'−'+alQ(f.monto)}</span></div>
-        <div class="al-l2"><span>${esc(f.que||'')}${alTieneDet(f)?' '+`<svg class='al-ojo' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-label='ver productos'><path d='M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z'/><circle cx='12' cy='12' r='2.8'/></svg>`:''}</span><span class="al-q">${esc(alQuien(f))}</span></div>
+        <div class="al-l2"><span>${esc(f.que||'')}</span><span class="al-q">${esc(alQuien(f))}</span></div>
       </div>`).join('');}).join('');
   }
   p.innerHTML=`<div class="al-cab"><div><h2>Cambios</h2><div class="al-sub">${fs.length?`${fs.length} en 7 días${perd>0.004?` · −${alQ(perd)}`:''}`:'Últimos 7 días'}</div></div>
@@ -3691,7 +3698,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-02.5';
+const VERSION='2026-11-03.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

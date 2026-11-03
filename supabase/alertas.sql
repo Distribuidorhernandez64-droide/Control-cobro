@@ -20,6 +20,8 @@ create table if not exists public.alertas (
   cambiado_en  timestamptz not null default now()
 );
 create index if not exists alertas_fecha on public.alertas (fecha);
+-- 2/11/2026: productos de lo anulado (para verlos al tocar la anulación)
+alter table public.alertas add column if not exists detalle jsonb;
 
 -- Una alerta ya vista nunca vuelve a "no vista" (aunque alguien mande visto_en vacío)
 create or replace function public.alertas_guardia() returns trigger language plpgsql as $$

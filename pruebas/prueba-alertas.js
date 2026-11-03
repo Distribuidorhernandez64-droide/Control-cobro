@@ -76,6 +76,16 @@ const ALERTAS=[
   await p.evaluate(h=>{window.__DB.alertas.push({clave:'p|9|z',tipo:'precio',fecha:h,hora:'15:00',nro:9,cliente:'Nueva',que:'pepsi · 1 × Q45.00 → Q40.00',quien:'caja',monto:5,vigente:true,visto_en:null});return alCargar();},hoy);
   await p.waitForTimeout(200);
   ok('Alerta nueva: vuelve el punto con 1',(await p.textContent('#btnAL')).replace(/\s/g,'')==='Cambios1'&&!(await p.$('#btnAL.visto')));
+  // Anulación con productos: tocarla muestra lo que tenía
+  await p.evaluate(h=>{window.__DB.alertas.push({clave:'a|factura1|22300',tipo:'anulada',fecha:h,hora:'16:00',nro:22300,cliente:'NANCY SAJAR',que:'Anularon la nota de entrega',quien:'caja',monto:164,vigente:true,visto_en:null,
+    detalle:[{c:'01',d:'----coca-cola 12onz 24ud',q:2,p:82,x:0}]});return alCargar();},hoy);
+  await p.click('#btnAL');await p.waitForTimeout(400);
+  ok('La anulación dice "ver productos"',(await p.textContent('#alPanel')).includes('ver productos'));
+  await p.click('.al-fila.al-tap');await p.waitForTimeout(400);
+  const vt=await p.textContent('#alVista').catch(()=>'');
+  ok('Muestra los productos de lo anulado',vt.includes('NANCY SAJAR')&&vt.includes('coca-cola 12onz')&&vt.includes('anulada')&&vt.includes('Q164.00'));
+  await p.screenshot({path:'/tmp/al-anul.png'}).catch(()=>{});
+  await p.evaluate(()=>{alVerCerrar();alCerrar();});await p.waitForTimeout(300);
   // PDF
   await p.click('#btnAL');await p.waitForTimeout(400);
   const pdfOk=await p.evaluate(async()=>{let n=null;await csCargarPdf();if(!window.jspdf)return 'sin jspdf';const O=window.jspdf.jsPDF;window.jspdf.jsPDF=function(...a){const d=new O(...a);d.save=x=>{n=x;};return d;};navigator.canShare=null;await alPdf();window.jspdf.jsPDF=O;return n;}).catch(e=>'err '+e.message);

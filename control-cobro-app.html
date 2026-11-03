@@ -302,6 +302,17 @@
   .al-chip b{font-weight:900;color:var(--bad)}
   .al-chip.visto{background:rgba(255,255,255,.32);color:rgba(28,36,51,.45);font-weight:700}
   .al-chip.visto i,.al-chip.visto b{display:none}
+  .rp-eng{background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer;line-height:0}
+  .rp-eng:active{transform:rotate(30deg)}
+  .rp-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px;box-shadow:var(--shadow)}
+  .rp-t{font-size:16px;font-weight:900;letter-spacing:-.2px}
+  .rp-s{font-size:12.5px;font-weight:700;color:var(--mut);margin:2px 0 12px}
+  .rp-l{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;flex:1;min-width:0}
+  .rp-l input,.rp-l select{height:44px;border:1px solid var(--line);border-radius:12px;background:#f8f7f4;padding:0 12px;font-family:inherit;font-size:15px;font-weight:700;color:var(--ink);text-transform:none;letter-spacing:0;width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none}
+  .rp-2{display:flex;gap:10px}
+  .rp-card .pv-btn{margin-top:2px}.rp-card .pv-btn:disabled{opacity:.6}
+  .rp-est{margin:14px 4px;font-size:13px;font-weight:700;color:var(--mut);text-align:center;min-height:18px}
+  .rp-est.mal{color:var(--bad)}
   .al-ov{display:none}
   .al-ov.open{display:flex;flex-direction:column;position:fixed;inset:0;z-index:400;background:var(--bg);animation:pop .18s}
   .al-cab{flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;background:var(--card);border-bottom:1px solid var(--line);padding:max(16px,env(safe-area-inset-top)) 16px 14px}
@@ -562,7 +573,7 @@
 <div class="demo" style="background:#e8f4ec;color:#1f6b4e">☁ <span id="quienSoy"></span> · <span id="btnSalir" onclick="cerrarSesion()" style="text-decoration:underline;cursor:pointer">salir</span> <span id="verApp" style="opacity:.55;font-weight:600;margin-left:4px"></span></div>
 <div id="avisoVersion" onclick="recargarApp()" style="display:none;background:#e8902a;color:#fff;text-align:center;font-size:13px;font-weight:800;padding:9px 12px;cursor:pointer">Hay una versión nueva de la app · <u>Tocá para actualizar</u></div>
 <header>
-  <div class="htop"><h1>Control de Cobro <span id="syncDot" class="dot ok" title="guardado"></span> <button id="btnActualizar" onclick="actualizarYa()" title="Actualizar" style="background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button> <span class="solo-maestro" style="position:relative;display:inline-block;vertical-align:middle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#1c2433" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><input type="date" id="fechaHist" max="" onchange="verDia(this.value)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer"></span><button id="btnAL" class="al-chip" onclick="alAbrir()" aria-label="Cambios"><i></i>Cambios<b id="alN"></b></button></h1><div style="display:flex;gap:7px;align-items:center">
+  <div class="htop"><h1>Control de Cobro <span id="syncDot" class="dot ok" title="guardado"></span> <button id="btnActualizar" onclick="actualizarYa()" title="Actualizar" style="background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button> <span class="solo-maestro" style="position:relative;display:inline-block;vertical-align:middle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#1c2433" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><input type="date" id="fechaHist" max="" onchange="verDia(this.value)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer"></span><button class="solo-maestro rp-eng" onclick="rpAbrir()" aria-label="Reportes" title="Reportes"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1c2433" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button><button id="btnAL" class="al-chip" onclick="alAbrir()" aria-label="Cambios"><i></i>Cambios<b id="alN"></b></button></h1><div style="display:flex;gap:7px;align-items:center">
     <button id="btnPE" class="pebell" onclick="peAbrir()" aria-label="Por entregar"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5Z" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><span class="pebd" id="peBadge"></span></button>
     <button class="rep solo-maestro" style="display:flex;align-items:center;gap:6px" onclick="abrirAuditoria()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 18V10M12 18V5M18 18v-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>Reporte</button>
   </div></div>
@@ -2621,7 +2632,7 @@ function peRenderCons(hoja){
     <div class="cs-solo"><span>Solo cajas (con guiones)</span><button class="cs-sw${PE.consSolo?' on':''}" onclick="peConsSolo()" aria-label="Solo cajas" aria-pressed="${!!PE.consSolo}"></button></div>
     <div class="pv-lista cs-lista">${cuerpo}</div>
     <div class="pv-pie">${sin.length?`<div class="cs-av">Sin productos todavía: ${sin.map(n=>n.nro).join(', ')} (no se cuentan).</div>`:''}
-      <div class="cs-btns"><button class="pv-btn quitar" id="csTxt" onclick="peConsCopiar()">Copiar texto</button><button class="pv-btn" onclick="peConsPdf()">PDF</button></div></div>`;
+      <div class="cs-btns"><button class="pv-btn quitar" id="csTxt" onclick="peConsCopiar()">${csPuedeCompartir()?'Enviar texto':'Copiar texto'}</button><button class="pv-btn" onclick="peConsPdf()">PDF</button></div></div>`;
 }
 function peConsTexto(){
   const notas=peConsNotas().filter(n=>Array.isArray(n.detalle)),{principal,bonif}=csArmar(notas,PE.consSolo),ah=new Date(),out=[];
@@ -2632,13 +2643,23 @@ function peConsTexto(){
   if(bonif.length){out.push('','*BONIFICACIONES*');bonif.forEach(fila);}
   return out.join('\n');
 }
+// En el celular: "Enviar texto" abre el menú de compartir (WhatsApp directo). En la PC: copia al portapapeles.
+const csPuedeCompartir=()=>!!(navigator.share&&(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))));
+function csCopiarViejo(t){
+  // Respaldo (iPhone incluido): textarea visible fuera de pantalla, seleccionado con setSelectionRange
+  const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.contentEditable='true';
+  a.style.cssText='position:fixed;top:0;left:-9999px;opacity:0;font-size:16px';document.body.appendChild(a);
+  a.focus();a.select();try{a.setSelectionRange(0,t.length);}catch(e){}
+  let ok=false;try{ok=document.execCommand('copy');}catch(e){}a.remove();return ok;
+}
 async function peConsCopiar(){
-  const t=peConsTexto();let ok=false;
-  try{await navigator.clipboard.writeText(t);ok=true;}catch(e){
-    const a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();
-    try{ok=document.execCommand('copy');}catch(e2){}a.remove();}
-  const b=document.getElementById('csTxt');
-  if(ok&&b){b.textContent='✓ Copiado';setTimeout(()=>{if(b.isConnected)b.textContent='Copiar texto';},2000);}else if(!ok)toast('No se pudo copiar',true);
+  const t=peConsTexto(),b=document.getElementById('csTxt');
+  if(csPuedeCompartir()){
+    try{await navigator.share({text:t});return;}catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true;}catch(e){ok=csCopiarViejo(t);}
+  if(ok&&b){b.textContent='✓ Copiado';setTimeout(()=>{if(b.isConnected)b.textContent=csPuedeCompartir()?'Enviar texto':'Copiar texto';},2000);}else if(!ok)toast('No se pudo copiar',true);
 }
 // PDF: carta, márgenes como el Recuento (izq 4.5, der 5.5, arriba 1, abajo 6.5 cm), igual que Facturación rápida
 let _csPdfLib=null;
@@ -2794,7 +2815,11 @@ async function peReintentarEnviadas(){
 // con punto rojo y número si hay algo sin ver; en gris suave si ya se vio hoy; no aparece si hoy no hubo nada.
 // Al abrirla se marcan vistas (también en la PC).
 const AL={filas:[],nuevas:new Set(),abierto:false,ok:false};
-const AL_TIT={vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar'};
+const AL_TIT={anulada:'Anulación',vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar',quitado:'Producto eliminado después de facturar'};
+// En anulaciones y cambio de vendedor el monto es el total del documento (no lo que se dejó de cobrar)
+const alGris=f=>f.tipo==='vendedor'||f.tipo==='anulada';
+const alDoc=f=>String(f.clave||'').startsWith('a|factura|')?'ticket':'nota';
+const alQuien=f=>[f.quien,f.hora].filter(Boolean).join(' · ');
 function alDesde(){const d=new Date();d.setDate(d.getDate()-6);return d.toLocaleDateString('en-CA');}
 function alQ(n){return 'Q'+Math.abs(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 async function alCargar(){
@@ -2843,18 +2868,18 @@ function alDia(f){const hoy=new Date().toLocaleDateString('en-CA'),d=new Date();
   return f===hoy?'Hoy':f===d.toLocaleDateString('en-CA')?'Ayer':f.slice(8,10)+'/'+f.slice(5,7);}
 function alRenderPanel(){
   const p=document.getElementById('alPanel');if(!p||!AL.abierto)return;
-  const fs=AL.filas,perd=fs.filter(f=>f.tipo!=='vendedor').reduce((s,f)=>s+Number(f.monto||0),0);
+  const fs=AL.filas,perd=fs.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0);
   let cuerpo='';
   if(!AL.ok&&!fs.length)cuerpo='<div class="al-vacio"><b>No se pudo leer</b><span>Revisá el internet o que la PC tenga Facturación abierta.</span></div>';
   else if(!fs.length)cuerpo=`<div class="al-vacio"><svg width="44" height="44" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#2fae74" stroke-width="2"/><path d="M8 12.5l2.7 2.7L16 10" stroke="#2fae74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Sin alertas</b><span>No hubo nada que te afecte.</span></div>`;
   else{
     const dias=[...new Set(fs.map(f=>f.fecha))];
-    cuerpo=dias.map(d=>{const ls=fs.filter(f=>f.fecha===d),m=ls.filter(f=>f.tipo!=='vendedor').reduce((s,f)=>s+Number(f.monto||0),0);
+    cuerpo=dias.map(d=>{const ls=fs.filter(f=>f.fecha===d),m=ls.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0);
       return `<div class="al-dia"><span>${alDia(d)}</span><span>${ls.length} ${ls.length===1?'alerta':'alertas'}${m>0.004?` · <b>−${alQ(m)}</b>`:''}</span></div>`+ls.map(f=>`
       <div class="al-fila${AL.nuevas.has(f.clave)?' nueva':''}">
         <div class="al-tipo">${esc(AL_TIT[f.tipo]||f.tipo)}</div>
-        <div class="al-l1"><span class="al-cli"><b>${esc(f.cliente||'')}</b> <span>· nota ${f.nro}</span></span><span class="al-m${f.tipo==='vendedor'?' gris':''}">${f.tipo==='vendedor'?alQ(f.monto):'−'+alQ(f.monto)}</span></div>
-        <div class="al-l2"><span>${esc(f.que||'')}</span><span class="al-q">${esc(f.quien||'—')} · ${esc(f.hora||'')}</span></div>
+        <div class="al-l1"><span class="al-cli"><b>${esc(f.cliente||'')}</b> <span>· ${alDoc(f)} ${f.nro}</span></span><span class="al-m${alGris(f)?' gris':''}">${alGris(f)?alQ(f.monto):'−'+alQ(f.monto)}</span></div>
+        <div class="al-l2"><span>${esc(f.que||'')}</span><span class="al-q">${esc(alQuien(f))}</span></div>
       </div>`).join('');}).join('');
   }
   p.innerHTML=`<div class="al-cab"><div><h2>Cambios</h2><div class="al-sub">${fs.length?`${fs.length} en 7 días${perd>0.004?` · −${alQ(perd)}`:''}`:'Últimos 7 días'}</div></div>
@@ -2867,7 +2892,7 @@ async function alPdf(){
   const doc=new jspdf.jsPDF({unit:'pt',format:'letter'});const W=612,L=40,R=572,BOT=745;let y=0;
   const T=(s,x,yy,o={})=>{doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9);const c=o.c||[30,30,30];doc.setTextColor(c[0],c[1],c[2]);doc.text(String(s),x,yy,o.r?{align:'right'}:undefined);};
   const corta=(s,w,sz,b)=>{doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz);let t=String(s);while(t.length>3&&doc.getTextWidth(t)>w)t=t.slice(0,-1);return t===String(s)?t:t.trimEnd()+'…';};
-  const gris=[120,120,120],rojo=[180,40,40],perd=fs.filter(f=>f.tipo!=='vendedor').reduce((s,f)=>s+Number(f.monto||0),0);
+  const gris=[120,120,120],rojo=[180,40,40],perd=fs.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0);
   const fl=f=>f.slice(8,10)+'/'+f.slice(5,7)+'/'+f.slice(0,4),dias=[...new Set(fs.map(f=>f.fecha))];
   const rango=dias.length===1?fl(dias[0]):`${fl(dias[dias.length-1])} al ${fl(dias[0])}`;
   const cab=()=>{y=46;T('Distribuidora Hernández',L,y,{b:1,s:13});T(`Alertas · ${rango}`,L,y+15,{s:10,c:gris});
@@ -2881,8 +2906,8 @@ async function alPdf(){
       for(const f of ls){if(y+26>BOT){doc.addPage();cab();}
         T(String(f.nro),L,y,{b:1});T(corta(f.cliente||'',120,9,1),L+40,y,{b:1});
         T(corta(String(f.que||'').replace(/→/g,'->').replace(/−/g,'-'),222,8.6),L+168,y,{s:8.6});
-        T(corta(`${f.quien||'-'} · ${f.hora||''}`,70,8.2),R-64,y,{s:8.2,c:gris,r:1});
-        T(f.tipo==='vendedor'?alQ(f.monto):'-'+alQ(f.monto),R,y,{b:1,r:1,c:f.tipo==='vendedor'?[30,30,30]:rojo});
+        T(corta(alQuien(f),70,8.2),R-64,y,{s:8.2,c:gris,r:1});
+        T(alGris(f)?alQ(f.monto):'-'+alQ(f.monto),R,y,{b:1,r:1,c:alGris(f)?[30,30,30]:rojo});
         doc.setDrawColor(235);doc.setLineWidth(.4);doc.line(L,y+7,R,y+7);y+=19;}
       y+=10;}}
   const np=doc.getNumberOfPages();
@@ -2891,6 +2916,121 @@ async function alPdf(){
   try{const file=new File([blob],nombre,{type:'application/pdf'});
     if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Alertas'});return;}}catch(e){if(e&&e.name==='AbortError')return;}
   doc.save(nombre);
+}
+
+// ===== Reportes ⚙️ (2/11/2026) — solo el maestro =====
+// "Ventas del día" y "Mapeo por vendedor", iguales a los de Facturación rápida. El celular deja el pedido en Supabase
+// (reportes_pedidos); la PC lo lee de Monica en pocos segundos y devuelve los datos; aquí se arma el mismo PDF.
+const RP={vens:null,ocupado:false};
+function rpHoy(){return new Date().toLocaleDateString('en-CA');}
+function rpAbrir(){
+  if(!esMaestro())return;
+  let p=document.getElementById('rpPanel');if(!p){p=document.createElement('div');p.id='rpPanel';document.body.appendChild(p);}
+  p.className='al-ov open';document.body.classList.add('pe-bloqueo');
+  if(!RP.vens){try{RP.vens=JSON.parse(localStorage.getItem('rpVens')||'null');}catch(e){}}
+  const h=rpHoy();
+  p.innerHTML=`<div class="al-cab"><div><h2>Reportes</h2><div class="al-sub">Los arma la PC desde Monica</div></div>
+    <div class="pe-tbtns"><button class="pe-cerrar" onclick="rpCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
+    <div class="al-lista">
+      <div class="rp-card"><div class="rp-t">Ventas del día</div><div class="rp-s">Todos los vendedores · notas y tickets</div>
+        <label class="rp-l">Fecha<input type="date" id="rpDia" value="${h}" max="${h}"></label>
+        <button class="pv-btn" id="rpBtnV" onclick="rpVentas()">PDF</button></div>
+      <div class="rp-card"><div class="rp-t">Mapeo por vendedor</div><div class="rp-s">Un vendedor · rango de fechas</div>
+        <label class="rp-l">Vendedor<select id="rpVen">${rpOpciones()}</select></label>
+        <div class="rp-2"><label class="rp-l">Desde<input type="date" id="rpDe" value="${h}" max="${h}"></label><label class="rp-l">Hasta<input type="date" id="rpA" value="${h}" max="${h}"></label></div>
+        <button class="pv-btn" id="rpBtnM" onclick="rpMapa()">PDF</button></div>
+      <div class="rp-est" id="rpEst"></div>
+    </div>`;
+  rpCargarVendedores();
+}
+function rpCerrar(){const p=document.getElementById('rpPanel');if(p){p.className='al-ov';p.innerHTML='';}
+  if(!(PE&&PE.abierto))document.body.classList.remove('pe-bloqueo');}
+function rpOpciones(){const vs=RP.vens||[],sel=(()=>{try{return localStorage.getItem('rpVenSel')||'';}catch(e){return '';}})();
+  return `<option value="">${vs.length?'Escoger…':'Cargando vendedores…'}</option>`+vs.map(v=>`<option value="${v.id}"${String(v.id)===sel?' selected':''}>${esc(v.nombre)}</option>`).join('');}
+function rpEstado(t,mal){const e=document.getElementById('rpEst');if(e){e.textContent=t||'';e.classList.toggle('mal',!!mal);}}
+// Deja el pedido y espera la respuesta de la PC (hasta 45 s)
+async function rpPedir(fila){
+  const ins=await sb.from('reportes_pedidos').insert(Object.assign({pedido_por:sesion?sesion.nombre:'?'},fila)).select('id').single();
+  if(ins.error||!ins.data)throw new Error(ins.error&&/reportes_pedidos/.test(ins.error.message||'')?'Falta preparar Supabase para los reportes':'No se pudo pedir el reporte. Revisá internet');
+  const id=ins.data.id,fin=Date.now()+45000;
+  while(Date.now()<fin){
+    await new Promise(r=>setTimeout(r,1500));
+    const r=await sb.from('reportes_pedidos').select('estado,resultado,error').eq('id',id).maybeSingle();
+    if(r.data&&r.data.estado==='listo')return r.data.resultado;
+    if(r.data&&r.data.estado==='error')throw new Error(r.data.error||'La PC no pudo armar el reporte');
+  }
+  throw new Error('La PC no respondió. Revisá que esté encendida con Facturación abierta');
+}
+async function rpCargarVendedores(){
+  try{const r=await rpPedir({tipo:'vendedores'});if(r&&r.vendedores){RP.vens=r.vendedores;try{localStorage.setItem('rpVens',JSON.stringify(RP.vens));}catch(e){}
+    const s=document.getElementById('rpVen');if(s){const v=s.value;s.innerHTML=rpOpciones();if(v)s.value=v;}}}
+  catch(e){if(!RP.vens||!RP.vens.length)rpEstado(e.message,true);}
+}
+async function rpGenerar(btn,fila,nombre){
+  if(RP.ocupado)return;RP.ocupado=true;const b=document.getElementById(btn),txt=b?b.textContent:'';
+  if(b){b.disabled=true;b.textContent='Preparando…';}rpEstado('La PC está leyendo Monica…');
+  try{
+    const r=await rpPedir(fila);
+    if(!r||!r.documentos){rpEstado('No hay ventas en esas fechas');return;}
+    await csCargarPdf();
+    const doc=monRepPdf(r),n=nombre(r);doc.setProperties({title:n.replace(/\.pdf$/,'')});
+    rpEstado('');
+    const blob=doc.output('blob');
+    try{const file=new File([blob],n,{type:'application/pdf'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:n.replace(/\.pdf$/,'')});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+    doc.save(n);
+  }catch(e){rpEstado(e.message||'No se pudo',true);}
+  finally{RP.ocupado=false;if(b){b.disabled=false;b.textContent=txt;}}
+}
+const rpF=s=>s.split('-').reverse().join('-');
+function rpVentas(){const d=document.getElementById('rpDia').value;if(!d){rpEstado('Escogé la fecha',true);return;}
+  rpGenerar('rpBtnV',{tipo:'ventas',desde:d,hasta:d},r=>`Cuentas tienda ${rpF(r.desde)}.pdf`);}
+function rpMapa(){const v=document.getElementById('rpVen').value,de=document.getElementById('rpDe').value,a=document.getElementById('rpA').value||de;
+  if(!v){rpEstado('Escogé el vendedor',true);return;}if(!de){rpEstado('Escogé la fecha',true);return;}
+  try{localStorage.setItem('rpVenSel',v);}catch(e){}
+  rpGenerar('rpBtnM',{tipo:'mapa',desde:de<=a?de:a,hasta:de<=a?a:de,vendedor_id:Number(v)},r=>`Mapa ${(((r.grupos||[])[0]||{}).vendedor||'').replace(/[\\/:*?"<>|]/g,' ').trim()} ${rpF(r.hasta)}.pdf`);}
+// Mismo diseño que el "LISTADO DE FACTURAS AGRUPADOS POR VENDEDOR" de Monica (carta horizontal)
+function monRepPdf(r){
+  const doc = new jspdf.jsPDF({unit:"pt", format:"letter", orientation:"landscape"});
+  const fecha = s=>{ const [a,m,d] = s.split("-"); return `${d}/${m}/${a}`; };
+  const Q = v=>Number(v).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
+  const T = (s, x, y, o={})=>{ doc.setFont(o.f || "helvetica", o.b ? "bold" : "normal"); doc.setFontSize(o.s || 7.6); const c = o.c || [0,0,0]; doc.setTextColor(c[0], c[1], c[2]);
+    doc.text(String(s), x, y, o.r ? {align:"right"} : o.m ? {align:"center"} : undefined); };
+  const e = r.empresa || {};
+  let pag = 0, y = 0;
+  const cabeza = ()=>{
+    if (pag) doc.addPage(); pag++;
+    T(e.p_cEmpresa || "DISTRIBUIDORA HERNANDEZ", 1.5, 24, {s:11.5});
+    T(e.p_cDireccion1 || "", 1.5, 35.5, {s:7});
+    T(e.p_cDireccion2 || "", 1.5, 46.7, {s:7});
+    T("Pagina", 489.4, 27, {s:7}); T(String(pag), 525, 27, {s:7.4});
+    T("Fecha", 490, 41.2, {s:7}); T(fecha(r.generado), 525, 40.5, {s:7.4});
+    T("LISTADO DE FACTURAS AGRUPADOS POR VENDEDOR", 324.75, 61, {s:8.4, m:1});
+    T(`Desde ${fecha(r.desde)}Hasta ${fecha(r.hasta)}`, 324.75, 74, {s:7.2, m:1});
+    doc.setDrawColor(0); doc.setLineWidth(.8); doc.rect(3, 96, 594, 21);
+    T("Nro.Docum.", 6.8, 108.5, {s:7}); T("Cliente", 87.8, 110, {s:7}); T("Total Q", 228, 108.5, {s:7.2});
+    y = 127.5;
+  };
+  const MAXY = 601;
+  cabeza();
+  for (const g of r.grupos){
+    if (y + 20 > MAXY) cabeza();
+    T(g.vendedor, 42.8, y, {f:"courier", b:1, s:7}); y += 19.6;
+    for (const f of g.filas){
+      if (y > MAXY){ cabeza(); y += 2; }
+      T(`${f.nro} ${f.cliente}`, 22.8, y, {s:7.6}); T(Q(f.total), 319.5, y, {s:7.6, r:1});
+      if (f.lat) T(f.lat, 355.5, y, {s:7.4}); if (f.lon) T(f.lon, 476.3, y, {s:7.4});
+      y += 12.75;
+    }
+    if (y + 6 > MAXY) cabeza();
+    doc.setDrawColor(0); doc.setLineWidth(.7); doc.line(10, y - 9.5, 350, y - 9.5);
+    T("Sub Total", 21.8, y - 3, {f:"courier", b:1, s:7}); T(Q(g.subtotal), 320.3, y - 2, {f:"courier", s:7, r:1, c:[110,110,110]});
+    y += 12.8;
+  }
+  if (y + 14 > MAXY) cabeza();
+  doc.setLineWidth(.7); doc.line(68, y - 9, 597, y - 9);
+  T("Total documentos", 46, y + 0.5, {s:7}); T(String(r.documentos), 135, y + 0.5, {s:7.2}); T("Total", 229, y + 0.5, {s:7}); T(Q(r.total), 320, y + 0.5, {s:7.4, r:1});
+  return doc;
 }
 
 function peRenderCampana(){
@@ -3504,7 +3644,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-01.5';
+const VERSION='2026-11-02.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

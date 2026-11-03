@@ -41,6 +41,14 @@
   header{position:sticky;top:0;z-index:50;background:var(--yellow);padding:16px 18px 18px}
   .htop{display:flex;justify-content:space-between;align-items:center}
   .htop h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+  .htop h1.hcab{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+  .hcab .htit{display:flex;align-items:center;white-space:nowrap}
+  .hcab .hicos{display:flex;align-items:center;gap:4px;margin-left:-7px}
+  .hcab .hic{position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:none;border-radius:10px;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+  .hcab .hic:active{background:rgba(28,36,51,.08)}
+  .hcab .hic svg{width:20px;height:20px;display:block}
+  .hcab .hic input[type=date]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+  .hcab .al-chip{margin-left:4px}
   .htop .rep{background:var(--ink);border:none;color:#fff;border-radius:12px;padding:10px 17px;font-size:13px;font-weight:700;cursor:pointer}
   .daytot{margin-top:15px}
   .daytot .l{font-size:11px;color:#977c1a;text-transform:uppercase;letter-spacing:.7px;font-weight:800;display:block}
@@ -302,8 +310,6 @@
   .al-chip b{font-weight:900;color:var(--bad)}
   .al-chip.visto{background:rgba(255,255,255,.32);color:rgba(28,36,51,.45);font-weight:700}
   .al-chip.visto i,.al-chip.visto b{display:none}
-  .rp-eng{background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer;line-height:0}
-  .rp-eng:active{transform:rotate(30deg)}
   .rp-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px;box-shadow:var(--shadow)}
   .rp-t{font-size:16px;font-weight:900;letter-spacing:-.2px}
   .rp-s{font-size:12.5px;font-weight:700;color:var(--mut);margin:2px 0 12px}
@@ -574,7 +580,11 @@
 <div class="demo" style="background:#e8f4ec;color:#1f6b4e">☁ <span id="quienSoy"></span> · <span id="btnSalir" onclick="cerrarSesion()" style="text-decoration:underline;cursor:pointer">salir</span> <span id="verApp" style="opacity:.55;font-weight:600;margin-left:4px"></span></div>
 <div id="avisoVersion" onclick="recargarApp()" style="display:none;background:#e8902a;color:#fff;text-align:center;font-size:13px;font-weight:800;padding:9px 12px;cursor:pointer">Hay una versión nueva de la app · <u>Tocá para actualizar</u></div>
 <header>
-  <div class="htop"><h1>Control de Cobro <span id="syncDot" class="dot ok" title="guardado"></span> <button id="btnActualizar" onclick="actualizarYa()" title="Actualizar" style="background:none;border:none;padding:4px;vertical-align:middle;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button> <span class="solo-maestro" style="position:relative;display:inline-block;vertical-align:middle"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#1c2433" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><input type="date" id="fechaHist" max="" onchange="verDia(this.value)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer"></span><button class="solo-maestro rp-eng" onclick="rpAbrir()" aria-label="Reportes" title="Reportes"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1c2433" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button><button id="btnAL" class="al-chip" onclick="alAbrir()" aria-label="Cambios"><i></i>Cambios<b id="alN"></b></button></h1><div style="display:flex;gap:7px;align-items:center">
+  <div class="htop"><h1 class="hcab"><span class="htit">Control de Cobro<span id="syncDot" class="dot ok" title="guardado"></span></span><span class="hicos">
+    <button id="btnActualizar" class="hic" onclick="actualizarYa()" title="Actualizar" aria-label="Actualizar"><svg viewBox="0 0 24 24" fill="none" stroke="#1c2433" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg></button>
+    <span class="hic solo-maestro" title="Ver otro día"><svg viewBox="0 0 24 24" fill="none" stroke="#1c2433" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input type="date" id="fechaHist" max="" onchange="verDia(this.value)" aria-label="Ver otro día"></span>
+    <button class="hic solo-maestro" onclick="rpAbrir()" aria-label="Reportes" title="Reportes"><svg viewBox="0 0 24 24" fill="none" stroke="#1c2433" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button id="btnAL" class="al-chip" onclick="alAbrir()" aria-label="Cambios"><i></i>Cambios<b id="alN"></b></button></span></h1><div style="display:flex;gap:7px;align-items:center">
     <button id="btnPE" class="pebell" onclick="peAbrir()" aria-label="Por entregar"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5Z" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="#1c2433" stroke-width="2" stroke-linecap="round"/></svg><span class="pebd" id="peBadge"></span></button>
     <button class="rep solo-maestro" style="display:flex;align-items:center;gap:6px" onclick="abrirAuditoria()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 18V10M12 18V5M18 18v-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>Reporte</button>
   </div></div>
@@ -3656,7 +3666,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-02.2';
+const VERSION='2026-11-02.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

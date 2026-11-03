@@ -44,9 +44,9 @@ window.supabase={createClient:()=>({
     return {p,errs};
   };
   const {p,errs}=await abrir('cesar','19881987');
-  ok('Engranaje visible para el maestro',await p.isVisible('.rp-eng'));
-  await p.screenshot({path:'/tmp/rp-cab.png',clip:{x:0,y:0,width:390,height:130}}).catch(()=>{});
-  await p.click('.rp-eng');await p.waitForTimeout(2600);
+  ok('Engranaje visible para el maestro',await p.isVisible('button[onclick="rpAbrir()"]'));
+  await p.evaluate(()=>{AL.filas=[{clave:'x',tipo:'tope',fecha:new Date().toLocaleDateString('en-CA'),visto_en:null}];alRenderCampana();});await p.screenshot({path:'/tmp/rp-cab.png',clip:{x:0,y:0,width:390,height:150}}).catch(()=>{});
+  await p.click('button[onclick="rpAbrir()"]');await p.waitForTimeout(2600);
   ok('Abre Reportes con Ventas del día y Mapeo',(await p.textContent('#rpPanel')).includes('Ventas del día')&&(await p.textContent('#rpPanel')).includes('Mapeo por vendedor'));
   ok('Carga los vendedores desde la PC',(await p.$$eval('#rpVen option',o=>o.map(x=>x.textContent))).includes('brenda (pueblo)'));
   await p.screenshot({path:'/tmp/rp-panel.png'}).catch(()=>{});
@@ -87,6 +87,6 @@ window.supabase={createClient:()=>({
   // Anotador
   const usuarios=await p.evaluate(()=>USUARIOS.filter(u=>u.rol!=='maestro').map(u=>[u.usuario,u.pass]));
   const q=await abrir(usuarios[0][0],usuarios[0][1]);
-  ok('El otro usuario NO ve el engranaje',!(await q.p.isVisible('.rp-eng')));
+  ok('El otro usuario NO ve el engranaje',!(await q.p.isVisible('button[onclick="rpAbrir()"]')));
   await b.close();srv.close();
 })();

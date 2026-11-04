@@ -39,3 +39,7 @@ Por entregar (tarjeta "regresó · rutero"), se puede deshacer solo si nadie la 
 Consolidado de Facturación rápida (solo guiones, excluidos, grupo 1/2, alfabético, sabores por renglón,
 Bonificaciones aparte), "Solo cajas" se puede apagar, Copiar texto y PDF. Necesita jsPDF local:
 `JSPDF=/ruta/jspdf.umd.min.js` (npm i jspdf@2.5.1).
+
+`prueba-ticket.js` — Cambios › pestañas Notas · Ticket (3/11/2026): arriba sigue una sola palabra "Cambios" con el total sin ver;
+adentro cada pestaña con su lista, su PDF y sus vistas (ver Notas no marca las de Ticket); abre en la pestaña que tiene algo nuevo.
+Ticket: producto eliminado (F9) tachado en la vista previa y sin sumar, venta cancelada sin ticket, precio subido en gris.

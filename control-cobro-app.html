@@ -343,6 +343,13 @@
   .al-fila.al-tap{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.al-fila.al-tap:active{background:#f7f6f3}
   #alVista .pv-l.al-marca .pv-d b{color:var(--bad)}
   #alVista .pv-l.al-marca .pv-q{background:var(--bad)}
+  #alVista .pv-l.al-elim .pv-i{text-decoration:line-through;color:var(--mut)}
+  .al-tabs{flex-shrink:0;display:flex;gap:4px;margin:10px 16px 0;padding:3px;border-radius:12px;background:rgba(28,36,51,.06)}
+  .al-tab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;border:none;border-radius:9px;background:transparent;color:var(--mut);font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
+  .al-tab.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(28,36,51,.12)}
+  .al-tab span{font-size:11.5px;font-weight:800;color:#a3a9b3}
+  .al-tab i{width:7px;height:7px;border-radius:50%;background:var(--bad)}
+  #alVista .al-quit{font-style:normal;font-weight:800;color:var(--bad)}
   .al-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:70px 20px;text-align:center;color:var(--mut);font-size:13.5px;font-weight:600}
   .al-vacio b{font-size:17px;font-weight:900;color:var(--ink)}
   .pe-aviso{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;font-family:inherit;color:var(--ink)}
@@ -2824,11 +2831,19 @@ async function peReintentarEnviadas(){
 // más del 5%, precio bajado después de facturar). Arriba, junto al calendario, una palabra pequeña "Cambios":
 // con punto rojo y número si hay algo sin ver; en gris suave si ya se vio hoy; no aparece si hoy no hubo nada.
 // Al abrirla se marcan vistas (también en la PC).
-const AL={filas:[],nuevas:new Set(),abierto:false,ok:false};
-const AL_TIT={anulada:'Anulación',vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar'};
-// En anulaciones y cambio de vendedor el monto es el total del documento (no lo que se dejó de cobrar)
-const alGris=f=>f.tipo==='vendedor'||f.tipo==='anulada';
-const alDoc=f=>String(f.clave||'').startsWith('a|factura|')?'ticket':'nota';
+// 3/11/2026: "Ticket" aparte (vigilante de Ticket en la PC): producto eliminado con F9, venta cancelada, cambio de precio,
+// descuento y ticket anulado. Arriba sigue una sola palabra "Cambios" (no cabe otra); adentro dos pestañas: Notas · Ticket,
+// cada una con su lista, su PDF y sus vistas (se marcan vistas al ver esa pestaña).
+const AL={filas:[],nuevas:new Set(),abierto:false,ok:false,grupo:'n'};
+const AL_TIT={anulada:'Anulación',vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar',
+  t_eliminado:'Producto eliminado',t_cancelada:'Venta cancelada',t_precio:'Cambio de precio',t_descuento:'Descuento',t_subio:'Precio subido',t_anulada:'Ticket anulado'};
+const alEsT=f=>String(f.tipo||'').startsWith('t_');
+const alDeGrupo=(g,fs)=>(fs||AL.filas).filter(f=>(g==='t')===alEsT(f));
+// En anulaciones y cambio de vendedor el monto es el total del documento (no lo que se dejó de cobrar); precio subido no es pérdida
+const alGris=f=>f.tipo==='vendedor'||f.tipo==='anulada'||f.tipo==='t_anulada'||f.tipo==='t_subio';
+const alDoc=f=>alEsT(f)||String(f.clave||'').startsWith('a|factura|')?'ticket':'nota';
+const alMonto=f=>f.tipo==='t_subio'?'+'+alQ(f.monto):alGris(f)?alQ(f.monto):'−'+alQ(f.monto);
+const alRef=f=>f.nro?`${alDoc(f)} ${f.nro}`:'';
 const alQuien=f=>[f.quien,f.hora].filter(Boolean).join(' · ');
 function alDesde(){const d=new Date();d.setDate(d.getDate()-6);return d.toLocaleDateString('en-CA');}
 function alQ(n){return 'Q'+Math.abs(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -2845,26 +2860,31 @@ async function alCargar(){
   alRenderCampana();
   if(AL.abierto)alRenderPanel();
 }
-function alNuevas(){return AL.filas.filter(f=>!f.visto_en);}
+function alNuevas(g){return alDeGrupo(g).filter(f=>!f.visto_en);}
 // "Cambios" arriba: no aparece si hoy no hubo nada; con algo nuevo lleva punto rojo y número; ya visto queda en gris suave.
 function alRenderCampana(){
   const b=document.getElementById('btnAL'),nb=document.getElementById('alN');if(!b||!nb)return;
   let maestro=false;try{maestro=!modoLectura&&esMaestro();}catch(e){}
-  const hoy=new Date().toLocaleDateString('en-CA'),n=alNuevas().length,h=AL.filas.filter(f=>f.fecha===hoy).length;
+  const hoy=new Date().toLocaleDateString('en-CA'),n=AL.filas.filter(f=>!f.visto_en).length,h=AL.filas.filter(f=>f.fecha===hoy).length;
   const ver=maestro&&(n>0||h>0);
   b.classList.toggle('ver',ver);b.classList.toggle('visto',ver&&!n);nb.textContent=n?String(n):'';
   b.setAttribute('aria-label',n?n+' cambios para revisar':'Cambios de hoy');
 }
-async function alAbrir(){
+async function alAbrir(g){
   if(!esMaestro())return;
+  // Abre en la pestaña que tiene algo sin ver (Notas primero)
+  AL.grupo=g==='t'||g==='n'?g:(alNuevas('n').length||!alNuevas('t').length?'n':'t');
   AL.abierto=true;AL.nuevas=new Set(AL.filas.filter(f=>!f.visto_en).map(f=>f.clave));
   let p=document.getElementById('alPanel');
   if(!p){p=document.createElement('div');p.id='alPanel';document.body.appendChild(p);}
   p.className='al-ov open';document.body.classList.add('pe-bloqueo');
   alRenderPanel();
   await alCargar();
-  // Ya las vio: se marcan vistas (la campanita se apaga aquí y en la PC)
-  const ks=AL.filas.filter(f=>!f.visto_en).map(f=>f.clave);
+  await alMarcarVistas();
+}
+// Ya las vio: se marcan vistas (la campanita se apaga aquí y en la PC). Solo las de la pestaña que está viendo.
+async function alMarcarVistas(){
+  const ks=alDeGrupo(AL.grupo).filter(f=>!f.visto_en).map(f=>f.clave);
   ks.forEach(k=>AL.nuevas.add(k));
   if(ks.length){
     try{const r=await sb.from('alertas').update({visto_en:new Date().toISOString(),visto_por:sesion?sesion.nombre:'?'}).in('clave',ks).is('visto_en',null);
@@ -2885,16 +2905,17 @@ function alVerDet(clave){
   let el=document.getElementById('alVista');
   if(!el){el=document.createElement('div');el.id='alVista';el.className='pv';el.style.zIndex='460';
     el.addEventListener('click',e=>{if(e.target===el)alVerCerrar();});document.body.appendChild(el);}
-  let suma=0;
-  const filas=f.detalle.map(l=>{const imp=Math.round(((Number(l.q)||0)*(Number(l.p)||0)-(Number(l.x)||0))*100)/100;suma+=imp;
-    return `<div class="pv-l${l.a?' al-marca':''}"><span class="pv-q">${peCant(l.q)}</span>
-      <span class="pv-d"><b>${esc(l.d||l.c||'')}</b><span>${l.c?'Cód. '+esc(l.c)+' · ':''}${peQP(l.p)} c/u${Number(l.x)>0?` · <i class="pv-dsc">desc. −${q(l.x)}</i>`:''}</span></span>
+  let suma=0;const cobrados=f.detalle.filter(l=>!l.e).length;
+  // l.e = se pasó por el lector y lo quitaron (no está en el ticket): se ve tachado y no suma
+  const filas=f.detalle.map(l=>{const imp=Math.round(((Number(l.q)||0)*(Number(l.p)||0)-(Number(l.x)||0))*100)/100;if(!l.e)suma+=imp;
+    return `<div class="pv-l${l.a?' al-marca':''}${l.e?' al-elim':''}"><span class="pv-q">${peCant(l.q)}</span>
+      <span class="pv-d"><b>${esc(l.d||l.c||'')}</b><span>${l.e?'<i class="al-quit">lo quitaron</i> · ':''}${l.c?'Cód. '+esc(l.c)+' · ':''}${peQP(l.p)} c/u${Number(l.x)>0?` · <i class="pv-dsc">desc. −${q(l.x)}</i>`:''}</span></span>
       <span class="pv-i">${q(imp)}</span></div>`;}).join('');
   el.innerHTML=`<div class="pv-hoja"><div class="pv-asa"></div>
-    <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${alDoc(f)==='ticket'?'Ticket':'Nota'} ${f.nro}${f.tipo==='anulada'?' · anulada':''}${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
+    <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${f.nro?(alDoc(f)==='ticket'?'Ticket':'Nota')+' '+f.nro:'Venta cancelada · sin ticket'}${f.tipo==='anulada'||f.tipo==='t_anulada'?' · anulada':''}${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
       <button class="pv-x" onclick="alVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button></div>
     <div class="pv-lista">${filas}</div>
-    <div class="pv-pie"><div class="pv-tot"><span>${f.detalle.length} producto${f.detalle.length===1?'':'s'}</span><b>${q(alGris(f)?f.monto:Math.round(suma*100)/100)}</b></div></div></div>`;
+    <div class="pv-pie"><div class="pv-tot"><span>${f.tipo==='t_cancelada'?'No se cobró':cobrados+' producto'+(cobrados===1?'':'s')}</span><b>${q(alGris(f)&&!alEsT(f)?f.monto:Math.round(suma*100)/100)}</b></div></div></div>`;
   requestAnimationFrame(()=>el.classList.add('open'));
 }
 function alVerCerrar(){const el=document.getElementById('alVista');if(!el)return;el.classList.remove('open');setTimeout(()=>{if(el.parentNode&&!el.classList.contains('open'))el.remove();},220);}
@@ -2903,30 +2924,34 @@ function alCerrar(){alVerCerrar();
   if(!(PE&&PE.abierto))document.body.classList.remove('pe-bloqueo');
   AL.nuevas=new Set();alRenderCampana();
 }
+async function alTab(g){if(AL.grupo===g)return;AL.grupo=g;alVerCerrar();alRenderPanel();const l=document.querySelector('#alPanel .al-lista');if(l)l.scrollTop=0;await alMarcarVistas();}
 function alDia(f){const hoy=new Date().toLocaleDateString('en-CA'),d=new Date();d.setDate(d.getDate()-1);
   return f===hoy?'Hoy':f===d.toLocaleDateString('en-CA')?'Ayer':f.slice(8,10)+'/'+f.slice(5,7);}
 function alRenderPanel(){
   const p=document.getElementById('alPanel');if(!p||!AL.abierto)return;
-  const fs=AL.filas,perd=fs.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0);
+  const fs=alDeGrupo(AL.grupo),perd=fs.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0),tit='Cambios';
   let cuerpo='';
   if(!AL.ok&&!fs.length)cuerpo='<div class="al-vacio"><b>No se pudo leer</b><span>Revisá el internet o que la PC tenga Facturación abierta.</span></div>';
-  else if(!fs.length)cuerpo=`<div class="al-vacio"><svg width="44" height="44" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#2fae74" stroke-width="2"/><path d="M8 12.5l2.7 2.7L16 10" stroke="#2fae74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Sin alertas</b><span>No hubo nada que te afecte.</span></div>`;
+  else if(!fs.length)cuerpo=`<div class="al-vacio"><svg width="44" height="44" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#2fae74" stroke-width="2"/><path d="M8 12.5l2.7 2.7L16 10" stroke="#2fae74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Sin alertas</b><span>${AL.grupo==='t'?'En Ticket no borraron, cancelaron ni cambiaron precios.':'No hubo nada que te afecte.'}</span></div>`;
   else{
     const dias=[...new Set(fs.map(f=>f.fecha))];
     cuerpo=dias.map(d=>{const ls=fs.filter(f=>f.fecha===d),m=ls.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0);
       return `<div class="al-dia"><span>${alDia(d)}</span><span>${ls.length} ${ls.length===1?'alerta':'alertas'}${m>0.004?` · <b>−${alQ(m)}</b>`:''}</span></div>`+ls.map(f=>`
       <div class="al-fila${AL.nuevas.has(f.clave)?' nueva':''}${alTieneDet(f)?' al-tap':''}"${alTieneDet(f)?` onpointerdown="alLPIni(event,'${esc(f.clave).replace(/'/g,'')}')" onpointerup="alLPFin()" onpointerleave="alLPFin()" onpointercancel="alLPFin()" onpointermove="alLPMueve(event)" oncontextmenu="return false"`:''}>
         <div class="al-tipo">${esc(AL_TIT[f.tipo]||f.tipo)}</div>
-        <div class="al-l1"><span class="al-cli"><b>${esc(f.cliente||'')}</b> <span>· ${alDoc(f)} ${f.nro}</span></span><span class="al-m${alGris(f)?' gris':''}">${alGris(f)?alQ(f.monto):'−'+alQ(f.monto)}</span></div>
+        <div class="al-l1"><span class="al-cli"><b>${esc(f.cliente||'')}</b>${alRef(f)?` <span>· ${alRef(f)}</span>`:''}</span><span class="al-m${alGris(f)?' gris':''}">${alMonto(f)}</span></div>
         <div class="al-l2"><span>${esc(f.que||'')}</span><span class="al-q">${esc(alQuien(f))}</span></div>
       </div>`).join('');}).join('');
   }
-  p.innerHTML=`<div class="al-cab"><div><h2>Cambios</h2><div class="al-sub">${fs.length?`${fs.length} en 7 días${perd>0.004?` · −${alQ(perd)}`:''}`:'Últimos 7 días'}</div></div>
+  const tab=(g,nom)=>{const ls=alDeGrupo(g),nv=ls.filter(f=>!f.visto_en).length;
+    return `<button class="al-tab${AL.grupo===g?' on':''}" onclick="alTab('${g}')">${nom}${ls.length?`<span>${ls.length}</span>`:''}${nv&&AL.grupo!==g?'<i></i>':''}</button>`;};
+  const tabs=`<div class="al-tabs">${tab('n','Notas')}${tab('t','Ticket')}</div>`;
+  p.innerHTML=`<div class="al-cab"><div><h2>${tit}</h2><div class="al-sub">${fs.length?`${fs.length} en 7 días${perd>0.004?` · −${alQ(perd)}`:''}`:'Últimos 7 días'}</div></div>
     <div class="pe-tbtns">${fs.length?`<button class="pe-consb ver" onclick="alPdf()">PDF</button>`:''}<button class="pe-cerrar" onclick="alCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
-    <div class="al-lista">${cuerpo}</div>`;
+    ${tabs}<div class="al-lista">${cuerpo}</div>`;
 }
 async function alPdf(){
-  const fs=AL.filas;if(!fs.length)return;
+  const fs=alDeGrupo(AL.grupo),esT=AL.grupo==='t';if(!fs.length)return;
   try{await csCargarPdf();}catch(e){toast('No se pudo cargar el PDF. Revisá internet',true);return;}
   const doc=new jspdf.jsPDF({unit:'pt',format:'letter'});const W=612,L=40,R=572,BOT=745;let y=0;
   const T=(s,x,yy,o={})=>{doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9);const c=o.c||[30,30,30];doc.setTextColor(c[0],c[1],c[2]);doc.text(String(s),x,yy,o.r?{align:'right'}:undefined);};
@@ -2934,7 +2959,7 @@ async function alPdf(){
   const gris=[120,120,120],rojo=[180,40,40],perd=fs.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0);
   const fl=f=>f.slice(8,10)+'/'+f.slice(5,7)+'/'+f.slice(0,4),dias=[...new Set(fs.map(f=>f.fecha))];
   const rango=dias.length===1?fl(dias[0]):`${fl(dias[dias.length-1])} al ${fl(dias[0])}`;
-  const cab=()=>{y=46;T('Distribuidora Hernández',L,y,{b:1,s:13});T(`Alertas · ${rango}`,L,y+15,{s:10,c:gris});
+  const cab=()=>{y=46;T('Distribuidora Hernández',L,y,{b:1,s:13});T(`${esT?'Cambios Ticket':'Alertas'} · ${rango}`,L,y+15,{s:10,c:gris});
     T(`${fs.length} ${fs.length===1?'alerta':'alertas'}`,R,y,{b:1,s:11,r:1});if(perd>0.004)T('-'+alQ(perd),R,y+15,{b:1,s:10,c:rojo,r:1});
     doc.setDrawColor(210);doc.setLineWidth(.6);doc.line(L,y+26,R,y+26);y+=50;};
   cab();
@@ -2943,17 +2968,17 @@ async function alPdf(){
       if(y+40>BOT){doc.addPage();cab();}
       T(`${dias.length>1?fl(d)+' · ':''}${AL_TIT[t].toUpperCase()} · ${ls.length}`,L,y,{b:1,s:8,c:gris});y+=14;
       for(const f of ls){if(y+26>BOT){doc.addPage();cab();}
-        T(String(f.nro),L,y,{b:1});T(corta(f.cliente||'',120,9,1),L+40,y,{b:1});
+        T(f.nro?String(f.nro):'—',L,y,{b:1});T(corta(f.cliente||'',120,9,1),L+40,y,{b:1});
         T(corta(String(f.que||'').replace(/→/g,'->').replace(/−/g,'-'),222,8.6),L+168,y,{s:8.6});
         T(corta(alQuien(f),70,8.2),R-64,y,{s:8.2,c:gris,r:1});
-        T(alGris(f)?alQ(f.monto):'-'+alQ(f.monto),R,y,{b:1,r:1,c:alGris(f)?[30,30,30]:rojo});
+        T(alMonto(f).replace(/−/g,'-'),R,y,{b:1,r:1,c:alGris(f)?[30,30,30]:rojo});
         doc.setDrawColor(235);doc.setLineWidth(.4);doc.line(L,y+7,R,y+7);y+=19;}
       y+=10;}}
   const np=doc.getNumberOfPages();
   for(let i=1;i<=np;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(150);doc.text(`${i} / ${np}`,W/2,772,{align:'center'});}
-  const nombre=`Alertas ${dias[dias.length-1]}${dias.length>1?' a '+dias[0]:''}.pdf`,blob=doc.output('blob');
+  const nombre=`${esT?'Cambios Ticket':'Alertas'} ${dias[dias.length-1]}${dias.length>1?' a '+dias[0]:''}.pdf`,blob=doc.output('blob');
   try{const file=new File([blob],nombre,{type:'application/pdf'});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Alertas'});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:esT?'Cambios Ticket':'Alertas'});return;}}catch(e){if(e&&e.name==='AbortError')return;}
   doc.save(nombre);
 }
 
@@ -3698,7 +3723,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-03.1';
+const VERSION='2026-11-03.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

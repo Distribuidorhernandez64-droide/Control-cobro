@@ -2905,6 +2905,8 @@ function alLPMueve(e){if(_alLP&&Math.hypot(e.clientX-_alLP.x,e.clientY-_alLP.y)>
 function alLPFin(){if(_alLP){clearTimeout(_alLP.t);_alLP=null;}}
 function alVerDet(clave){
   const f=AL.filas.find(x=>x.clave===clave);if(!f||!alTieneDet(f))return;
+  // 4/11/2026: ya la revisó → se le quita el rojo de "nueva" (sin mover la lista)
+  if(AL.nuevas.delete(clave)){const l=document.querySelector('#alPanel .al-lista'),t=l?l.scrollTop:0;alRenderPanel();const l2=document.querySelector('#alPanel .al-lista');if(l2)l2.scrollTop=t;}
   let el=document.getElementById('alVista');
   if(!el){el=document.createElement('div');el.id='alVista';el.className='pv';el.style.zIndex='460';
     el.addEventListener('click',e=>{if(e.target===el)alVerCerrar();});document.body.appendChild(el);}
@@ -3726,7 +3728,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-04.1';
+const VERSION='2026-11-04.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

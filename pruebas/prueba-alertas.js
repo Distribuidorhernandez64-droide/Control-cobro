@@ -91,7 +91,10 @@ const ALERTAS=[
   await p.evaluate(h=>{alVerCerrar();window.__DB.alertas.push({clave:'d|22316|900',tipo:'tope',fecha:h,hora:'13:15',nro:22316,cliente:'ERICKA BARRIOS 2',que:'deporade 625ml uva · compró 1.5 · Q100.00 c/u · desc. Q2.50 c/u',quien:'tienda2',monto:3.75,vigente:true,visto_en:null,
     detalle:[{c:'900',d:'---deporade 625ml uva 24ud',q:1.5,p:100,x:3.75,a:1},{c:'01',d:'----coca-cola 12onz 24ud',q:1,p:82,x:0,a:0}]});return alCargar();},hoy);
   await p.waitForTimeout(300);
+  await p.evaluate(()=>{AL.nuevas.add('d|22316|900');alRenderPanel();});
+  const rojoAntes=await p.evaluate(()=>AL.nuevas.has('d|22316|900')&&!!document.querySelector('#alPanel .al-fila.nueva[onclick*="22316"]'));
   await p.evaluate(()=>alVerDet('d|22316|900'));await p.waitForTimeout(400);
+  ok('Al abrirla se le quita el rojo (ya la revisó)',rojoAntes&&await p.evaluate(()=>!AL.nuevas.has('d|22316|900')&&!document.querySelector('#alPanel .al-fila.nueva[onclick*="22316"]')&&!!document.querySelector('#alPanel .al-fila[onclick*="22316"]')));
   const v2=await p.textContent('#alVista').catch(()=>'');
   ok('Alerta de descuento: muestra la nota completa y el total',v2.includes('ERICKA BARRIOS 2')&&v2.includes('coca-cola 12onz')&&v2.includes('Nota 22316')&&!v2.includes('anulada')&&v2.includes('Q228.25'));
   ok('El producto de la alerta va marcado',(await p.$$('#alVista .pv-l.al-marca')).length===1);

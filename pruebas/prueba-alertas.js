@@ -80,11 +80,10 @@ const ALERTAS=[
   await p.evaluate(h=>{window.__DB.alertas.push({clave:'a|factura1|22300',tipo:'anulada',fecha:h,hora:'16:00',nro:22300,cliente:'NANCY SAJAR',que:'Anularon la nota de entrega',quien:'caja',monto:164,vigente:true,visto_en:null,
     detalle:[{c:'01',d:'----coca-cola 12onz 24ud',q:2,p:82,x:0}]});return alCargar();},hoy);
   await p.click('#btnAL');await p.waitForTimeout(400);
-  ok('Sin ojito: todas se abren manteniendo presionado',!(await p.$('#alPanel .al-ojo')));
+  ok('Con ojito visible en las que tienen nota',(await p.$$('#alPanel .al-ojo')).length>0);
   const fila=await p.$('.al-fila.al-tap');const bx=await fila.boundingBox();
-  await p.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await p.mouse.down();await p.mouse.up();await p.waitForTimeout(300);
-  ok('Un toque NO abre la nota',!(await p.$('#alVista.open')));
-  await p.mouse.down();await p.waitForTimeout(700);await p.mouse.up();await p.waitForTimeout(400);
+  await p.mouse.click(bx.x+bx.width/2,bx.y+bx.height/2);await p.waitForTimeout(400);
+  ok('Un toque abre la nota',!!(await p.$('#alVista.open')));
   const vt=await p.textContent('#alVista').catch(()=>'');
   ok('Muestra los productos de lo anulado',vt.includes('NANCY SAJAR')&&vt.includes('coca-cola 12onz')&&vt.includes('anulada')&&vt.includes('Q164.00'));
   await p.screenshot({path:'/tmp/al-anul.png'}).catch(()=>{});

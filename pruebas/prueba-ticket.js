@@ -73,11 +73,10 @@ const ALERTAS=[
   await p.screenshot({path:'/tmp/tk-panel.png'}).catch(()=>{});
   const fila=(await p.$$('.al-fila.al-tap'));let fe=null;
   for(const f of fila){if((await f.textContent()).includes('lo quitaron')){fe=f;break;}}
-  const bx=await fe.boundingBox();await p.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await p.mouse.down();await p.mouse.up();await p.waitForTimeout(300);
-  ok('Un toque NO abre',!(await p.$('#alVista.open')));
-  await p.mouse.down();await p.waitForTimeout(700);await p.mouse.up();await p.waitForTimeout(400);
+  const bx=await fe.boundingBox();await p.mouse.click(bx.x+bx.width/2,bx.y+bx.height/2);await p.waitForTimeout(400);
+  ok('Un toque abre el ticket',!!(await p.$('#alVista.open')));
   const v=await p.textContent('#alVista').catch(()=>'');
-  ok('Mantener presionada: ticket 35561 con el producto quitado',v.includes('Ticket 35561')&&v.includes('lo quitaron')&&v.includes('1.5lt'));
+  ok('Ticket 35561 con el producto quitado',v.includes('Ticket 35561')&&v.includes('lo quitaron')&&v.includes('1.5lt'));
   ok('El total es lo cobrado (Q359.50), el quitado no suma',v.includes('Q359.50')&&v.includes('3 productos'));
   ok('El quitado va tachado',(await p.$$('#alVista .pv-l.al-elim')).length===1);
   await p.screenshot({path:'/tmp/tk-elim.png'}).catch(()=>{});

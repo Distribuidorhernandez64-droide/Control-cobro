@@ -2836,11 +2836,11 @@ async function peReintentarEnviadas(){
 // cada una con su lista, su PDF y sus vistas (se marcan vistas al ver esa pestaña).
 const AL={filas:[],nuevas:new Set(),abierto:false,ok:false,grupo:'n'};
 const AL_TIT={anulada:'Anulación',vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar',
-  t_eliminado:'Producto eliminado',t_cancelada:'Venta cancelada',t_precio:'Cambio de precio',t_descuento:'Descuento',t_subio:'Precio subido',t_anulada:'Ticket anulado'};
+  fecha:'Fecha cambiada',t_fecha:'Fecha cambiada',t_eliminado:'Producto eliminado',t_cancelada:'Venta cancelada',t_precio:'Cambio de precio',t_descuento:'Descuento',t_subio:'Precio subido',t_anulada:'Ticket anulado'};
 const alEsT=f=>String(f.tipo||'').startsWith('t_');
 const alDeGrupo=(g,fs)=>(fs||AL.filas).filter(f=>(g==='t')===alEsT(f));
 // En anulaciones y cambio de vendedor el monto es el total del documento (no lo que se dejó de cobrar); precio subido no es pérdida
-const alGris=f=>f.tipo==='vendedor'||f.tipo==='anulada'||f.tipo==='t_anulada'||f.tipo==='t_subio';
+const alGris=f=>f.tipo==='vendedor'||f.tipo==='anulada'||f.tipo==='t_anulada'||f.tipo==='t_subio'||f.tipo==='fecha'||f.tipo==='t_fecha';
 const alDoc=f=>alEsT(f)||String(f.clave||'').startsWith('a|factura|')?'ticket':'nota';
 const alMonto=f=>f.tipo==='t_subio'?'+'+alQ(f.monto):alGris(f)?alQ(f.monto):'−'+alQ(f.monto);
 const alRef=f=>f.nro?`${alDoc(f)} ${f.nro}`:'';
@@ -2912,7 +2912,7 @@ function alVerDet(clave){
       <span class="pv-d"><b>${esc(l.d||l.c||'')}</b><span>${l.e?'<i class="al-quit">lo quitaron</i> · ':''}${l.c?'Cód. '+esc(l.c)+' · ':''}${peQP(l.p)} c/u${Number(l.x)>0?` · <i class="pv-dsc">desc. −${q(l.x)}</i>`:''}</span></span>
       <span class="pv-i">${q(imp)}</span></div>`;}).join('');
   el.innerHTML=`<div class="pv-hoja"><div class="pv-asa"></div>
-    <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${f.nro?(alDoc(f)==='ticket'?'Ticket':'Nota')+' '+f.nro:'Venta cancelada · sin ticket'}${f.tipo==='anulada'||f.tipo==='t_anulada'?' · anulada':''}${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
+    <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${f.nro?(alDoc(f)==='ticket'?'Ticket':'Nota')+' '+f.nro:'Venta cancelada · sin ticket'}${f.tipo==='anulada'||f.tipo==='t_anulada'?' · anulada':''}${f.tipo==='fecha'||f.tipo==='t_fecha'?' · '+esc(f.que||''):''}${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
       <button class="pv-x" onclick="alVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button></div>
     <div class="pv-lista">${filas}</div>
     <div class="pv-pie"><div class="pv-tot"><span>${f.tipo==='t_cancelada'?'No se cobró':cobrados+' producto'+(cobrados===1?'':'s')}</span><b>${q(alGris(f)&&!alEsT(f)?f.monto:Math.round(suma*100)/100)}</b></div></div></div>`;
@@ -3723,7 +3723,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-03.2';
+const VERSION='2026-11-03.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

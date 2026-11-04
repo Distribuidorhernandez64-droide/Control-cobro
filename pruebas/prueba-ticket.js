@@ -101,6 +101,16 @@ const ALERTAS=[
   await p.click('#btnAL');await p.waitForTimeout(400);
   ok('Abre directo en la pestaña Ticket',(await p.textContent('.al-tab.on')).startsWith('Ticket')&&(await p.textContent('#alPanel .al-lista')).includes('desc. Q2.00'));
   await p.click('#alPanel .pe-cerrar');await p.waitForTimeout(200);
+  // Fecha cambiada: nota en Notas, ticket en Ticket, en gris (total del documento)
+  await p.evaluate(h=>{window.__DB.alertas.push({clave:'f|factura1|22400|2026-11-01',tipo:'fecha',fecha:h,hora:'10:00',nro:22400,cliente:'TIENDA X',que:'Lo hicieron el 03/11 10:00 con fecha 01/11',quien:'caja',monto:100,vigente:true,visto_en:null},
+    {clave:'f|factura|35562|2026-11-02',tipo:'t_fecha',fecha:h,hora:'22:02',nro:35562,cliente:'CLIENTE',que:'Lo hicieron el 03/11 22:02 con fecha 02/11',quien:'tienda',monto:30,vigente:true,visto_en:null});return alCargar();},hoy);
+  await p.waitForTimeout(200);await p.click('#btnAL');await p.waitForTimeout(400);
+  const fN=await p.textContent('#alPanel .al-lista');
+  ok('Fecha cambiada de nota sale en Notas, en gris',(await p.textContent('.al-tab.on')).startsWith('Notas')&&fN.toLowerCase().includes('fecha cambiada')&&fN.includes('con fecha 01/11')&&!fN.includes('con fecha 02/11'));
+  await p.click('.al-tab:not(.on)');await p.waitForTimeout(400);
+  const fT=await p.textContent('#alPanel .al-lista');
+  ok('Fecha cambiada de ticket sale en Ticket',fT.includes('con fecha 02/11')&&!fT.includes('con fecha 01/11'));
+  await p.click('#alPanel .pe-cerrar');await p.waitForTimeout(200);
   ok('Sin errores de la página',errs.length===0);if(errs.length)console.log(errs);
   // Celular angosto
   const n=await abrir('cesar','19881987',360);

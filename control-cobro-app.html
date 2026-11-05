@@ -551,6 +551,7 @@
   .t-reg{background:#e9eef5;color:#5b6b82;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px;margin-left:4px}
   .pe-regl{color:#6b7a90!important;font-weight:700}
   .pe-verl{cursor:pointer;color:var(--bad)!important;font-weight:800;font-size:12.5px!important;margin-top:2px}
+  .pe-devm{color:var(--warn);font-weight:800}
   .pe-vercam{cursor:pointer}.pe-vercam u{font-weight:900;text-underline-offset:2px;white-space:nowrap}
   .pe-card.reg{background:#f2f4f7;border-color:#dfe3ea}
   .pe-card.reg .pe-cnom{color:#4a5568}
@@ -1603,7 +1604,7 @@ function renderPedidos(v,editable){
     let row=`<div class="pedwrap">${puedeBorrar?`<button class="peddel" onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})">Eliminar</button>`:''}<div class="ped ${prob?'prob':''}${p.fac?' lp':''}" ${swipeAttrs} ${p.fac?`onpointerdown="rtLPIni(event,${Number(p.fac)},'${esc(String(v.rutero||'')).replace(/'/g,'')}')" onpointerup="rtLPFin()" onpointerleave="rtLPFin()" onpointercancel="rtLPFin()" onpointermove="rtLPMueve(event)" oncontextmenu="return false"`:''} ${editable?`onclick="if(rtLPFue())return;abrirPed(${v.id},${p.id})"`:noEnt?`onclick="if(rtLPFue())return;peNoEntMenu(${v.id},${p.id})"`:''}>
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:38px;height:38px;border-radius:50%;background:#eef0f3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="#9aa1ad" stroke-width="1.8"/><path d="M5 19c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5" stroke="#9aa1ad" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-        <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${av.tags}<div class="sub">${pedidoSub(p)}</div>${av.linea}</div>
+        <div><span class="pn${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'nombre')"`:''}>${p.nombre}</span>${pedTag(p)}${p.fac?`<span class="tag t-fac">${p.facEnv?ICO_CANDADO+' ':''}Nota ${p.fac}</span>`:''}${av.tags}${av.sinSub?'':`<div class="sub">${pedidoSub(p)}</div>`}${av.linea}</div>
       </div>
       <div class="pm${puedeEditar?' edt':''}" ${puedeEditar?`onclick="event.stopPropagation();editarPed(${v.id},${p.id},'total')"`:''}>${montoShow}</div></div></div>`;
     if(editable){
@@ -1840,7 +1841,7 @@ function renderZona(){
     html+=`<div class="vcard abierta" id="viaje-${v.id}" style="border-color:${colorRutero(selRutero)}"><div class="vhead-open" style="background:${colorRutero(selRutero)}">
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/></svg></span>
-        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${credChip([v])?'<div>'+credChip([v])+'</div>':''}${peModViaje(v)?`<div class="s pe-modh">${ICO_ALERTA} ${esc(peAvisoTxt(peAvisosDe([v])))}</div>`:''}</div>
+        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${credChip([v])?'<div>'+credChip([v])+'</div>':''}${peModViaje(v)?`<div class="s pe-modh">${esc(peAvisoTxt(peAvisosDe([v])))}</div>`:''}</div>
       </div>
       <span class="badge">${enRuta?'En ruta':'Preparando'}</span></div>`;
     html+=renderPedidos(v,true);
@@ -2479,7 +2480,7 @@ function peAvisoTxt(a){
   return t.join(' · ');
 }
 function peModViaje(v){return peAvisosDe([v]).total;}
-function peModLinea(v){const a=peAvisosDe([v]);return a.total?`<div class="pe-modv">${ICO_ALERTA} ${esc(peAvisoTxt(a))}</div>`:'';}
+function peModLinea(v){const a=peAvisosDe([v]);return a.total?`<div class="pe-modv">${esc(peAvisoTxt(a))}</div>`:'';}
 function peModificadasDe(r){return peAvisosDe(viajes.filter(v=>v&&v.rutero===r));}
 function peCambioDe(p){return p&&p.fac&&p.facEnv&&!p.facReg?PE.cambios[p.fac]:null;}
 const peR2=n=>Math.round((Number(n)||0)*100)/100;
@@ -2588,7 +2589,8 @@ function peAvisoPedido(v,p){
   const d=peDiffMonica(c,p.total);
   tags+=`<span class="tag t-mod">${ICO_ALERTA} ${d&&d.dev>0?'devolución':d&&d.precio.length?'cambió precio':'cambió en Monica'}</span>`;
   const ya=p.devMon||0, limpio=d&&ya>0&&Math.abs(d.dev-ya)<=0.001&&!d.precio.length;
-  if(limpio)return {tags,linea:`<div class="sub pe-verl" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">Ver qué cambió ›</div>`};
+  const solaDev=limpio&&!(p.descuento>0)&&!(p.vuelto>0)&&(p.devolucion||0)<=ya+0.001&&p.estado==='pagado';
+  if(limpio)return {tags,sinSub:solaDev,linea:`<div class="sub pe-verl" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${solaDev?`<span class="pe-devm">−${q(ya)}</span> · `:''}<span style="white-space:nowrap">Ver qué cambió ›</span></div>`};
   return {tags,linea:`<div class="sub pe-modl pe-vercam" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${esc(peCambioTxt(p,c,v))} · <u>Ver qué cambió</u></div>`};
 }
 
@@ -3728,7 +3730,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-04.2';
+const VERSION='2026-11-04.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

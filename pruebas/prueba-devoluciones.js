@@ -66,7 +66,7 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   ok('Lo que salió sigue igual (Q163.50)', x.total===163.5);
   await p.evaluate(()=>entrarVendedor('Gerson'));await p.waitForTimeout(500);
   let z=await p.textContent('#zona');
-  ok('El pedido dice "devolución" y cuánto ya se descontó', z.includes('devolución Q46.00')&&z.includes('Ver qué cambió ›')&&!z.includes('ya descontada'));
+  ok('El pedido dice "devolución" y cuánto ya se descontó', z.includes('−Q46.00 · Ver qué cambió ›')&&!z.includes('devolución Q46.00')&&!z.includes('ya descontada'));
   ok('El viaje muestra "1 cambió en Monica · devolución −Q46.00"', z.includes('1 cambió en Monica · devolución −Q46.00'));
   await p.screenshot({path:SHOTS+'/d1-viaje-devolucion.png'});
   ok('Sin etiqueta "ajuste" de más (ya dice "devolución")', !(await p.textContent('.ped:has-text("TIENDA ROSA")')).includes('ajuste'));

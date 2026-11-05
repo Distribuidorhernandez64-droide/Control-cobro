@@ -234,7 +234,7 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   await p.screenshot({path:SHOTS+'/a1-solo-abierta.png'});
   ok('Solo abierta: el viaje dice en gris "Abierta en Monica"', (await p.$$('.pe-abh')).length===1&&(await p.textContent('.pe-abh')).includes('Abierta en Monica'));
   await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Pedro');v.cerrado=true;v.horaRecibido=new Date().toISOString();viajeAbierto=null;renderZona();});
-  ok('Solo abierta: la tarjeta del viaje recibido también lo dice (sin borde rojo)', (await p.textContent('.vcard .pe-abv')).includes('Abierta en Monica')&&(await p.$$('.vcard.pe-vmod')).length===0);
+  ok('Solo abierta: la tarjeta del viaje recibido también lo dice (sin borde rojo)', (await p.textContent('.vcard .pe-abv')).includes('Abierta en Monica')&&(await p.$$('.vcard.pe-vab')).length===1&&(await p.$$('.vcard.pe-vmod')).length===0);
   await p.screenshot({path:SHOTS+'/a2-tarjeta-abierta.png'});
   await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Pedro');v.cerrado=false;renderZona();});
   await rest('PATCH','pendientes_entrega?nro=eq.21902',{monica_detalle:[L('05','PEPSI 2LT',4,25,0)].map(l=>({...l,m:'2 seven'}))});

@@ -67,7 +67,7 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   await p.evaluate(()=>entrarVendedor('Gerson'));await p.waitForTimeout(500);
   let z=await p.textContent('#zona');
   ok('El pedido dice "devolución" y cuánto ya se descontó', z.includes('−Q46.00 · Ver qué cambió ›')&&!z.includes('devolución Q46.00')&&!z.includes('ya descontada'));
-  ok('El viaje muestra "1 cambió en Monica · devolución −Q46.00"', z.includes('1 cambió en Monica · devolución −Q46.00'));
+  ok('El viaje muestra corto "Devolución −Q46.00"', z.includes('Devolución −Q46.00'));
   await p.screenshot({path:SHOTS+'/d1-viaje-devolucion.png'});
   ok('Sin etiqueta "ajuste" de más (ya dice "devolución")', !(await p.textContent('.ped:has-text("TIENDA ROSA")')).includes('ajuste'));
   await p.click('.pe-verl');await p.waitForTimeout(400);
@@ -77,7 +77,7 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   await p.screenshot({path:SHOTS+'/d2-ver-que-cambio.png'});
   await p.evaluate(()=>cerrarModalRecibe());
   await p.evaluate(()=>volverLista());await p.waitForTimeout(300);
-  ok('En la lista de ruteros: "1 cambió en Monica · devolución −Q46.00"', (await p.textContent('#zona')).includes('1 cambió en Monica · devolución −Q46.00'));
+  ok('En la lista de ruteros: "Devolución −Q46.00"', (await p.textContent('#zona')).includes('Devolución −Q46.00'));
   await p.screenshot({path:SHOTS+'/d3-lista-ruteros.png'});
 
   // Monica cambia otra vez: quitan también los anillos (Q32) -> la devolución se ajusta a Q78 (no se suma dos veces)
@@ -164,7 +164,7 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   ok('En la ruta: "regresó y la anularon"', z.includes('regresó y la anularon'));
   await p.screenshot({path:SHOTS+'/d8-regreso-anulada.png'});
   await p.evaluate(()=>volverLista());await p.waitForTimeout(300);
-  ok('En la lista de ruteros: "1 regresó y la anularon"', (await p.textContent('#zona')).includes('1 regresó y la anularon'));
+  ok('En la lista de ruteros: "1 anulada"', (await p.textContent('#zona')).includes('1 anulada'));
   await p.screenshot({path:SHOTS+'/d9-lista-anulada.png'});
 
   // ---- 6) Regresa y se manda con otro rutero: la ruta vieja ya no la puede reclamar ----

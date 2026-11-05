@@ -2475,8 +2475,10 @@ function peAvisosDe(vs){
 }
 function peAvisoTxt(a){
   const t=[];
-  if(a.n)t.push(a.n+(a.n===1?' cambió':' cambiaron')+' en Monica'+(a.dev>0?' · devolución −'+q(a.dev):''));
-  if(a.anul)t.push(a.anul+(a.anul===1?' regresó y la anularon':' regresaron y las anularon'));
+  // Corto: "Devolución −Q130.00" · "2 cambios · −Q130.00" · "Cambió en Monica" · "1 anulada"
+  if(a.n===1)t.push(a.dev>0?'Devolución −'+q(a.dev):'Cambió en Monica');
+  else if(a.n>1)t.push(a.n+' cambios'+(a.dev>0?' · −'+q(a.dev):' en Monica'));
+  if(a.anul)t.push(a.anul+(a.anul===1?' anulada':' anuladas'));
   return t.join(' · ');
 }
 function peModViaje(v){return peAvisosDe([v]).total;}
@@ -3730,7 +3732,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-04.3';
+const VERSION='2026-11-04.4';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -223,6 +223,20 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   await p.screenshot({path:SHOTS+'/c3-viaje-recibido-credito.png'});
   await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Pedro');v.cerrado=false;renderZona();volverLista();});
 
+  // ---- Solo abrieron la nota en Monica (mismo total y productos): sin alarma, solo línea gris ----
+  await rest('PATCH','pendientes_entrega?nro=eq.21902',{monica_cambio:true,monica_total:100,monica_detalle:D2});
+  await recargar();
+  await p.evaluate(()=>{PE.abierto&&peCerrar();volverLista();});await p.waitForTimeout(300);
+  ok('Solo abierta: no sale aviso en la lista de ruteros para Pedro', !(await p.$$eval('.vrow',rs=>rs.map(r=>r.textContent))).some(x=>x.includes('Pedro')&&/Cambió en Monica|cambios/.test(x)));
+  await p.evaluate(()=>entrarVendedor('Pedro'));await p.waitForTimeout(400);
+  z=await p.textContent('#zona');
+  ok('Solo abierta: línea gris "Abierta en Monica · sin cambios", sin etiqueta roja', z.includes('Abierta en Monica · sin cambios')&&!z.includes('cambió en Monica')&&(await p.$$('.vcard.pe-vmod')).length===0);
+  await p.screenshot({path:SHOTS+'/a1-solo-abierta.png'});
+  await rest('PATCH','pendientes_entrega?nro=eq.21902',{monica_detalle:[L('05','PEPSI 2LT',4,25,0)].map(l=>({...l,m:'2 seven'}))});
+  await recargar();
+  ok('Solo cambió el comentario: "Abierta en Monica · solo cambió un comentario"', (await p.textContent('#zona')).includes('solo cambió un comentario'));
+  await p.evaluate(()=>volverLista());await p.waitForTimeout(300);
+
   // ---- 7) Gesto: si la lista se refresca a media arrastrada, el gesto sigue ----
   await p.evaluate(()=>peAbrir());await p.waitForTimeout(800);
   const cdp=await ctx.newCDPSession(p);

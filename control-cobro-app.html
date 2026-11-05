@@ -552,6 +552,7 @@
   .pe-regl{color:#6b7a90!important;font-weight:700}
   .pe-verl{cursor:pointer;color:var(--bad)!important;font-weight:800;font-size:12.5px!important;margin-top:2px}
   .pe-devm{color:var(--warn);font-weight:800}
+  .pe-abl{color:var(--mut)!important;font-size:12px!important;font-weight:600}
   .pe-vercam{cursor:pointer}.pe-vercam u{font-weight:900;text-underline-offset:2px;white-space:nowrap}
   .pe-card.reg{background:#f2f4f7;border-color:#dfe3ea}
   .pe-card.reg .pe-cnom{color:#4a5568}
@@ -2464,12 +2465,24 @@ async function peCargarCambios(){
 // Avisos de una o varias rutas: notas que cambiaron en Monica después de salir (y cuánto se devolvió),
 // y notas que regresaron sin entregar y después las anularon en Monica.
 function peRegAnulada(p){if(!p||!p.facReg)return false;const f=PE.filas.find(x=>x.nro===p.fac);return !!(f&&f.regresada&&f.anulada);}
+// Abrieron la nota en Monica pero no cambió nada del cobro (mismo total, mismos productos y precios):
+// no es alarma, solo una línea gris. Devuelve el texto, o null si sí hubo un cambio de verdad.
+function peSoloAbierta(p,c){
+  if(!c||c.monica_anulada)return null;
+  const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
+  if(mt===null||Math.abs(mt-(p.total||0))>0.001)return null;
+  const d=peDiffMonica(c,p.total);
+  if(d&&(d.menos.length||d.precio.length||d.mas.length))return null;
+  if(!d)return 'Abierta en Monica · mismo total';
+  const com=ls=>JSON.stringify((ls||[]).map(l=>[String(l.c||''),String(l.m||'').trim()]).sort());
+  return com(c.detalle)!==com(c.monica_detalle)?'Abierta en Monica · solo cambió un comentario':'Abierta en Monica · sin cambios';
+}
 function peAvisosDe(vs){
   const a={n:0,dev:0,anul:0,total:0};
   vs.forEach(v=>{if(!v)return;(v.pedidos||[]).forEach(p=>{
     if(!p||!p.fac)return;
     if(p.facReg){if(peRegAnulada(p))a.anul++;return;}
-    if(peCambioDe(p)){a.n++;a.dev+=p.devMon||0;}
+    const c=peCambioDe(p);if(c&&!peSoloAbierta(p,c)){a.n++;a.dev+=p.devMon||0;}
   });});
   a.dev=peR2(a.dev);a.total=a.n+a.anul;return a;
 }
@@ -2588,6 +2601,7 @@ function peAvisoPedido(v,p){
   }
   let tags=p.facAnul?'<span class="tag t-canc">anulada en Monica</span>':'';
   const c=peCambioDe(p);if(!c)return {tags,linea:''};
+  const sa=peSoloAbierta(p,c);if(sa)return {tags,linea:`<div class="sub pe-abl">${sa}</div>`};
   const d=peDiffMonica(c,p.total);
   tags+=`<span class="tag t-mod">${ICO_ALERTA} ${d&&d.dev>0?'devolución':d&&d.precio.length?'cambió precio':'cambió en Monica'}</span>`;
   const ya=p.devMon||0, limpio=d&&ya>0&&Math.abs(d.dev-ya)<=0.001&&!d.precio.length;
@@ -3732,7 +3746,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-04.4';
+const VERSION='2026-11-04.5';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

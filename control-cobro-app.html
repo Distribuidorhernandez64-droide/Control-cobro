@@ -553,6 +553,9 @@
   .pe-verl{cursor:pointer;color:var(--bad)!important;font-weight:800;font-size:12.5px!important;margin-top:2px}
   .pe-devm{color:var(--warn);font-weight:800}
   .pe-abl{color:var(--mut)!important;font-size:12px!important;font-weight:600}
+  .pe-abv{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;font-weight:700;color:#8a919c}
+  .pe-abv svg,.pe-abh svg{width:13px;height:13px;flex-shrink:0}
+  .pe-abh{display:flex;align-items:center;gap:5px;margin-top:2px;opacity:.85;font-weight:700}
   .pe-vercam{cursor:pointer}.pe-vercam u{font-weight:900;text-underline-offset:2px;white-space:nowrap}
   .pe-card.reg{background:#f2f4f7;border-color:#dfe3ea}
   .pe-card.reg .pe-cnom{color:#4a5568}
@@ -1842,7 +1845,7 @@ function renderZona(){
     html+=`<div class="vcard abierta" id="viaje-${v.id}" style="border-color:${colorRutero(selRutero)}"><div class="vhead-open" style="background:${colorRutero(selRutero)}">
       <div style="display:flex;align-items:center;gap:11px">
         <span style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/></svg></span>
-        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${credChip([v])?'<div>'+credChip([v])+'</div>':''}${peModViaje(v)?`<div class="s pe-modh">${esc(peAvisoTxt(peAvisosDe([v])))}</div>`:''}</div>
+        <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${credChip([v])?'<div>'+credChip([v])+'</div>':''}${peModViaje(v)?`<div class="s pe-modh">${esc(peAvisoTxt(peAvisosDe([v])))}</div>`:''}${peAvisosDe([v]).abiertas?`<div class="s pe-abh">${ICO_OJO_S}${esc(peAbiertasTxt(peAvisosDe([v])))}</div>`:''}</div>
       </div>
       <span class="badge">${enRuta?'En ruta':'Preparando'}</span></div>`;
     html+=renderPedidos(v,true);
@@ -2398,6 +2401,7 @@ function creditosDe(vs){let n=0,m=0;vs.forEach(v=>{if(v)(v.pedidos||[]).forEach(
 function credChip(vs){const c=creditosDe(vs);if(!c.n)return '';
   return `<span class="cr-chip" title="${c.n} pedido${c.n===1?'':'s'} a crédito">${ICO_CRED}${c.n>1?c.n+' créditos · ':'Crédito '}${q(c.m)}</span>`;}
 const ICO_CONS=`<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="4" width="14" height="17" rx="2.5" stroke="currentColor" stroke-width="2.1"/><path d="M9 4.2V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5v.7" stroke="currentColor" stroke-width="2.1"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>`;
+const ICO_OJO_S=`<svg viewBox="0 0 24 24" fill="none"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2.2"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
 // "brenda (pueblo)" -> "Brenda pueblo"
@@ -2478,11 +2482,11 @@ function peSoloAbierta(p,c){
   return com(c.detalle)!==com(c.monica_detalle)?'Abierta en Monica · solo cambió un comentario':'Abierta en Monica · sin cambios';
 }
 function peAvisosDe(vs){
-  const a={n:0,dev:0,anul:0,total:0};
+  const a={n:0,dev:0,anul:0,total:0,abiertas:0};
   vs.forEach(v=>{if(!v)return;(v.pedidos||[]).forEach(p=>{
     if(!p||!p.fac)return;
     if(p.facReg){if(peRegAnulada(p))a.anul++;return;}
-    const c=peCambioDe(p);if(c&&!peSoloAbierta(p,c)){a.n++;a.dev+=p.devMon||0;}
+    const c=peCambioDe(p);if(c){if(peSoloAbierta(p,c))a.abiertas++;else{a.n++;a.dev+=p.devMon||0;}}
   });});
   a.dev=peR2(a.dev);a.total=a.n+a.anul;return a;
 }
@@ -2495,7 +2499,9 @@ function peAvisoTxt(a){
   return t.join(' · ');
 }
 function peModViaje(v){return peAvisosDe([v]).total;}
-function peModLinea(v){const a=peAvisosDe([v]);return a.total?`<div class="pe-modv">${esc(peAvisoTxt(a))}</div>`:'';}
+// Notas que solo abrieron en Monica (sin cambios en el cobro): aviso gris, sutil
+function peAbiertasTxt(a){return a.abiertas?(a.abiertas===1?'Abierta en Monica':a.abiertas+' abiertas en Monica'):'';}
+function peModLinea(v){const a=peAvisosDe([v]);return (a.total?`<div class="pe-modv">${esc(peAvisoTxt(a))}</div>`:'')+(a.abiertas?`<div class="pe-abv">${ICO_OJO_S}${esc(peAbiertasTxt(a))}</div>`:'');}
 function peModificadasDe(r){return peAvisosDe(viajes.filter(v=>v&&v.rutero===r));}
 function peCambioDe(p){return p&&p.fac&&p.facEnv&&!p.facReg?PE.cambios[p.fac]:null;}
 const peR2=n=>Math.round((Number(n)||0)*100)/100;
@@ -3746,7 +3752,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-04.5';
+const VERSION='2026-11-04.6';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

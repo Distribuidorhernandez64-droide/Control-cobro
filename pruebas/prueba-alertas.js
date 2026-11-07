@@ -1,5 +1,5 @@
 // Alertas de Facturación rápida en Cobros (1/11/2026): campanita solo para el maestro,
-// gris sin nada nuevo, roja con número si hay; al abrir se marcan vistas; lista y PDF.
+// gris sin nada nuevo, roja con número si hay; cada una se marca vista al tocarla (mantener presionada = vista previa); lista y PDF.
 let chromium;try{({chromium}=require('playwright-core'));}catch(e){({chromium}=require('playwright'));}
 const http=require('http'),fs=require('fs'),path=require('path');
 const HTML=fs.readFileSync(path.join(__dirname,'..','control-cobro-app.html'),'utf8');
@@ -60,8 +60,14 @@ const ALERTAS=[
   ok('No muestra alertas que ya no aplican',!txt.includes('No vigente'));
   ok('Total de lo que se dejó de cobrar (−Q7.00)',txt.includes('Q7.00'));
   ok('Nuevas marcadas con la raya roja',(await p.$$('#alPanel .al-fila.nueva')).length===2);
-  ok('Al abrir quedan vistas en la nube',await p.evaluate(()=>window.__DB.alertas.filter(a=>a.vigente&&!a.visto_en).length===0));
+  // 6/11/2026: abrir la ventana ya NO las marca; cada una se marca al tocarla
+  ok('Al abrir NO se marcan vistas (siguen en rojo y en la nube)',await p.evaluate(()=>window.__DB.alertas.filter(a=>a.vigente&&!a.visto_en).length===2)&&(await p.$$('#alPanel .al-fila.nueva')).length===2);
+  await p.click('#alPanel .al-fila:has-text("tienda santa ana")');await p.waitForTimeout(300);
+  ok('Al tocar una: se le quita el rojo y queda vista en la nube',!(await p.$('#alPanel .al-fila.nueva:has-text("tienda santa ana")'))&&await p.evaluate(()=>!!window.__DB.alertas.find(a=>a.clave==='b|22211|401').visto_en));
   ok('Se anota quién la vio',await p.evaluate(()=>window.__DB.alertas.find(a=>a.clave==='b|22211|401').visto_por==='César'));
+  ok('"Cambios" sigue con 1 hasta tocar todas',(await p.textContent('#btnAL')).replace(/\s/g,'')==='Cambios1');
+  await p.click('#alPanel .al-fila:has-text("Tienda C")');await p.waitForTimeout(300);
+  ok('Tocadas todas: ya no hay rojo',(await p.$$('#alPanel .al-fila.nueva')).length===0);
 
   await p.screenshot({path:'/tmp/al-panel.png'}).catch(()=>{});
   await p.click('#alPanel .pe-cerrar');await p.waitForTimeout(200);
@@ -81,9 +87,16 @@ const ALERTAS=[
     detalle:[{c:'01',d:'----coca-cola 12onz 24ud',q:2,p:82,x:0}]});return alCargar();},hoy);
   await p.click('#btnAL');await p.waitForTimeout(400);
   ok('Con ojito visible en las que tienen nota',(await p.$$('#alPanel .al-ojo')).length>0);
-  const fila=await p.$('.al-fila.al-tap');const bx=await fila.boundingBox();
+  const fila=await p.$('.al-fila:has-text("NANCY SAJAR")');const bx=await fila.boundingBox();
+  // Mantener presionada = vista previa: se ve la nota pero NO se quita el rojo ni la alarma
+  await p.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await p.mouse.down();await p.waitForTimeout(700);await p.mouse.up();await p.waitForTimeout(400);
+  ok('Mantener presionada abre la vista previa',!!(await p.$('#alVista.open'))&&(await p.textContent('#alVista')).includes('Vista previa'));
+  ok('Vista previa: sigue en rojo y sin marcar en la nube',!!(await p.$('#alPanel .al-fila.nueva:has-text("NANCY SAJAR")'))&&await p.evaluate(()=>!window.__DB.alertas.find(a=>a.clave==='a|factura1|22300').visto_en));
+  ok('Vista previa: "Cambios" sigue con su número',/Cambios\d/.test((await p.textContent('#btnAL')).replace(/\s/g,'')));
+  await p.evaluate(()=>alVerCerrar());await p.waitForTimeout(300);
   await p.mouse.click(bx.x+bx.width/2,bx.y+bx.height/2);await p.waitForTimeout(400);
-  ok('Un toque abre la nota',!!(await p.$('#alVista.open')));
+  ok('Un toque abre la nota',!!(await p.$('#alVista.open'))&&!(await p.textContent('#alVista')).includes('Vista previa'));
+  ok('Un toque: ahí sí se quita el rojo y queda vista',!(await p.$('#alPanel .al-fila.nueva:has-text("NANCY SAJAR")'))&&await p.evaluate(()=>!!window.__DB.alertas.find(a=>a.clave==='a|factura1|22300').visto_en));
   const vt=await p.textContent('#alVista').catch(()=>'');
   ok('Muestra los productos de lo anulado',vt.includes('NANCY SAJAR')&&vt.includes('coca-cola 12onz')&&vt.includes('anulada')&&vt.includes('Q164.00'));
   await p.screenshot({path:'/tmp/al-anul.png'}).catch(()=>{});
@@ -91,10 +104,9 @@ const ALERTAS=[
   await p.evaluate(h=>{alVerCerrar();window.__DB.alertas.push({clave:'d|22316|900',tipo:'tope',fecha:h,hora:'13:15',nro:22316,cliente:'ERICKA BARRIOS 2',que:'deporade 625ml uva · compró 1.5 · Q100.00 c/u · desc. Q2.50 c/u',quien:'tienda2',monto:3.75,vigente:true,visto_en:null,
     detalle:[{c:'900',d:'---deporade 625ml uva 24ud',q:1.5,p:100,x:3.75,a:1},{c:'01',d:'----coca-cola 12onz 24ud',q:1,p:82,x:0,a:0}]});return alCargar();},hoy);
   await p.waitForTimeout(300);
-  await p.evaluate(()=>{AL.nuevas.add('d|22316|900');alRenderPanel();});
-  const rojoAntes=await p.evaluate(()=>AL.nuevas.has('d|22316|900')&&!!document.querySelector('#alPanel .al-fila.nueva[onclick*="22316"]'));
-  await p.evaluate(()=>alVerDet('d|22316|900'));await p.waitForTimeout(400);
-  ok('Al abrirla se le quita el rojo (ya la revisó)',rojoAntes&&await p.evaluate(()=>!AL.nuevas.has('d|22316|900')&&!document.querySelector('#alPanel .al-fila.nueva[onclick*="22316"]')&&!!document.querySelector('#alPanel .al-fila[onclick*="22316"]')));
+  const rojoAntes=await p.evaluate(()=>!!document.querySelector('#alPanel .al-fila.nueva[onclick*="22316"]'));
+  await p.evaluate(()=>alToque('d|22316|900'));await p.waitForTimeout(400);
+  ok('Al abrirla se le quita el rojo (ya la revisó)',rojoAntes&&await p.evaluate(()=>!document.querySelector('#alPanel .al-fila.nueva[onclick*="22316"]')&&!!document.querySelector('#alPanel .al-fila[onclick*="22316"]')));
   const v2=await p.textContent('#alVista').catch(()=>'');
   ok('Alerta de descuento: muestra la nota completa y el total',v2.includes('ERICKA BARRIOS 2')&&v2.includes('coca-cola 12onz')&&v2.includes('Nota 22316')&&!v2.includes('anulada')&&v2.includes('Q228.25'));
   ok('El producto de la alerta va marcado',(await p.$$('#alVista .pv-l.al-marca')).length===1);

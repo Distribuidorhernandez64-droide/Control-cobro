@@ -148,7 +148,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.evaluate(()=>peCargar());await p.waitForTimeout(1200);
   const zt=await p.textContent('#zona');
   ok('Nota enviada y modificada en Monica: marca "cambió en Monica"', zt.includes('cambió en Monica'));
-  ok('Dice cuánto salió y cuánto dice Monica ahora', zt.includes('Salió Q400.00 · Monica ahora Q380.00'));
+  ok('Dice cuánto salió y cuánto dice Monica ahora', zt.includes('Salió Q400.00 · ahora Q380.00'));
   v=await p.evaluate(()=>viajes.find(x=>x.rutero==='Juan'));
   ok('Lo que salió no cambia (sigue Q400.00 y Q250.00)', v.pedidos.reduce((s,x)=>s+x.total,0)===650);
   await p.screenshot({path:SHOTS+'/8b-cambio-en-monica.png'});

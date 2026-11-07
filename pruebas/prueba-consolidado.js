@@ -84,6 +84,31 @@ const JSPDF=process.env.JSPDF;
   // Deslizar hacia abajo lo cierra (igual que la vista previa)
   await p.evaluate(()=>peVerCerrar());await p.waitForTimeout(300);
   ok('Se cierra y siguen escogidas las notas', !(await p.evaluate(()=>PE.vista))&&(await p.evaluate(()=>PE.sel.size))===4);
+  // ---- Historial: al volver a entrar (recargar), se ve qué notas llevaba el último consolidado ----
+  await p.reload({waitUntil:'networkidle'});await p.waitForTimeout(1500);
+  if(await p.isVisible('#loginUser')){await p.fill('#loginUser','cesar');await p.fill('#loginPin','19881987');await p.click('#loginScreen button');await p.waitForTimeout(1500);}
+  await p.evaluate(()=>peAbrir());await p.waitForTimeout(1000);
+  ok('Al volver a entrar no hay nada escogido', (await p.evaluate(()=>PE.sel.size))===0);
+  ok('Las notas del último consolidado se ven con un tono suave', (await p.$$('.pe-card.cons')).length===4);
+  ok('Aparece el icono del historial arriba', await p.isVisible('#peHistBtn'));
+  await p.screenshot({path:SHOTS+'/k3-tono-ultimo.png'});
+  await p.click('#peHistBtn');await p.waitForTimeout(500);
+  t=await p.textContent('#peVista');
+  ok('Historial: "Hoy", 4 notas y sus clientes', t.includes('Consolidados')&&t.includes('Hoy')&&t.includes('4 notas')&&t.includes('leticia xia')&&t.includes('milton'));
+  await p.screenshot({path:SHOTS+'/k4-historial.png'});
+  await p.click('#peVista .ch-b:not(.osc)');await p.waitForTimeout(500);
+  t=await p.textContent('#peVista');
+  ok('Historial → Ver consolidado: el mismo consolidado', t.includes('Consolidado de carga')&&t.includes('3 notas · 6 productos'));
+  await p.evaluate(()=>peHistAbrir());await p.waitForTimeout(400);
+  await p.click('#peVista .ch-b.osc');await p.waitForTimeout(500);
+  ok('Historial → Escoger otra vez: quedan escogidas las 4 notas', (await p.evaluate(()=>PE.sel.size))===4&&!(await p.evaluate(()=>PE.vista)));
+  ok('Escogidas: se ven como escogidas (no con el tono suave)', (await p.$$('.pe-card.on')).length===4&&(await p.$$('.pe-card.cons')).length===0);
+  // Otro consolidado distinto: el tono pasa a esas notas y el historial guarda los dos
+  await p.evaluate(()=>{PE.sel=new Set([22301]);peRenderPanel();});await p.waitForTimeout(200);
+  await p.click('#peConsBtn');await p.waitForTimeout(400);await p.evaluate(()=>peVerCerrar());
+  await p.evaluate(()=>{PE.sel=new Set();peRenderPanel();});await p.waitForTimeout(300);
+  ok('Nuevo consolidado: el tono suave ahora solo en esa nota', (await p.$$('.pe-card.cons')).length===1);
+  ok('El historial guarda los dos', (await p.evaluate(()=>peHistLeer().length))===2);
   ok('Sin errores en la página', errs.length===0);
   if(errs.length)console.log(errs);
   await b.close();srv.close();

@@ -66,7 +66,7 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   ok('Lo que salió sigue igual (Q163.50)', x.total===163.5);
   await p.evaluate(()=>entrarVendedor('Gerson'));await p.waitForTimeout(500);
   let z=await p.textContent('#zona');
-  ok('El pedido dice "devolución" y cuánto ya se descontó', z.includes('−Q46.00 · Ver qué cambió ›')&&!z.includes('devolución Q46.00')&&!z.includes('ya descontada'));
+  ok('El pedido dice "devolución" y cuánto ya se descontó', z.includes('−Q46.00 · Cambios ›')&&!z.includes('devolución Q46.00')&&!z.includes('ya descontada'));
   ok('El viaje muestra corto "Devolución −Q46.00"', z.includes('Devolución −Q46.00'));
   await p.screenshot({path:SHOTS+'/d1-viaje-devolucion.png'});
   ok('Sin etiqueta "ajuste" de más (ya dice "devolución")', !(await p.textContent('.ped:has-text("TIENDA ROSA")')).includes('ajuste'));
@@ -98,7 +98,7 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   ok('Cambio de precio: la cuenta no cambia (se cobra Q100.00, sin devolución)', !x.devMon&&!x.devolucion&&x.efectivo===100);
   await p.evaluate(()=>entrarVendedor('Gerson'));await p.waitForTimeout(400);
   z=await p.textContent('#zona');
-  ok('Cambio de precio: aviso "cambió precio" y "Monica ahora Q96.00"', z.includes('cambió precio')&&z.includes('Salió Q100.00 · Monica ahora Q96.00'));
+  ok('Cambio de precio: aviso "cambió precio" y "Monica ahora Q96.00"', z.includes('cambió precio')&&z.includes('Salió Q100.00 · ahora Q96.00'));
   await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Gerson');const pp=v.pedidos.find(x=>x.fac===21902);peVerCambio(v.id,pp.id);});await p.waitForTimeout(300);
   m=await p.textContent('#modalRecibeBody');
   ok('"Ver qué cambió" muestra el precio antes y ahora (Q25.00 → Q24.00) y que no se descuenta', m.includes('Q25.00 → Q24.00')&&m.includes('no se descuenta'));

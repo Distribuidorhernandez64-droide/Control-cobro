@@ -43,3 +43,5 @@ Bonificaciones aparte), "Solo cajas" se puede apagar, Copiar texto y PDF. Necesi
 `prueba-ticket.js` — Cambios › pestañas Notas · Ticket (3/11/2026): arriba sigue una sola palabra "Cambios" con el total sin ver;
 adentro cada pestaña con su lista, su PDF y sus vistas (ver Notas no marca las de Ticket); abre en la pestaña que tiene algo nuevo.
 Ticket: producto eliminado (F9) tachado en la vista previa y sin sumar, venta cancelada sin ticket, precio subido en gris.
+  Historial (6/11): al sacar un consolidado se guarda en el teléfono; sus notas quedan con tono suave y el
+  reloj arriba abre "Consolidados" (Ver consolidado / Escoger otra vez).

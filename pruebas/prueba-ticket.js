@@ -61,7 +61,8 @@ const ALERTAS=[
   let txt=await p.textContent('#alPanel .al-lista');
   ok('Notas: solo Santa Ana, nada de Ticket',txt.includes('santa ana')&&!txt.includes('lo quitaron'));
   ok('Pestaña Ticket con punto rojo (5 sin ver)',!!(await p.$('.al-tab:not(.on) i'))&&(await p.textContent('.al-tab:not(.on)')).includes('5'));
-  ok('Ver Notas no marca las de Ticket',await p.evaluate(()=>!!window.__DB.alertas.find(a=>a.clave==='b|22211|401').visto_en&&window.__DB.alertas.filter(a=>a.tipo.startsWith('t_')&&!a.visto_en).length===5));
+  await p.click('#alPanel .al-fila:has-text("santa ana")');await p.waitForTimeout(300);
+  ok('Tocar la de Notas no marca las de Ticket',await p.evaluate(()=>!!window.__DB.alertas.find(a=>a.clave==='b|22211|401').visto_en&&window.__DB.alertas.filter(a=>a.tipo.startsWith('t_')&&!a.visto_en).length===5));
   await p.screenshot({path:'/tmp/tk-notas.png'}).catch(()=>{});
   await p.click('.al-tab:not(.on)');await p.waitForTimeout(500);
   txt=await p.textContent('#alPanel .al-lista');
@@ -69,7 +70,7 @@ const ALERTAS=[
   ok('Venta cancelada dice "sin ticket"',txt.includes('sin ticket'));
   ok('Precio subido en gris con +',txt.includes('+Q3.00'));
   ok('Total que se dejó de cobrar: −Q179.00 (73.50+103.50+2; sin anulada ni subido)',(await p.textContent('#alPanel .al-sub')).includes('Q179.00'));
-  ok('Al ver Ticket quedan vistas las de Ticket',await p.evaluate(()=>window.__DB.alertas.filter(a=>a.vigente&&!a.visto_en).length===0));
+  ok('Ver la pestaña Ticket NO las marca (se marcan al tocarlas)',await p.evaluate(()=>window.__DB.alertas.filter(a=>a.vigente&&!a.visto_en).length===5));
   await p.screenshot({path:'/tmp/tk-panel.png'}).catch(()=>{});
   const fila=(await p.$$('.al-fila.al-tap'));let fe=null;
   for(const f of fila){if((await f.textContent()).includes('lo quitaron')){fe=f;break;}}
@@ -91,8 +92,9 @@ const ALERTAS=[
   await p.click('.al-tab:not(.on)');await p.waitForTimeout(300);
   const pdf2=await p.evaluate(async()=>{let n=null;const O=window.jspdf.jsPDF;window.jspdf.jsPDF=function(...a){const d=new O(...a);d.save=x=>{n=x;};return d;};navigator.canShare=null;await alPdf();window.jspdf.jsPDF=O;return n;}).catch(e=>'err '+e.message);
   ok('PDF de Notas sigue igual ('+pdf2+')',typeof pdf2==='string'&&pdf2.startsWith('Alertas'));
+  await p.evaluate(async()=>{for(const f of AL.filas.filter(x=>!x.visto_en))await alMarcarUna(f.clave);});await p.waitForTimeout(250);
   await p.click('#alPanel .pe-cerrar');await p.waitForTimeout(250);
-  ok('Todo visto: "Cambios" en gris sin número',await p.isVisible('#btnAL.visto')&&(await p.textContent('#btnAL')).trim()==='Cambios');
+  ok('Todas tocadas: "Cambios" en gris sin número',await p.isVisible('#btnAL.visto')&&(await p.textContent('#btnAL')).trim()==='Cambios');
   // Solo hay de Ticket sin ver: abre directo en Ticket
   await p.evaluate(h=>{window.__DB.alertas.push({clave:'t|d|35570|01|2.00',tipo:'t_descuento',fecha:h,hora:'23:00',nro:35570,cliente:'CLIENTE',que:'coca-cola 12onz 24ud · compró 1 · Q82.00 c/u · desc. Q2.00 c/u',quien:'tienda',monto:2,vigente:true,visto_en:null});return alCargar();},hoy);
   await p.waitForTimeout(200);

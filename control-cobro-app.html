@@ -340,7 +340,8 @@
   .al-l2{margin-top:3px;font-size:12.5px;font-weight:600;color:#5b6472}
   .al-l2>span:first-child{min-width:0}
   .al-q{flex-shrink:0;font-size:11.5px;font-weight:700;color:var(--mut);white-space:nowrap}
-  .al-fila.al-tap{cursor:pointer}.al-fila.al-tap:active{background:#f7f6f3}
+  .al-fila.al-tap{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.al-fila.al-tap:active{background:#f7f6f3}
+  .al-prev{font-style:normal;font-weight:800;color:var(--bad)}
   .al-ojo{vertical-align:-3px;margin-left:3px;color:#9aa1ad}
   #alVista .pv-l.al-marca .pv-d b{color:var(--bad)}
   #alVista .pv-l.al-marca .pv-q{background:var(--bad)}
@@ -501,6 +502,21 @@
   .pe-cerrar{width:34px;height:34px;border-radius:50%;border:none;background:#f1f0ec;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
   .pe-cerrar:active{transform:scale(.92)}
   .pe-tbtns{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .pe-histb{width:34px;height:34px;border-radius:50%;border:none;background:#f1f0ec;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
+  .pe-histb.ver{display:flex}.pe-histb:active{transform:scale(.92)}
+  /* notas que fueron en el último consolidado de hoy: solo un tono suave, no estorba */
+  .pe-card.cons{background:#fffaea;border-color:#ecd9a0}
+  .ch-lista{padding:4px 16px 14px}
+  .ch-f{padding:12px 0;border-bottom:1px solid #f0eee9}.ch-f:last-child{border-bottom:none}
+  .ch-l1{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .ch-l1 b{font-size:14.5px;font-weight:900}.ch-l1 span{font-size:12.5px;font-weight:700;color:var(--mut);white-space:nowrap}
+  .ch-cli{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 9px}
+  .ch-cli span{font-size:11.5px;font-weight:700;color:#5b6472;background:#f4f3ef;border-radius:7px;padding:3px 8px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ch-cli i{font-style:normal;font-weight:900;color:var(--ink);margin-right:4px}
+  .ch-btns{display:flex;gap:8px;align-items:center}
+  .ch-b{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:17px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:12.5px;font-weight:800;color:var(--ink);cursor:pointer}
+  .ch-b svg{width:15px;height:15px}.ch-b.osc{background:#1c2433;border-color:#1c2433;color:#fff}
+  .ch-ya{font-size:12px;font-weight:700;color:var(--mut)}
   .pe-consb{display:none;align-items:center;gap:6px;height:34px;padding:0 12px 0 10px;border-radius:17px;border:none;background:#1c2433;color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;animation:pop .18s}
   .pe-consb.ver{display:inline-flex}.pe-consb:active{transform:scale(.95)}
   .pe-consb svg{width:16px;height:16px;flex-shrink:0}
@@ -545,7 +561,7 @@
   .t-mod{background:#fbe9e4;color:var(--bad);white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px;margin-left:4px}
   .pe-modv{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:12.5px;font-weight:800;color:var(--bad)}
   .pe-vmod{border-color:#e7a89a!important;box-shadow:0 0 0 1px #f3cfc6 inset}
-  .pe-vab{border-color:#c9d1dc!important}   /* solo abierta en Monica: contorno gris azulado, sin alarma */
+  .pe-vab{border-color:#aab8ca!important;box-shadow:0 0 0 1px #e1e7ef inset}   /* solo abierta en Monica: contorno gris azulado, sin alarma */
   .pe-modh{font-weight:900!important;color:#fff3b0!important;display:flex;align-items:center;gap:4px;margin-top:2px}
   .pe-modl{color:var(--bad)!important;font-weight:800}
   .pe-modr{color:var(--bad);font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:4px;margin-top:3px}
@@ -2401,6 +2417,7 @@ const ICO_CRED=`<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="
 function creditosDe(vs){let n=0,m=0;vs.forEach(v=>{if(v)(v.pedidos||[]).forEach(p=>{if(p&&p.estado==='credito'&&creditoDe(p)>0.001){n++;m+=creditoDe(p);}});});return {n,m:Math.round(m*100)/100};}
 function credChip(vs){const c=creditosDe(vs);if(!c.n)return '';
   return `<span class="cr-chip" title="${c.n} pedido${c.n===1?'':'s'} a crédito">${ICO_CRED}${c.n>1?c.n+' créditos · ':'Crédito '}${q(c.m)}</span>`;}
+const ICO_HIST=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round"/><path d="M3.5 4.5v4h4" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3 2" stroke="#1c2433" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICO_CONS=`<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="4" width="14" height="17" rx="2.5" stroke="currentColor" stroke-width="2.1"/><path d="M9 4.2V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5v.7" stroke="currentColor" stroke-width="2.1"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>`;
 const ICO_OJO_S=`<svg viewBox="0 0 24 24" fill="none"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2.2"/></svg>`;
 const ICO_CANDADO=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="2.4"/></svg>`;
@@ -2514,7 +2531,7 @@ function peCambioTxt(p,c,v){
   if(d&&Math.abs(d.dev-ya)>0.001)return 'Monica: devolución −'+q(d.dev)+' sin descontar'+(v&&v.cerrado?' (ruta ya recibida)':'');
   if(ya>0&&!(d&&d.precio.length))return 'Devolución de Monica ya descontada';
   const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
-  return (mt!==null&&Math.abs(mt-(p.total||0))>0.001)?'Salió '+q(p.total)+' · Monica ahora '+q(mt):'Modificada en Monica (mismo total '+q(p.total)+')';
+  return (mt!==null&&Math.abs(mt-(p.total||0))>0.001)?'Salió '+q(p.total)+' · ahora '+q(mt):'Modificada · mismo total '+q(p.total);
 }
 // ---- Devoluciones: qué cambió en Monica después de que la nota salió ----
 // Compara los productos con que salió la nota contra como están AHORA en Monica (por código de producto):
@@ -2613,8 +2630,8 @@ function peAvisoPedido(v,p){
   tags+=`<span class="tag t-mod">${ICO_ALERTA} ${d&&d.dev>0?'devolución':d&&d.precio.length?'cambió precio':'cambió en Monica'}</span>`;
   const ya=p.devMon||0, limpio=d&&ya>0&&Math.abs(d.dev-ya)<=0.001&&!d.precio.length;
   const solaDev=limpio&&!(p.descuento>0)&&!(p.vuelto>0)&&(p.devolucion||0)<=ya+0.001&&p.estado==='pagado';
-  if(limpio)return {tags,sinSub:solaDev,linea:`<div class="sub pe-verl" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${solaDev?`<span class="pe-devm">−${q(ya)}</span> · `:''}<span style="white-space:nowrap">Ver qué cambió ›</span></div>`};
-  return {tags,linea:`<div class="sub pe-modl pe-vercam" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${esc(peCambioTxt(p,c,v))} · <u>Ver qué cambió</u></div>`};
+  if(limpio)return {tags,sinSub:solaDev,linea:`<div class="sub pe-verl" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${solaDev?`<span class="pe-devm">−${q(ya)}</span> · `:''}<span style="white-space:nowrap">Cambios ›</span></div>`};
+  return {tags,linea:`<div class="sub pe-modl pe-vercam" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${esc(peCambioTxt(p,c,v))} · <span style="white-space:nowrap">Cambios ›</span></div>`};
 }
 
 // ---- Consolidado de carga de las notas escogidas ----
@@ -2659,8 +2676,59 @@ function csArmar(notas,solo){
 function csCorto(s){let w=csNombre(s).split(/\s+/).filter(Boolean);
   while(w.length>1&&/^(cliente|clte|gco\.?|tienda|tiendita|abarroteria|abarrotería|variedades|y|tiendas)$/i.test(w[0]))w.shift();
   const t=w.slice(0,2).join(' ');return t.length>18?t.slice(0,18).trim():t;}
-function peConsNotas(){const por={};PE.filas.forEach(f=>por[f.nro]=f);return (PE.consNros||[]).map(n=>por[n]).filter(Boolean);}
-function peConsAbrir(){if(!PE.sel.size)return;PE.consNros=[...PE.sel];if(PE.consSolo===undefined)PE.consSolo=true;peVer('cons');}
+// Notas del consolidado: las que siguen en Por entregar van al día con Monica; las que ya salieron, como estaban
+// cuando se sacó (copia guardada en el historial).
+function peConsNotas(){const por={};PE.filas.forEach(f=>por[f.nro]=f);const cp=PE.consCopia||{};
+  return (PE.consNros||[]).map(n=>por[n]||cp[n]).filter(Boolean);}
+function peConsAbrir(){if(!PE.sel.size)return;PE.consNros=[...PE.sel];PE.consCopia=null;if(PE.consSolo===undefined)PE.consSolo=true;
+  peHistGuardar(PE.consNros);peVer('cons');peRenderLista();}
+// ---- Historial de consolidados (en este teléfono, últimos 7 días, hasta 20) ----
+// Cada vez que se saca un consolidado se guarda qué notas llevaba. Las notas del último de hoy se ven con un
+// tono suave en Por entregar; el icono de reloj arriba abre la lista para verlo otra vez o escoger esas notas.
+const PE_HIST_K='cc_consolidados';
+function peHistLeer(){try{const a=JSON.parse(localStorage.getItem(PE_HIST_K)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function peHistGuardar(nros){
+  const por={};PE.filas.forEach(f=>por[f.nro]=f);
+  const notas=nros.map(n=>por[n]).filter(Boolean).map(f=>({nro:f.nro,cliente:f.cliente,total:f.total,vendedor:f.vendedor,detalle:f.detalle||null}));
+  if(!notas.length)return;
+  const lim=new Date();lim.setDate(lim.getDate()-7);
+  let h=peHistLeer().filter(x=>x&&x.t&&new Date(x.t)>=lim);
+  const clave=notas.map(x=>x.nro).sort((a,b)=>a-b).join(',');
+  if(h.length&&h[0].clave===clave)h.shift();            // el mismo otra vez: solo se actualiza la hora
+  h.unshift({t:new Date().toISOString(),clave,notas});
+  try{localStorage.setItem(PE_HIST_K,JSON.stringify(h.slice(0,20)));}catch(e){try{localStorage.setItem(PE_HIST_K,JSON.stringify(h.slice(0,5)));}catch(e2){}}
+}
+// Notas del último consolidado de HOY (para el tono suave en las tarjetas)
+function peHistUltimo(){const h=peHistLeer()[0];if(!h)return new Set();
+  return new Date(h.t).toLocaleDateString('en-CA')===peHoyF()?new Set(h.notas.map(x=>x.nro)):new Set();}
+function peHistAbrir(){peVer('hist');}
+function peHistVer(i){const h=peHistLeer()[i];if(!h)return;
+  PE.consNros=h.notas.map(x=>x.nro);PE.consCopia={};h.notas.forEach(x=>PE.consCopia[x.nro]=x);
+  if(PE.consSolo===undefined)PE.consSolo=true;PE.vista='cons';peRenderVista();}
+// Escoger otra vez las notas de ese consolidado que siguen pendientes
+function peHistEscoger(i){const h=peHistLeer()[i];if(!h)return;
+  const libres=new Set(pePendientes().filter(f=>!peEsManana(f)).map(f=>f.nro));
+  const ok=h.notas.map(x=>x.nro).filter(n=>libres.has(n));
+  if(!ok.length){toast('Esas notas ya no están en Por entregar',true);return;}
+  PE.sel=new Set(ok);PE.filtro='todos';peVerCerrar();peRenderPanel();
+  const falta=h.notas.length-ok.length;
+  toast(ok.length+(ok.length===1?' nota escogida':' notas escogidas')+(falta?' · '+falta+' ya no está'+(falta===1?'':'n')+' en Por entregar':''));
+}
+function peHistTxtDia(t){const d=new Date(t),hoy=peHoyF(),a=new Date();a.setDate(a.getDate()-1);const ds=d.toLocaleDateString('en-CA');
+  return (ds===hoy?'Hoy':ds===a.toLocaleDateString('en-CA')?'Ayer':ds.slice(8,10)+'/'+ds.slice(5,7))+' · '+d.toLocaleTimeString('es-GT',{hour:'numeric',minute:'2-digit'});}
+function peRenderHist(hoja){
+  const h=peHistLeer(),libres=new Set(pePendientes().map(f=>f.nro));
+  const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
+  const filas=h.map((x,i)=>{const pend=x.notas.filter(n=>libres.has(n.nro)).length,tot=x.notas.reduce((a,n)=>a+(Number(n.total)||0),0);
+    return `<div class="ch-f">
+      <div class="ch-l1"><b>${peHistTxtDia(x.t)}</b><span>${x.notas.length} nota${x.notas.length===1?'':'s'} · ${q(tot)}</span></div>
+      <div class="ch-cli">${x.notas.map(n=>`<span><i>${n.nro}</i>${esc(csNombre(n.cliente))}</span>`).join('')}</div>
+      <div class="ch-btns"><button class="ch-b" onclick="peHistVer(${i})">${ICO_CONS}Ver consolidado</button>${pend?`<button class="ch-b osc" onclick="peHistEscoger(${i})">Escoger ${pend===x.notas.length?'otra vez':pend+' que siguen'}</button>`:'<span class="ch-ya">Ya salieron</span>'}</div>
+    </div>`;}).join('');
+  hoja.innerHTML=`<div class="pv-asa"></div>
+    <div class="pv-cab"><div class="pv-tit"><b>Consolidados</b><span>${h.length?'Los que sacaste en este teléfono · 7 días':'Todavía no has sacado ninguno'}</span></div>${cerrar}</div>
+    <div class="pv-lista ch-lista">${filas||'<div class="pv-vacio">Cuando saques un consolidado, queda aquí para verlo otra vez o escoger esas notas.</div>'}</div>`;
+}
 function peConsSolo(){PE.consSolo=!PE.consSolo;peRenderVista();}
 function peRenderCons(hoja){
   const notas=peConsNotas(), sin=notas.filter(n=>!Array.isArray(n.detalle)), con=notas.filter(n=>Array.isArray(n.detalle));
@@ -2882,6 +2950,8 @@ async function alCargar(){
     if(r.error&&!AL.sinDet&&/detalle/.test(r.error.message||'')){AL.sinDet=true;r=await pedir(base);}   // falta la columna: sigue sin productos
     if(r.error)throw r.error;
     AL.filas=r.data||[];AL.ok=true;
+    // las que ya tocó aquí y todavía no se guardan en la nube no vuelven a salir en rojo
+    AL.filas.forEach(f=>{if(!f.visto_en&&AL.vistasLocal&&AL.vistasLocal.has(f.clave))f.visto_en=AL.vistasLocal.get(f.clave);});
   }catch(e){AL.ok=false;}
   alRenderCampana();
   if(AL.abierto)alRenderPanel();
@@ -2900,23 +2970,30 @@ async function alAbrir(g){
   if(!esMaestro())return;
   // Abre en la pestaña que tiene algo sin ver (Notas primero)
   AL.grupo=g==='t'||g==='n'?g:(alNuevas('n').length||!alNuevas('t').length?'n':'t');
-  AL.abierto=true;AL.nuevas=new Set(AL.filas.filter(f=>!f.visto_en).map(f=>f.clave));
+  AL.abierto=true;
   let p=document.getElementById('alPanel');
   if(!p){p=document.createElement('div');p.id='alPanel';document.body.appendChild(p);}
   p.className='al-ov open';document.body.classList.add('pe-bloqueo');
   alRenderPanel();
   await alCargar();
-  await alMarcarVistas();
 }
-// Ya las vio: se marcan vistas (la campanita se apaga aquí y en la PC). Solo las de la pestaña que está viendo.
-async function alMarcarVistas(){
-  const ks=alDeGrupo(AL.grupo).filter(f=>!f.visto_en).map(f=>f.clave);
-  ks.forEach(k=>AL.nuevas.add(k));
-  if(ks.length){
-    try{const r=await sb.from('alertas').update({visto_en:new Date().toISOString(),visto_por:sesion?sesion.nombre:'?'}).in('clave',ks).is('visto_en',null);
-      if(!r.error){const ah=new Date().toISOString();AL.filas.forEach(f=>{if(ks.includes(f.clave)&&!f.visto_en)f.visto_en=ah;});}}catch(e){}
-    alRenderCampana();alRenderPanel();
-  }
+// 6/11/2026: cada alerta se marca vista SOLO cuando se toca (no al abrir la ventana). "Cambios" sigue con su
+// número hasta tocarlas todas. Mantener presionada = vista previa: se ve pero sigue en rojo.
+AL.vistasLocal=new Map();
+async function alMarcarUna(clave){
+  const f=AL.filas.find(x=>x.clave===clave);if(!f||f.visto_en)return;
+  const ah=new Date().toISOString();f.visto_en=ah;AL.vistasLocal.set(clave,ah);
+  const l=document.querySelector('#alPanel .al-lista'),t=l?l.scrollTop:0;alRenderPanel();alRenderCampana();
+  const l2=document.querySelector('#alPanel .al-lista');if(l2)l2.scrollTop=t;
+  try{const r=await sb.from('alertas').update({visto_en:ah,visto_por:sesion?sesion.nombre:'?'}).eq('clave',clave).is('visto_en',null);
+    if(!r.error)AL.vistasLocal.delete(clave);}catch(e){}
+}
+let _alLPfue=false;
+function alToque(clave){
+  if(_alLPfue){_alLPfue=false;return;}          // fue mantener presionada: ya se abrió la vista previa
+  const f=AL.filas.find(x=>x.clave===clave);if(!f)return;
+  alMarcarUna(clave);
+  if(alTieneDet(f))alVerDet(clave,false);
 }
 // Anulación: tocarla muestra los productos que tenía (misma vista que Por entregar)
 function alTieneDet(f){return Array.isArray(f.detalle)&&f.detalle.length>0;}
@@ -2924,14 +3001,13 @@ function alTieneDet(f){return Array.isArray(f.detalle)&&f.detalle.length>0;}
 const ALOJO=` <svg class="al-ojo" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="ver"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>`;
 // Mantener presionada la tarjeta (no un toque, para que no se abra por error) → la nota completa
 let _alLP=null;
-function alLPIni(e,clave){if(_alLP)clearTimeout(_alLP.t);
-  _alLP={x:e.clientX,y:e.clientY,t:setTimeout(()=>{_alLP=null;try{navigator.vibrate&&navigator.vibrate(30);}catch(e){}alVerDet(clave);},480)};}
+function alLPIni(e,clave){if(_alLP)clearTimeout(_alLP.t);_alLPfue=false;
+  const f=AL.filas.find(x=>x.clave===clave);if(!f||!alTieneDet(f))return;
+  _alLP={x:e.clientX,y:e.clientY,t:setTimeout(()=>{_alLP=null;_alLPfue=true;try{navigator.vibrate&&navigator.vibrate(30);}catch(e){}alVerDet(clave,true);},480)};}
 function alLPMueve(e){if(_alLP&&Math.hypot(e.clientX-_alLP.x,e.clientY-_alLP.y)>10){clearTimeout(_alLP.t);_alLP=null;}}
 function alLPFin(){if(_alLP){clearTimeout(_alLP.t);_alLP=null;}}
-function alVerDet(clave){
+function alVerDet(clave,previa){
   const f=AL.filas.find(x=>x.clave===clave);if(!f||!alTieneDet(f))return;
-  // 4/11/2026: ya la revisó → se le quita el rojo de "nueva" (sin mover la lista)
-  if(AL.nuevas.delete(clave)){const l=document.querySelector('#alPanel .al-lista'),t=l?l.scrollTop:0;alRenderPanel();const l2=document.querySelector('#alPanel .al-lista');if(l2)l2.scrollTop=t;}
   let el=document.getElementById('alVista');
   if(!el){el=document.createElement('div');el.id='alVista';el.className='pv';el.style.zIndex='460';
     el.addEventListener('click',e=>{if(e.target===el)alVerCerrar();});document.body.appendChild(el);}
@@ -2942,7 +3018,7 @@ function alVerDet(clave){
       <span class="pv-d"><b>${esc(l.d||l.c||'')}</b><span>${l.e?'<i class="al-quit">lo quitaron</i> · ':''}${l.c?'Cód. '+esc(l.c)+' · ':''}${peQP(l.p)} c/u${Number(l.x)>0?` · <i class="pv-dsc">desc. −${q(l.x)}</i>`:''}</span></span>
       <span class="pv-i">${q(imp)}</span></div>`;}).join('');
   el.innerHTML=`<div class="pv-hoja"><div class="pv-asa"></div>
-    <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${f.nro?(alDoc(f)==='ticket'?'Ticket':'Nota')+' '+f.nro:'Venta cancelada · sin ticket'}${f.tipo==='anulada'||f.tipo==='t_anulada'?' · anulada':''}${f.tipo==='fecha'||f.tipo==='t_fecha'?' · '+esc(f.que||''):''}${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
+    <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${previa&&!f.visto_en?'<i class="al-prev">Vista previa</i> · ':''}${f.nro?(alDoc(f)==='ticket'?'Ticket':'Nota')+' '+f.nro:'Venta cancelada · sin ticket'}${f.tipo==='anulada'||f.tipo==='t_anulada'?' · anulada':''}${f.tipo==='fecha'||f.tipo==='t_fecha'?' · '+esc(f.que||''):''}${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
       <button class="pv-x" onclick="alVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button></div>
     <div class="pv-lista">${filas}</div>
     <div class="pv-pie"><div class="pv-tot"><span>${f.tipo==='t_cancelada'?'No se cobró':cobrados+' producto'+(cobrados===1?'':'s')}</span><b>${q(alGris(f)&&!alEsT(f)?f.monto:Math.round(suma*100)/100)}</b></div></div></div>`;
@@ -2952,9 +3028,9 @@ function alVerCerrar(){const el=document.getElementById('alVista');if(!el)return
 function alCerrar(){alVerCerrar();
   AL.abierto=false;const p=document.getElementById('alPanel');if(p){p.className='al-ov';p.innerHTML='';}
   if(!(PE&&PE.abierto))document.body.classList.remove('pe-bloqueo');
-  AL.nuevas=new Set();alRenderCampana();
+  alRenderCampana();
 }
-async function alTab(g){if(AL.grupo===g)return;AL.grupo=g;alVerCerrar();alRenderPanel();const l=document.querySelector('#alPanel .al-lista');if(l)l.scrollTop=0;await alMarcarVistas();}
+async function alTab(g){if(AL.grupo===g)return;AL.grupo=g;alVerCerrar();alRenderPanel();const l=document.querySelector('#alPanel .al-lista');if(l)l.scrollTop=0;}
 function alDia(f){const hoy=new Date().toLocaleDateString('en-CA'),d=new Date();d.setDate(d.getDate()-1);
   return f===hoy?'Hoy':f===d.toLocaleDateString('en-CA')?'Ayer':f.slice(8,10)+'/'+f.slice(5,7);}
 function alRenderPanel(){
@@ -2967,7 +3043,7 @@ function alRenderPanel(){
     const dias=[...new Set(fs.map(f=>f.fecha))];
     cuerpo=dias.map(d=>{const ls=fs.filter(f=>f.fecha===d),m=ls.filter(f=>!alGris(f)).reduce((s,f)=>s+Number(f.monto||0),0);
       return `<div class="al-dia"><span>${alDia(d)}</span><span>${ls.length} ${ls.length===1?'alerta':'alertas'}${m>0.004?` · <b>−${alQ(m)}</b>`:''}</span></div>`+ls.map(f=>`
-      <div class="al-fila${AL.nuevas.has(f.clave)?' nueva':''}${alTieneDet(f)?' al-tap':''}"${alTieneDet(f)?` onclick="alVerDet('${esc(f.clave).replace(/'/g,'')}')"`:''}>
+      <div class="al-fila${!f.visto_en?' nueva':''} al-tap" onclick="alToque('${esc(f.clave).replace(/'/g,'')}')" onpointerdown="alLPIni(event,'${esc(f.clave).replace(/'/g,'')}')" onpointermove="alLPMueve(event)" onpointerup="alLPFin()" onpointercancel="alLPFin()" oncontextmenu="return false">
         <div class="al-tipo">${esc(AL_TIT[f.tipo]||f.tipo)}</div>
         <div class="al-l1"><span class="al-cli"><b>${esc(f.cliente||'')}</b>${alRef(f)?` <span>· ${alRef(f)}</span>`:''}</span><span class="al-m${alGris(f)?' gris':''}">${alMonto(f)}</span></div>
         <div class="al-l2"><span>${esc(f.que||'')}${alTieneDet(f)?ALOJO:''}</span><span class="al-q">${esc(alQuien(f))}</span></div>
@@ -3325,6 +3401,7 @@ function peRenderVista(){
   PE.vistaPend=false;
   const hoja=el.querySelector('.pv-hoja');if(!hoja)return;
   if(PE.vista==='cons'){hoja.classList.add('alta');return peRenderCons(hoja);}
+  if(PE.vista==='hist'){hoja.classList.add('alta');return peRenderHist(hoja);}
   const nro=PE.vista, rf=PE.rutaFila&&PE.rutaFila.nro===nro?PE.rutaFila:null, f=rf?(rf.cliente!==undefined?rf:null):PE.filas.find(x=>x.nro===nro);
   const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   if(!f){hoja.innerHTML=`<div class="pv-asa"></div><div class="pv-cab"><div class="pv-tit"><b>Nota ${nro}</b></div>${cerrar}</div>
@@ -3446,7 +3523,7 @@ function peRenderPanel(){
   // El esqueleto (con el buscador) se arma UNA vez: así el teclado no se cierra al refrescar
   if(!document.getElementById('peBuscar')){
     sh.innerHTML=`<div class="pe-cab">
-        <div class="pe-tit"><div><h2>Por entregar</h2><div id="peEst"></div></div><div class="pe-tbtns"><button id="peConsBtn" class="pe-consb" onclick="peConsAbrir()" aria-label="Consolidado de las notas escogidas">${ICO_CONS}Consolidado</button><button class="pe-cerrar" onclick="peCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
+        <div class="pe-tit"><div><h2>Por entregar</h2><div id="peEst"></div></div><div class="pe-tbtns"><button id="peConsBtn" class="pe-consb" onclick="peConsAbrir()" aria-label="Consolidado de las notas escogidas">${ICO_CONS}Consolidado</button><button id="peHistBtn" class="pe-histb" onclick="peHistAbrir()" aria-label="Consolidados anteriores">${ICO_HIST}</button><button class="pe-cerrar" onclick="peCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
         <div class="pe-buscar">${ICO_LUPA}<input id="peBuscar" type="text" inputmode="search" placeholder="Cliente, nota o código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" value="${esc(PE.buscar)}" oninput="peBuscar(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
           <button id="peLimpiar" class="pe-limpiar${PE.buscar?' ver':''}" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="peLimpiar()" aria-label="Borrar búsqueda"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg></button></div>
         <div class="pe-chips" id="peChips"></div>
@@ -3478,6 +3555,7 @@ function peRenderLista(){
     const cuando=f=>{const t=peFechaNota(f);return t===null?Infinity:t;};
     // las que regresaron sin entregar van al final del grupo (esperan que alguien decida, no son urgentes)
     const masVieja=v=>Math.min(...grupos[v].map(f=>f.regresada?Infinity:cuando(f)));
+    const ultCons=peHistUltimo();
     Object.keys(grupos).sort((a,b)=>masVieja(a)-masVieja(b)||a.localeCompare(b)).forEach(v=>{
       const lista=grupos[v].sort((a,b)=>(!!a.regresada-!!b.regresada)||cuando(a)-cuando(b)||a.nro-b.nro), col=peColorVend(v);
       const largas=enM?0:lista.filter(f=>!f.regresada&&(peEsperaMin(f)||0)>=60).length;
@@ -3489,8 +3567,8 @@ function peRenderLista(){
       lista.forEach(f=>{
         const on=PE.sel.has(f.nro);
         const ayer=!enM&&f.pospuesta_hasta;
-        const reg=!!f.regresada;
-        h+=`<button class="pe-card${on?' on':''}${enM?' manana':''}${reg?' reg':''}" data-nro="${f.nro}" onclick="peTap(${f.nro})" aria-pressed="${on}">
+        const reg=!!f.regresada,enCons=!on&&ultCons.has(f.nro);
+        h+=`<button class="pe-card${on?' on':''}${enM?' manana':''}${reg?' reg':''}${enCons?' cons':''}" data-nro="${f.nro}" onclick="peTap(${f.nro})" aria-pressed="${on}">
           ${on?`<span class="pe-cok">${ICO_OK_S}</span>`:reg?`<span class="pe-nueva pe-cnueva pe-regb">regresó${f.regreso_rutero?' · '+esc(f.regreso_rutero):''}</span>`:(ayer?'<span class="pe-nueva pe-cnueva pe-ayer">de ayer</span>':(vistas.has(f.nro)||enM?'':'<span class="pe-nueva pe-cnueva">nueva</span>'))}
           <span class="pe-cnom">${esc(f.cliente||'Sin nombre')}</span>
           <span class="pe-csub">Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}</span>
@@ -3518,6 +3596,7 @@ function peRenderLista(){
 }
 function peRenderBarra(){
   const cb=document.getElementById('peConsBtn');if(cb)cb.classList.toggle('ver',PE.sel.size>0);
+  const hb=document.getElementById('peHistBtn');if(hb)hb.classList.toggle('ver',peHistLeer().length>0);
   const b=document.getElementById('peBarra');if(!b)return;
   if(!PE.sel.size){b.innerHTML='';return;}
   const fs=PE.filas.filter(f=>PE.sel.has(f.nro)), tot=fs.reduce((s,f)=>s+f.total,0);
@@ -3753,7 +3832,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-04.7';
+const VERSION='2026-11-06.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

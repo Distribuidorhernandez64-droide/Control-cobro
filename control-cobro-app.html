@@ -2706,6 +2706,16 @@ function peAvisoPedido(v,p){
 // todos), nunca Laky/azúcar/Acticlor/cloro/Ilgua/detergente, grupo 1, grupo 2 y lo demás alfabético, cada nota de
 // sabor en su renglón y Bonificaciones aparte al final. Los productos vienen de Monica (los sube Facturación rápida).
 const CS_EXCLUIR=[/laky/,/azucar/,/acticlor/,/cloro/,/ilgua/,/detergente/];
+// Tiky jumbo va justo debajo de Orange jumbo (mismo precio; 7/11/2026, igual que Facturación rápida). Sin Orange, la Tiky queda en su lugar.
+const CS_JUNTOS=[[k=>/orange/.test(k)&&/(jumbo|3 ?lt)/.test(k)&&!/vidrio/.test(k),k=>/tiky/.test(k)&&/(jumbo|3 ?lt)/.test(k)&&!/vidrio/.test(k)]];
+function csJuntar(arr){
+  for(const [esA,esB] of CS_JUNTOS){
+    const a=arr.findIndex(x=>esA(x.k)),b=arr.findIndex(x=>esB(x.k));
+    if(a<0||b<0||arr[a].grupo!==arr[b].grupo)continue;
+    const [x]=arr.splice(b,1);arr.splice(arr.findIndex(y=>esA(y.k))+1,0,x);
+  }
+  return arr;
+}
 const CS_ORDEN=[
   [1,s=>/pepsi/.test(s)&&/1 1\/4/.test(s)],
   [1,s=>/coca/.test(s)&&/(^|[^\d.\/])1 ?lt\b/.test(s)],
@@ -2737,7 +2747,7 @@ function csArmar(notas,solo){
   const alfa=(a,b)=>a.k.localeCompare(b.k,'es');
   const todos=[...m.values()].filter(x=>x.cantidad);
   todos.forEach(x=>{const i=CS_ORDEN.findIndex(([,f])=>f(x.k));x.rank=i<0?99:i;x.grupo=i<0?3:CS_ORDEN[i][0];});
-  return {principal:todos.filter(x=>!/bonificacion/.test(x.k)).sort((a,b)=>a.rank-b.rank||alfa(a,b)),bonif:todos.filter(x=>/bonificacion/.test(x.k)).sort(alfa)};
+  return {principal:csJuntar(todos.filter(x=>!/bonificacion/.test(x.k)).sort((a,b)=>a.rank-b.rank||alfa(a,b))),bonif:todos.filter(x=>/bonificacion/.test(x.k)).sort(alfa)};
 }
 // Nombre corto para WhatsApp (igual que Facturación rápida)
 function csCorto(s){let w=csNombre(s).split(/\s+/).filter(Boolean);
@@ -4159,7 +4169,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-07.7';
+const VERSION='2026-11-07.8';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

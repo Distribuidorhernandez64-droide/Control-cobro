@@ -644,6 +644,8 @@
   .rm-lista li span{min-width:0}.rm-lista li small{display:block;color:var(--mut);font-size:12px;font-weight:700}
   .rm-sin{background:#fbf3e6;color:#8a5a12;border-radius:11px;padding:9px 11px;font-size:12.5px;font-weight:700;margin-bottom:12px;line-height:1.45}.rm-sin small{font-size:11.5px;opacity:.85}
   .rm-btns{display:flex;flex-direction:column;gap:9px}
+  .rm-omw{display:flex;gap:8px}.rm-omw .rm-om{flex:1}
+  .rm-omc{width:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0}.rm-omc svg{width:20px;height:20px}
   .rm-om{background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;gap:7px}.rm-om svg{width:17px;height:17px}
   .rm-btns a.btn{text-decoration:none;text-align:center;display:block}
   .rm-nota{font-size:12px;color:var(--mut);font-weight:700;margin:-4px 0 12px}
@@ -3541,6 +3543,7 @@ function peEsperaTxt(min){
 const ICO_MAPA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 4.5 3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2-6-2Z" stroke="#1c2433" stroke-width="2.1" stroke-linejoin="round"/><path d="M9 4.5v13M15 6.5v13" stroke="#1c2433" stroke-width="2.1"/></svg>`;
 const ICO_LISTA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6.5h11M9 12h11M9 17.5h11" stroke="#1c2433" stroke-width="2.3" stroke-linecap="round"/><circle cx="4.5" cy="6.5" r="1.4" stroke="#1c2433" stroke-width="1.6"/><circle cx="4.5" cy="12" r="1.4" stroke="#1c2433" stroke-width="1.6"/><circle cx="4.5" cy="17.5" r="1.4" stroke="#1c2433" stroke-width="1.6"/></svg>`;
 const ICO_PIN=`<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="2.2"/></svg>`;
+const ICO_COMPARTIR=`<svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5v11M8 7.5l4-4 4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 10.5H6a1.5 1.5 0 0 0-1.5 1.5v7A1.5 1.5 0 0 0 6 20.5h12a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 const ICO_X_S=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="3" stroke-linecap="round"/></svg>`;
 // De aquí sale la ruta (ubicación que dio César, 7/11/2026)
 const BODEGA={lat:14.5000347,lng:-90.9534797,nombre:'Distribuidora Hernández'};
@@ -3716,14 +3719,17 @@ function rmKml(v,fecha){
   const txt=`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>${rmXml(nombre)}</name>\n${pms.join('\n')}${pms.length?'\n':''}</Document>\n</kml>\n`;
   return {txt,archivo,nombre,n:paradas.length};
 }
-async function rmKmlEnviar(vid){
+// "Archivo para Organic Maps" abre la vista previa del archivo (en el iPhone: la del sistema, con su botón
+// de compartir, desde donde se abre en Organic Maps o se manda por WhatsApp). "Compartir" abre el menú directo.
+async function rmKmlEnviar(vid,directo){
   const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
   const k=rmKml(v);if(!k.n){toast('Ninguna parada tiene ubicación',true);return;}
-  logAudit('RUTA ORGANIC MAPS',`${v.rutero}: ${k.archivo} (${k.n} paradas)`);
+  logAudit('RUTA ORGANIC MAPS',`${v.rutero}: ${k.archivo} (${k.n} paradas)${directo?' · compartir':''}`);
   const f=new File([k.txt],k.archivo,{type:'application/vnd.google-earth.kml+xml'});
-  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:k.nombre});return;}}
-  catch(e){if(e&&e.name==='AbortError')return;}
-  // Sin "compartir": se descarga el archivo (desde ahí se manda por WhatsApp)
+  if(directo){
+    try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:k.nombre});return;}}
+    catch(e){if(e&&e.name==='AbortError')return;}
+  }
   const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=k.archivo;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
   toast('Archivo listo: '+k.archivo);
@@ -3761,7 +3767,7 @@ function rutaMaps(vid){
     ${sin.length?`<div class="rm-sin"><b>Sin ubicación (${sin.length})</b><br>${sin.map(x=>esc(x.nom)).join(' · ')}<br><small>No tienen coordenadas en Monica; no van en el enlace ni en el archivo.</small></div>`:''}
     <div class="rm-btns">
       ${paradas.length?`<button class="btn ok" onclick="rmWhats(${v.id})">Google Maps por WhatsApp</button>
-      <button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo para Organic Maps</button>
+      <div class="rm-omw"><button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo para Organic Maps</button><button class="btn sec rm-omc" onclick="rmKmlEnviar(${v.id},true)" aria-label="Compartir el archivo">${ICO_COMPARTIR}</button></div>
       ${en.map(e=>`<a class="btn sec" href="${e.url}" target="_blank" rel="noopener">Abrir en Google Maps${en.length>1?` · paradas ${e.desde} a ${e.hasta}`:''}</a>`).join('')}
       <button class="btn sec" onclick="rmCopiar(${v.id})">Copiar</button>`:''}
       <button class="btn sec pm-cancel" onclick="cerrarModalRecibe()">Cerrar</button>
@@ -4134,7 +4140,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-07.4';
+const VERSION='2026-11-07.5';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -596,6 +596,53 @@
   .dv-av{margin:8px 0 2px;padding:10px 12px;border-radius:12px;background:#fbe9e4;color:#a8432d;font-size:13px;font-weight:700;line-height:1.4}
   .dv-av.gris{background:#f1f0ec;color:#5b6472}
   .t-fac{background:#fdf0e1;color:#b0601a;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
+  /* ===== Mapa de Por entregar (7/11/2026) ===== */
+  .pe-mapab{width:34px;height:34px;border-radius:50%;border:none;background:#f1f0ec;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
+  .pe-mapab:active{transform:scale(.92)}
+  .pe-mapab.on{background:#1c2433}.pe-mapab.on svg path,.pe-mapab.on svg circle{stroke:#fff}
+  .pe-sheet #peLista.con-mapa{padding:0;overflow:hidden;position:relative}
+  .pe-mapa{position:absolute;inset:0;isolation:isolate;z-index:0;background:#eef0f2}
+  .pe-mapadiv{position:absolute;inset:0;font-family:inherit}
+  .pe-mapa .leaflet-control-attribution{font-size:9px;background:rgba(255,255,255,.7)}
+  .pe-mapa .leaflet-control-zoom{border:none;box-shadow:0 2px 10px rgba(28,36,51,.16);border-radius:12px;overflow:hidden;margin:10px 10px 0 0}
+  .pe-mapa .leaflet-control-zoom a{width:36px;height:36px;line-height:36px;font-size:18px;color:var(--ink)}
+  .pe-mcarga{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--mut);z-index:5;pointer-events:none}
+  .pe-mcarga.no{display:none}
+  .pe-pin-w{background:none;border:none}
+  .pe-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--c);border:2.5px solid #fff;box-shadow:0 2px 7px rgba(28,36,51,.35);color:#fff;font-size:11px;font-weight:900;font-family:'Nunito',sans-serif;transition:width .12s,height .12s}
+  .pe-pin.medio{box-shadow:0 0 0 3px #1c2433,0 2px 7px rgba(28,36,51,.35)}
+  .pe-pin.on{width:30px;height:30px;background:#1c2433;border:3px solid var(--c);box-shadow:0 3px 10px rgba(28,36,51,.45)}
+  .pe-pin.on svg{width:15px;height:15px}
+  .pe-pin.gris{width:16px;height:16px;background:#b9bec7;border-width:2px;box-shadow:0 1px 4px rgba(28,36,51,.25)}
+  .pe-pin.visto{outline:2px solid rgba(28,36,51,.55);outline-offset:2px}
+  .pe-mtop{position:absolute;left:10px;top:10px;right:58px;z-index:900;display:flex;flex-direction:column;align-items:flex-start;gap:8px;pointer-events:none}
+  .pe-mtop>*{pointer-events:auto}
+  .pe-msinb{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:17px;border:none;background:#fff;color:var(--ink);font-family:inherit;font-size:13px;font-weight:800;box-shadow:0 2px 10px rgba(28,36,51,.16);cursor:pointer}
+  .pe-msinb i{width:8px;height:8px;border-radius:50%;background:var(--warn)}.pe-msinb.ok i{background:var(--mint)}
+  .pe-minfo{width:100%;max-width:300px;background:#fff;border-radius:14px;box-shadow:0 4px 18px rgba(28,36,51,.18);padding:9px 10px 8px 12px;animation:pop .16s}
+  .pe-mi-t{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .pe-mi-t b{font-size:13.5px;font-weight:900;line-height:1.25;padding-top:3px}
+  .pe-mi-x{border:none;background:#f1f0ec;width:26px;height:26px;border-radius:50%;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+  .pe-mi-r{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12px;color:var(--mut);font-weight:700}
+  .pe-mi-r span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pe-mi-r b{color:var(--ink);font-size:13px;font-variant-numeric:tabular-nums}
+  .pe-mi-r button{border:1px solid var(--line);background:#fff;border-radius:9px;height:26px;padding:0 9px;font-family:inherit;font-size:12px;font-weight:800;color:var(--ink);cursor:pointer}
+  .pe-mi-e{margin-top:5px;font-size:11.5px;font-weight:800;color:var(--mut)}.pe-mi-e.on{color:var(--green)}
+  .pe-msin{position:absolute;left:0;right:0;bottom:0;max-height:70%;z-index:950;background:var(--bg);border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(28,36,51,.18);display:flex;flex-direction:column;animation:pop .18s}
+  .pe-msin-c{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 14px 6px}
+  .pe-msin-c b{font-size:15px;font-weight:900;display:block}.pe-msin-c span{font-size:12.5px;color:var(--mut);font-weight:700}
+  .pe-msin .pe-grid{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 8px 110px}
+  /* Ruta en Google Maps (viaje) */
+  .rmaps-b{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:10px}
+  .rmaps-b svg{width:17px;height:17px;flex-shrink:0}
+  .rm-lista{list-style:none;margin:0 0 12px;padding:0;max-height:42vh;overflow-y:auto}
+  .rm-lista li{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px;font-weight:700}
+  .rm-lista li:last-child{border-bottom:none}
+  .rm-n{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rm-lista li span{min-width:0}.rm-lista li small{display:block;color:var(--mut);font-size:12px;font-weight:700}
+  .rm-sin{background:#fbf3e6;color:#8a5a12;border-radius:11px;padding:9px 11px;font-size:12.5px;font-weight:700;margin-bottom:12px;line-height:1.45}.rm-sin small{font-size:11.5px;opacity:.85}
+  .rm-btns{display:flex;flex-direction:column;gap:9px}
+  .rm-btns a.btn{text-decoration:none;text-align:center;display:block}
+  .rm-nota{font-size:12px;color:var(--mut);font-weight:700;margin:-4px 0 12px}
 </style>
 </head>
 <body>
@@ -1893,7 +1940,8 @@ function renderZona(){
           <label class="fld">Envases que se llevó (opcional)</label>
           <input id="env-${v.id}" placeholder="ej. 2 cajas retornable" value="${(v.envases||'').replace(/"/g,'&quot;')}" oninput="setEnvasesSilent(${v.id},this.value)">
           ${(()=>{const t=peEnvViaje(v);if(!t)return '';const igual=(v.envases||'')===t;
-            return `<div class="pe-envhint">${ICO_CAJA_S}<span>Según Monica: <b>${esc(t)}</b></span>${igual?'':`<button onclick="peUsarEnvMonica(${v.id})">Usar</button>`}</div>`;})()}</div>
+            return `<div class="pe-envhint">${ICO_CAJA_S}<span>Según Monica: <b>${esc(t)}</b></span>${igual?'':`<button onclick="peUsarEnvMonica(${v.id})">Usar</button>`}</div>`;})()}
+          ${rmBoton(v)}</div>
         <div class="enviar-wrap">
           <button class="btn-enviar" ontouchstart="terminarPedidos(${v.id})" onclick="terminarPedidos(${v.id})">
             <span class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M7 5h7a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h6" stroke="#e8770f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="5" r="2.3" fill="#e8770f"/><circle cx="17" cy="17" r="2.3" fill="#e8770f"/></svg></span>
@@ -1910,6 +1958,7 @@ function renderZona(){
           <span style="width:25px;height:25px;border-radius:7px;border:2px solid ${v.envOk?'var(--mint)':'var(--line)'};background:${v.envOk?'var(--mint)':'transparent'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900">${v.envOk?'✓':''}</span>
           Envase revisado y devuelto completo</div>`:''}`:'<div style="font-size:13px;color:var(--mut)">Sin envases registrados.</div>'}
         ${esMaestro()?`<button class="btn sec" style="font-size:12px;padding:8px 13px;margin-top:12px" onclick="reabrirEntrada(${v.id})">← Corregir pedidos o envases</button>`:''}
+        ${rmBoton(v)}
       </div>
       <div class="vfoot"><div class="vtot">Efectivo del viaje: <b>${q(efv)}</b></div>
         ${esMaestro()?`<button class="btn ok" id="rec-${v.id}" onclick="recibirTodo(${v.id})">Dinero recibido ✓</button>`:`<button class="btn ok" style="opacity:.45;cursor:not-allowed" disabled>Dinero recibido ✓</button>`}</div>`;
@@ -2898,6 +2947,7 @@ function peSeguirMonica(){
       if(!f.anulada&&f.cliente&&p.nombre!==f.cliente){p.nombre=f.cliente;c=true;}
       if(!!p.facAnul!==!!f.anulada){p.facAnul=!!f.anulada;c=true;}
       if(!f.anulada&&JSON.stringify(p.env||[])!==JSON.stringify(f.envases||[])){p.env=f.envases||[];c=true;}
+      {const u=peUbic(f);if(u&&(p.lat!==u[0]||p.lng!==u[1])){p.lat=u[0];p.lng=u[1];c=true;}}
       if(c&&!tocados.includes(v))tocados.push(v);
     });
     if(peActualizarEnvases(v)&&!tocados.includes(v))tocados.push(v);
@@ -3235,7 +3285,7 @@ function peAbrir(){
   peCargar();
 }
 function peCerrar(sinRender){
-  PE.abierto=false;peMarcarVistas();peVerCerrar();
+  PE.abierto=false;peMarcarVistas();peVerCerrar();peMapaQuitar();PE.mapaInfo=null;PE.mapaSin=false;
   const ov=document.getElementById('overlay'),sh=document.getElementById('sheet');
   if(document.activeElement&&document.activeElement.id==='peBuscar')document.activeElement.blur();
   ov.classList.remove('open','pe-modo');ov.style.top='';ov.style.height='';
@@ -3345,6 +3395,7 @@ document.addEventListener('touchstart',function(e){
   if(mr&&mr.classList.contains('open'))return;
   if(e.target.closest('input,textarea,select'))return;
   const ch=e.target.closest('.pe-chips');if(ch&&ch.scrollLeft>0)return;
+  if(e.target.closest('.pe-mapa'))return;   // en el mapa se arrastra el mapa
   _pg=Object.assign(base,{tipo:'p',sh:document.getElementById('sheet'),ov:document.getElementById('overlay'),tgt:e.target});_pgEscuchar(_pg);
 },{passive:true});
 function _pgEscuchar(g){g.tgt.addEventListener('touchmove',_pgMueve,{passive:false});g.tgt.addEventListener('touchend',_pgFinOk,{passive:true});g.tgt.addEventListener('touchcancel',_pgFinCancel,{passive:true});}
@@ -3478,6 +3529,209 @@ function peEsperaTxt(min){
   const h=Math.floor(min/60);if(h>=24)return Math.floor(h/24)+'d';
   const r=min%60;return h+'h'+(r?' '+r+'m':'');
 }
+// ===== Mapa de Por entregar (7/11/2026) =====
+// Cada nota es un punto en la ubicación del cliente, tal como está en la ficha de Monica
+// (Representante = latitud, Teléfono = longitud; la sube Facturación rápida en ubic_lat/ubic_lng).
+// Tocar un punto escoge (o quita) sus notas, igual que en la lista. Las notas cuyo cliente no
+// tiene ubicación quedan en "Sin ubicación" para decidir a mano a qué ruta van.
+const ICO_MAPA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 4.5 3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2-6-2Z" stroke="#1c2433" stroke-width="2.1" stroke-linejoin="round"/><path d="M9 4.5v13M15 6.5v13" stroke="#1c2433" stroke-width="2.1"/></svg>`;
+const ICO_LISTA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6.5h11M9 12h11M9 17.5h11" stroke="#1c2433" stroke-width="2.3" stroke-linecap="round"/><circle cx="4.5" cy="6.5" r="1.4" stroke="#1c2433" stroke-width="1.6"/><circle cx="4.5" cy="12" r="1.4" stroke="#1c2433" stroke-width="1.6"/><circle cx="4.5" cy="17.5" r="1.4" stroke="#1c2433" stroke-width="1.6"/></svg>`;
+const ICO_PIN=`<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="2.2"/></svg>`;
+const ICO_X_S=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="3" stroke-linecap="round"/></svg>`;
+// Coordenadas válidas (Guatemala); cualquier otra cosa = sin ubicación
+function peUbic(f){
+  if(!f||f.ubic_lat===null||f.ubic_lat===undefined||f.ubic_lng===null||f.ubic_lng===undefined||f.ubic_lat===''||f.ubic_lng==='')return null;
+  const a=Number(f.ubic_lat),b=Number(f.ubic_lng);
+  return isFinite(a)&&isFinite(b)&&a>=13&&a<=18&&b>=-93&&b<=-88?[a,b]:null;
+}
+let _peLeaf=null;
+function peLeaflet(){
+  if(window.L&&window.L.map)return Promise.resolve();
+  if(!_peLeaf)_peLeaf=new Promise((ok,mal)=>{
+    const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);
+    const sc=document.createElement('script');sc.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    sc.onload=()=>ok();sc.onerror=()=>{_peLeaf=null;css.remove();sc.remove();mal(new Error('sin internet'));};document.head.appendChild(sc);});
+  return _peLeaf;
+}
+function peMapaQuitar(){if(PE._map){try{PE._map.remove();}catch(e){}PE._map=null;PE._capa=null;}}
+function peMapaToggle(){
+  PE.mapa=!PE.mapa;PE.mapaInfo=null;PE.mapaSin=false;PE._mapaFit=null;peMapaQuitar();
+  try{localStorage.setItem('cc_pe_mapa',PE.mapa?'1':'');}catch(e){}
+  const cont=document.getElementById('peLista');if(cont){cont.innerHTML='';cont.scrollTop=0;}
+  peRenderPanel();
+}
+try{PE.mapa=localStorage.getItem('cc_pe_mapa')==='1';}catch(e){}
+function peMapaBtn(){
+  const b=document.getElementById('peMapaBtn');if(!b)return;
+  b.classList.toggle('on',!!PE.mapa);
+  const h=PE.mapa?ICO_LISTA:ICO_MAPA;if(b.__h!==h){b.innerHTML=h;b.__h=h;}
+  b.setAttribute('aria-label',PE.mapa?'Ver como lista':'Ver en el mapa');
+}
+function peMapaTocar(nros){
+  if(PE.filtro==='__m'){PE.mapaInfo={nros};peRenderLista();toast('Están para mañana · en la lista, mantené presionada para regresarlas a hoy');return;}
+  const todas=nros.every(n=>PE.sel.has(n));
+  nros.forEach(n=>todas?PE.sel.delete(n):PE.sel.add(n));
+  PE.mapaInfo={nros};peRenderLista();
+}
+function peMapaInfoCerrar(){PE.mapaInfo=null;peRenderLista();}
+function peMapaSin(on){PE.mapaSin=!!on;peRenderLista();}
+function peMapaInfoHtml(fs,asig){
+  const inf=PE.mapaInfo;if(!inf)return '';
+  if(inf.asig){
+    const f=asig.find(x=>x.nro===inf.asig);if(!f)return '';
+    const aqui=pePedidoDe(f.nro);
+    return `<div class="pe-minfo"><div class="pe-mi-t"><b>${esc(f.cliente||'Sin nombre')}</b><button class="pe-mi-x" onclick="peMapaInfoCerrar()" aria-label="Cerrar">${ICO_X_S}</button></div>
+      <div class="pe-mi-r"><span>Nota ${f.nro}</span><b>${q(f.total)}</b></div>
+      <div class="pe-mi-e">Ya va en la ruta de ${esc(f.rutero||aqui&&aqui.v.rutero||'')} (se está preparando)</div></div>`;
+  }
+  const por={};fs.forEach(f=>por[f.nro]=f);
+  const ns=(inf.nros||[]).filter(n=>por[n]);if(!ns.length)return '';
+  const on=ns.every(n=>PE.sel.has(n)),nombres=[...new Set(ns.map(n=>por[n].cliente||'Sin nombre'))];
+  return `<div class="pe-minfo"><div class="pe-mi-t"><b>${esc(nombres.join(' · '))}</b><button class="pe-mi-x" onclick="peMapaInfoCerrar()" aria-label="Cerrar">${ICO_X_S}</button></div>
+    ${ns.map(n=>{const f=por[n];return `<div class="pe-mi-r"><span>Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}</span><b>${q(f.total)}</b><button onclick="peVer(${f.nro})">Ver</button></div>`;}).join('')}
+    <div class="pe-mi-e${on?' on':''}">${PE.filtro==='__m'?'Para mañana':on?(ns.length>1?'✓ Escogidas':'✓ Escogida')+' · toca el punto para quitar':'Toca el punto para escoger'}</div></div>`;
+}
+function peMapaCard(f){
+  const on=PE.sel.has(f.nro);
+  return `<button class="pe-card${on?' on':''}" data-nro="${f.nro}" onclick="peTap(${f.nro})" aria-pressed="${on}">
+    ${on?`<span class="pe-cok">${ICO_OK_S}</span>`:''}
+    <span class="pe-cnom">${esc(f.cliente||'Sin nombre')}</span>
+    <span class="pe-csub">Nota ${f.nro}${f.hora?' · '+peHora(f.hora):''}</span>
+    <span class="pe-cpie"><span class="pe-csub">${f.codigo_cliente?'Cód. '+esc(f.codigo_cliente):''}</span><span class="pe-ctot">${q(f.total)}</span></span></button>`;
+}
+function peRenderMapa(){
+  const cont=document.getElementById('peLista');if(!cont)return;
+  cont.classList.add('con-mapa');
+  if(!cont.querySelector('.pe-mapa')){
+    peMapaQuitar();
+    cont.innerHTML=`<div class="pe-mapa"><div id="peMapaDiv" class="pe-mapadiv"></div><div class="pe-mcarga" id="peMCarga">Cargando mapa…</div><div class="pe-mtop" id="peMTop"></div><div id="peMSin"></div></div>`;
+  }
+  if(!(window.L&&window.L.map)){
+    peLeaflet().then(()=>{if(PE.mapa&&PE.abierto)peRenderLista();})
+      .catch(()=>{const c=document.getElementById('peMCarga');if(c)c.textContent='No se pudo cargar el mapa. Revisá internet.';});
+    return;
+  }
+  const Lf=window.L;
+  if(PE._map&&!document.body.contains(PE._map.getContainer()))peMapaQuitar();
+  if(!PE._map){
+    const m=Lf.map('peMapaDiv',{zoomControl:false,attributionControl:true});
+    Lf.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      {maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap · © CARTO'}).addTo(m);
+    m.attributionControl.setPrefix(false);
+    Lf.control.zoom({position:'topright'}).addTo(m);
+    m.setView([14.4965,-90.9617],14);
+    PE._capa=Lf.layerGroup().addTo(m);PE._map=m;PE._mapaFit=null;
+    const c=document.getElementById('peMCarga');if(c)c.classList.add('no');
+    setTimeout(()=>{if(PE._map)PE._map.invalidateSize();},60);
+  }
+  const fs=peFiltradas(), enM=PE.filtro==='__m';
+  const asig=enM?[]:peAsignadas().filter(f=>peUbic(f)&&(!PE.buscar||String(f.nro).includes(PE.buscar.trim().toLowerCase())||String(f.cliente||'').toLowerCase().includes(PE.buscar.trim().toLowerCase())));
+  const grupos={},sin=[];
+  fs.forEach(f=>{const u=peUbic(f);if(!u){sin.push(f);return;}
+    const k=u[0].toFixed(5)+','+u[1].toFixed(5);(grupos[k]=grupos[k]||{u,fs:[]}).fs.push(f);});
+  const inf=PE.mapaInfo,visto=new Set(inf&&inf.nros||[]);
+  PE._capa.clearLayers();
+  const pts=[];
+  asig.forEach(f=>{const u=peUbic(f);pts.push(u);
+    const mk=Lf.marker(u,{icon:Lf.divIcon({className:'pe-pin-w',iconSize:[18,18],iconAnchor:[9,9],html:'<span class="pe-pin gris" style="--c:#b9bec7"></span>'}),keyboard:false,zIndexOffset:-100});
+    mk.on('click',()=>{PE.mapaInfo={asig:f.nro};peRenderLista();});mk.addTo(PE._capa);});
+  Object.values(grupos).forEach(g=>{
+    const ns=g.fs.map(f=>f.nro),on=ns.every(n=>PE.sel.has(n)),medio=!on&&ns.some(n=>PE.sel.has(n));
+    const col=peColorVend(g.fs[0].vendedor),n=ns.length,sz=on?34:28;
+    const html=`<span class="pe-pin${on?' on':medio?' medio':''}${ns.some(x=>visto.has(x))?' visto':''}" style="--c:${col}">${on?ICO_OK_S:(n>1?n:'')}</span>`;
+    const mk=Lf.marker(g.u,{icon:Lf.divIcon({className:'pe-pin-w',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],html}),keyboard:false,zIndexOffset:on?600:(medio?300:0),title:g.fs.map(f=>f.cliente).join(' · ')});
+    mk.on('click',()=>peMapaTocar(ns));mk.addTo(PE._capa);pts.push(g.u);
+  });
+  // Encuadre: al abrir y cada vez que cambia el filtro o la búsqueda (no cuando llegan notas nuevas)
+  const clave=PE.filtro+'|'+PE.buscar;
+  if(PE._mapaFit!==clave&&pts.length){
+    PE._mapaFit=clave;
+    // margen: arriba el aviso y la tarjeta, abajo la barra del total
+    if(pts.length===1)PE._map.setView(pts[0],16);else PE._map.fitBounds(pts,{paddingTopLeft:[36,110],paddingBottomRight:[46,100],maxZoom:16});
+  }
+  // Arriba: "Sin ubicación" + la tarjeta del último punto tocado
+  const sinSel=sin.filter(f=>PE.sel.has(f.nro)).length;
+  let top='';
+  if(!fs.length&&!asig.length)top+=`<div class="pe-minfo"><div class="pe-mi-t"><b>${enM?'Nada para mañana':(PE.buscar?'Sin resultados':'Todo entregado')}</b></div><div class="pe-mi-e">${PE.buscar?'No hay notas que coincidan con “'+esc(PE.buscar)+'”.':'Cuando se facturen notas de los vendedores de ruta, aparecen aquí.'}</div></div>`;
+  if(sin.length)top+=`<button class="pe-msinb${sinSel===sin.length?' ok':''}" onclick="peMapaSin(true)"><i></i>${sin.length} sin ubicación${sinSel?' · '+sinSel+' escogida'+(sinSel===1?'':'s'):''} ›</button>`;
+  top+=peMapaInfoHtml(fs,asig);
+  const te=document.getElementById('peMTop');if(te&&te.__h!==top){te.innerHTML=top;te.__h=top;}
+  let sh='';
+  if(PE.mapaSin&&sin.length){
+    sh=`<div class="pe-msin"><div class="pe-msin-c"><div><b>Sin ubicación · ${sin.length} nota${sin.length===1?'':'s'}</b><span>Estos clientes no tienen coordenadas en Monica. Tú decides a qué ruta van.</span></div>
+      <button class="pe-mi-x" onclick="peMapaSin(false)" aria-label="Cerrar">${ICO_X_S}</button></div>
+      <div class="pe-grid">${sin.sort((a,b)=>a.nro-b.nro).map(peMapaCard).join('')}</div></div>`;
+  }else PE.mapaSin=false;
+  const se=document.getElementById('peMSin');if(se&&se.__h!==sh){const g=se.querySelector('.pe-grid'),y=g?g.scrollTop:0;se.innerHTML=sh;se.__h=sh;const g2=se.querySelector('.pe-grid');if(g2)g2.scrollTop=y;}
+}
+
+// ---- Ruta en Google Maps (para mandársela al rutero) ----
+// Paradas en el orden del viaje. Google Maps acepta pocas paradas en un enlace: de 10 en 10.
+// Sin punto de salida: Google Maps sale de donde está el teléfono del rutero.
+const RM_POR_ENLACE=10;
+function peUbicPed(p){
+  if(!p)return null;
+  const u=peUbic({ubic_lat:p.lat,ubic_lng:p.lng});if(u)return u;
+  if(p.fac){const f=PE.filas.find(x=>x.nro===p.fac);if(f)return peUbic(f);}
+  return null;
+}
+function rmParadas(v){
+  const paradas=[],sin=[],por={};
+  (v&&v.pedidos||[]).forEach(p=>{
+    if(!p||p.facAnul||p.facReg||p.estado==='cancelado')return;
+    const u=peUbicPed(p),nom=p.nombre||(p.fac?'Nota '+p.fac:'Sin nombre');
+    if(!u){sin.push({nom,fac:p.fac});return;}
+    const k=u[0].toFixed(5)+','+u[1].toFixed(5);
+    if(por[k]){if(!por[k].noms.includes(nom))por[k].noms.push(nom);if(p.fac)por[k].facs.push(p.fac);return;}
+    por[k]={u,noms:[nom],facs:p.fac?[p.fac]:[]};paradas.push(por[k]);
+  });
+  return {paradas,sin};
+}
+function rmEnlaces(paradas){
+  const out=[];
+  for(let i=0;i<paradas.length;i+=RM_POR_ENLACE){
+    const ps=paradas.slice(i,i+RM_POR_ENLACE),fin=ps[ps.length-1].u,medio=ps.slice(0,-1).map(x=>x.u.join(','));
+    out.push({desde:i+1,hasta:i+ps.length,url:'https://www.google.com/maps/dir/?api=1&destination='+fin.join(',')+(medio.length?'&waypoints='+encodeURIComponent(medio.join('|')):'')+'&travelmode=driving'});
+  }
+  return out;
+}
+function rmTieneNotas(v){return !!(v&&(v.pedidos||[]).some(p=>p&&p.fac&&!p.facAnul&&!p.facReg&&p.estado!=='cancelado'));}
+function rmBoton(v){return rmTieneNotas(v)?`<button class="btn sec rmaps-b" onclick="rutaMaps(${v.id})">${ICO_PIN}Ruta en Google Maps</button>`:'';}
+function rmTexto(v){
+  const {paradas,sin}=rmParadas(v),en=rmEnlaces(paradas);
+  const fecha=new Date().toLocaleDateString('es-GT',{weekday:'long',day:'numeric',month:'long'});
+  let t=`Ruta de ${v.rutero} · ${fecha}\n`;
+  if(paradas.length){
+    t+=`${paradas.length} parada${paradas.length===1?'':'s'} en orden:\n`;
+    paradas.forEach((x,i)=>{t+=`${i+1}. ${x.noms.join(' / ')}${x.facs.length?' (nota '+x.facs.join(', ')+')':''}\n`;});
+    t+='\nAbrir en Google Maps:\n';
+    en.forEach(e=>{t+=(en.length>1?`Paradas ${e.desde} a ${e.hasta}:\n`:'')+e.url+'\n';});
+  }
+  if(sin.length)t+=`\nSin ubicación (preguntar dónde quedan):\n`+sin.map(x=>'- '+x.nom+(x.fac?' (nota '+x.fac+')':'')).join('\n')+'\n';
+  return t.trim();
+}
+function rutaMaps(vid){
+  const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
+  const {paradas,sin}=rmParadas(v),en=rmEnlaces(paradas);
+  document.getElementById('modalRecibeBody').innerHTML=`
+    <div class="pm-cab"><b>Ruta en Google Maps</b><span>${esc(v.rutero)} · ${paradas.length} parada${paradas.length===1?'':'s'}</span></div>
+    ${paradas.length?`<div class="rm-nota">En el orden de la ruta. Google Maps sale de donde esté el teléfono.</div>
+    <ol class="rm-lista">${paradas.map((x,i)=>`<li><span class="rm-n">${i+1}</span><span>${esc(x.noms.join(' / '))}${x.facs.length?`<small>Nota ${x.facs.join(', ')}</small>`:''}</span></li>`).join('')}</ol>`:''}
+    ${sin.length?`<div class="rm-sin"><b>Sin ubicación (${sin.length})</b><br>${sin.map(x=>esc(x.nom)).join(' · ')}<br><small>No tienen coordenadas en Monica; no van en el enlace.</small></div>`:''}
+    <div class="rm-btns">
+      ${paradas.length?`<button class="btn ok" onclick="rmWhats(${v.id})">Enviar por WhatsApp</button>
+      ${en.map(e=>`<a class="btn sec" href="${e.url}" target="_blank" rel="noopener">Abrir en Google Maps${en.length>1?` · paradas ${e.desde} a ${e.hasta}`:''}</a>`).join('')}
+      <button class="btn sec" onclick="rmCopiar(${v.id})">Copiar</button>`:''}
+      <button class="btn sec pm-cancel" onclick="cerrarModalRecibe()">Cerrar</button>
+    </div>`;
+  document.getElementById('modalRecibe').classList.add('open');
+}
+function rmWhats(vid){const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
+  logAudit('RUTA EN MAPS',`${v.rutero}: enviada por WhatsApp`);
+  window.open('https://wa.me/?text='+encodeURIComponent(rmTexto(v)),'_blank');}
+async function rmCopiar(vid){const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
+  try{await navigator.clipboard.writeText(rmTexto(v));toast('Copiado');}catch(e){toast('No se pudo copiar',true);}}
+
 function peToggle(nro){if(PE.sel.has(nro))PE.sel.delete(nro);else PE.sel.add(nro);peRenderLista();}
 function peToggleGrupo(v){
   const fs=peFiltradas().filter(f=>f.vendedor===v);
@@ -3523,7 +3777,7 @@ function peRenderPanel(){
   // El esqueleto (con el buscador) se arma UNA vez: así el teclado no se cierra al refrescar
   if(!document.getElementById('peBuscar')){
     sh.innerHTML=`<div class="pe-cab">
-        <div class="pe-tit"><div><h2>Por entregar</h2><div id="peEst"></div></div><div class="pe-tbtns"><button id="peConsBtn" class="pe-consb" onclick="peConsAbrir()" aria-label="Consolidado de las notas escogidas">${ICO_CONS}Consolidado</button><button id="peHistBtn" class="pe-histb" onclick="peHistAbrir()" aria-label="Consolidados anteriores">${ICO_HIST}</button><button class="pe-cerrar" onclick="peCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
+        <div class="pe-tit"><div><h2>Por entregar</h2><div id="peEst"></div></div><div class="pe-tbtns"><button id="peConsBtn" class="pe-consb" onclick="peConsAbrir()" aria-label="Consolidado de las notas escogidas">${ICO_CONS}Consolidado</button><button id="peHistBtn" class="pe-histb" onclick="peHistAbrir()" aria-label="Consolidados anteriores">${ICO_HIST}</button><button id="peMapaBtn" class="pe-mapab" onclick="peMapaToggle()" aria-label="Ver en el mapa">${ICO_MAPA}</button><button class="pe-cerrar" onclick="peCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
         <div class="pe-buscar">${ICO_LUPA}<input id="peBuscar" type="text" inputmode="search" placeholder="Cliente, nota o código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" value="${esc(PE.buscar)}" oninput="peBuscar(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
           <button id="peLimpiar" class="pe-limpiar${PE.buscar?' ver':''}" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="peLimpiar()" aria-label="Borrar búsqueda"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg></button></div>
         <div class="pe-chips" id="peChips"></div>
@@ -3544,6 +3798,9 @@ function peRenderPanel(){
 }
 function peRenderLista(){
   const cont=document.getElementById('peLista');if(!cont)return;
+  peMapaBtn();
+  if(PE.mapa){peRenderMapa();peRenderBarra();return;}
+  if(cont.classList.contains('con-mapa')){peMapaQuitar();cont.classList.remove('con-mapa');cont.innerHTML='';}
   const fs=peFiltradas(), vistas=peVistas(), enM=PE.filtro==='__m';
   let h='';
   if(!(enM?pePospuestas():pePendientes()).length){
@@ -3677,10 +3934,13 @@ async function peAsignar(r){
     ruterosBorrados=ruterosBorrados.filter(x=>x!==r);
     if(!ruteros.includes(r))ruteros.push(r);
     if(nuevo)viajes.push(v);
-    tomadas.sort((a,b)=>a.nro-b.nro).forEach(f=>{
+    // En el orden en que se escogieron (así queda el orden de la ruta en Google Maps)
+    const orden=new Map(nros.map((n,i)=>[n,i]));
+    tomadas.sort((a,b)=>(orden.get(a.nro)??1e9)-(orden.get(b.nro)??1e9)||a.nro-b.nro).forEach(f=>{
       if(pePedidoDe(f.nro))return;
-      v.pedidos.push({id:nuevoId(),nombre:f.cliente||('Nota '+f.nro),total:f.total,estado:'pagado',devolucion:0,descuento:0,vuelto:0,
-        fac:f.nro,codCli:f.codigo_cliente||'',vendMon:f.vendedor||'',horaFac:f.hora||'',env:f.envases||[]});
+      const u=peUbic(f);
+      v.pedidos.push(Object.assign({id:nuevoId(),nombre:f.cliente||('Nota '+f.nro),total:f.total,estado:'pagado',devolucion:0,descuento:0,vuelto:0,
+        fac:f.nro,codCli:f.codigo_cliente||'',vendMon:f.vendedor||'',horaFac:f.hora||'',env:f.envases||[]},u?{lat:u[0],lng:u[1]}:{}));
     });
     v.pedidosListos=true; // directo al paso de "Enviar ruta" (ahí está "Agregar más pedidos")
     tocar(v);peActualizarEnvases(v);
@@ -3832,7 +4092,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-06.4';
+const VERSION='2026-11-07.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -157,3 +157,8 @@ create policy pu_cambiar on public.puente for update to anon, authenticated usin
 grant select, insert, update on public.pendientes_entrega to anon, authenticated;
 grant select, insert, update on public.puente to anon, authenticated;
 grant execute on function public.puente_edad(text) to anon, authenticated;
+
+-- Mapa (7/11/2026): ubicación del cliente de la nota, de la ficha de Monica
+-- (latitud = "Representante", longitud = "Teléfono"). Vacío = el cliente no tiene ubicación.
+alter table public.pendientes_entrega add column if not exists ubic_lat double precision;
+alter table public.pendientes_entrega add column if not exists ubic_lng double precision;

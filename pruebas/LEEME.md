@@ -45,3 +45,10 @@ adentro cada pestaña con su lista, su PDF y sus vistas (ver Notas no marca las 
 Ticket: producto eliminado (F9) tachado en la vista previa y sin sumar, venta cancelada sin ticket, precio subido en gris.
   Historial (6/11): al sacar un consolidado se guarda en el teléfono; sus notas quedan con tono suave y el
   reloj arriba abre "Consolidados" (Ver consolidado / Escoger otra vez).
+
+`prueba-mapa.js` — Mapa en Por entregar (7/11/2026): botón de mapa arriba, un punto por cliente (varias notas del mismo
+cliente = un punto con el número), tocar escoge/quita, punto gris = ya va en una ruta que se prepara, "N sin ubicación"
+con sus notas para escogerlas a mano, filtro y búsqueda, arrastrar el mapa no cierra el panel, al refrescar no se mueve.
+Al mandar a un rutero las notas quedan en el orden en que se escogieron y con su ubicación; en el viaje, "Ruta en Google
+Maps": paradas en orden (mismo cliente = una parada), enlaces de 10 en 10, WhatsApp y Copiar. Misma base local que
+`prueba-por-entregar.js` y Leaflet local (`npm i leaflet@1.9.4`).

@@ -37,7 +37,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await rest('POST','puente?on_conflict=id',[{id:'facturacion',latido:1}],'resolution=merge-duplicates,return=minimal');
 
   const b=await chromium.launch();
-  const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true,acceptDownloads:true});
   const p=await ctx.newPage();
   const errs=[];p.on('pageerror',e=>errs.push(e.message));
   await p.route('**/cdn.jsdelivr.net/npm/@supabase/**',r=>r.fulfill({status:200,contentType:'application/javascript',body:UMD}));
@@ -65,6 +65,9 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('Aviso "1 sin ubicación"', (await p.textContent('#peMTop')).includes('1 sin ubicación'));
   ok('Todos los puntos quedan dentro de la pantalla', await p.evaluate(()=>{const r=document.querySelector('.pe-mapa').getBoundingClientRect();
     return [...document.querySelectorAll('.pe-pin')].every(x=>{const b=x.getBoundingClientRect();return b.left>=r.left&&b.right<=r.right&&b.top>=r.top&&b.bottom<=r.bottom;});}));
+  ok('Bodega en el mapa con su nombre', (await p.$$('.pe-bod')).length===1&&(await p.textContent('.pe-bodn'))==='Distribuidora Hernández');
+  await p.locator('.leaflet-marker-icon[title="Distribuidora Hernández"]').click();await p.waitForTimeout(300);
+  ok('Tocar la bodega: "De aquí sale la ruta" (no escoge nada)', (await p.textContent('#peMTop')).includes('De aquí sale la ruta')&&await p.evaluate(()=>PE.sel.size===0));
   ok('Botón del mapa marcado (ahora dice "Ver como lista")', (await p.getAttribute('#peMapaBtn','aria-label'))==='Ver como lista');
   await p.screenshot({path:SHOTS+'/mapa-1-abierto.png'});
 
@@ -148,7 +151,20 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('Avisa la que no tiene ubicación', modal.includes('Sin ubicación (1)')&&modal.includes('CLTE GCO.'));
   const href=await p.getAttribute('.rm-btns a','href');
   ok('Enlace de Google Maps: destino la última, las otras en orden', href==='https://www.google.com/maps/dir/?api=1&destination=14.5006218,-90.9906239&waypoints='+encodeURIComponent('14.4965337,-90.9617256|14.4816749,-91.0451764')+'&travelmode=driving');
-  ok('Botones WhatsApp y Copiar', modal.includes('Enviar por WhatsApp')&&modal.includes('Copiar'));
+  ok('Botones WhatsApp, Organic Maps y Copiar', modal.includes('Google Maps por WhatsApp')&&modal.includes('Archivo para Organic Maps')&&modal.includes('Copiar'));
+  ok('Dice que sale de la bodega', modal.includes('Ruta de Juan')&&modal.includes('sale de Distribuidora Hernández'));
+  const kml=await p.evaluate(id=>rmKml(viajes.find(x=>x.id===id),new Date(2026,10,7)),v.id);
+  const esperado='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>Ruta Juan 7 noviembre</name>\n'+
+    '<Placemark><name>01. ABARROTERIA BUENA VISTA - Q300</name><Point><coordinates>-90.9617256,14.4965337,0</coordinates></Point></Placemark>\n'+
+    '<Placemark><name>02. ADELAIDA GABRIEL - Q200</name><Point><coordinates>-91.0451764,14.4816749,0</coordinates></Point></Placemark>\n'+
+    '<Placemark><name>03. ALFA Y OMEGA #2 - Q210</name><Point><coordinates>-90.9906239,14.5006218,0</coordinates></Point></Placemark>\n</Document>\n</kml>\n';
+  ok('Archivo KML igual al formato de César (01. CLIENTE - Q total, longitud,latitud,0)', kml.txt===esperado);
+  if(kml.txt!==esperado)console.log(kml.txt);
+  ok('Nombre del archivo: ruta_juan_7noviembre.kml', kml.archivo==='ruta_juan_7noviembre.kml');
+  ok('Montos con decimales como en su archivo (Q514.70, Q279)', await p.evaluate(()=>rmQkml(514.7)==='Q514.70'&&rmQkml(279)==='Q279'&&rmQkml(1244.12)==='Q1244.12'));
+  const [dl]=await Promise.all([p.waitForEvent('download',{timeout:5000}).catch(()=>null),p.click('.rm-om')]);
+  ok('Sin "compartir" se descarga el .kml', dl&&dl.suggestedFilename()===kml.archivo.replace(/\d+noviembre/,new Date().getDate()+['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][new Date().getMonth()]));
+  await p.waitForTimeout(300);
   await p.screenshot({path:SHOTS+'/mapa-5-ruta-maps.png'});
   const txt=await p.evaluate(id=>rmTexto(viajes.find(x=>x.id===id)),v.id);
   ok('Mensaje de WhatsApp: rutero, paradas en orden, enlace y sin ubicación', txt.startsWith('Ruta de Juan')&&txt.includes('1. ABARROTERIA BUENA VISTA (nota 30001)')&&txt.includes('2. ADELAIDA GABRIEL (nota 30002, 30003)')&&txt.includes(href)&&txt.includes('- CLTE GCO. (nota 30004)'));

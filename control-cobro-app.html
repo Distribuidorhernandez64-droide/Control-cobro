@@ -3615,8 +3615,9 @@ function peRenderMapa(){
   if(PE._map&&!document.body.contains(PE._map.getContainer()))peMapaQuitar();
   if(!PE._map){
     const m=Lf.map('peMapaDiv',{zoomControl:false,attributionControl:true});
-    Lf.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-      {maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap · © CARTO'}).addTo(m);
+    // Mapa de OpenStreetMap (gratis, sin clave). CARTO pide clave desde 2026: no se usa.
+    Lf.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);
     m.attributionControl.setPrefix(false);
     Lf.control.zoom({position:'topright'}).addTo(m);
     m.setView([14.4965,-90.9617],14);
@@ -3647,7 +3648,7 @@ function peRenderMapa(){
   if(PE._mapaFit!==clave&&pts.length){
     PE._mapaFit=clave;
     // margen: arriba el aviso y la tarjeta, abajo la barra del total
-    if(pts.length===1)PE._map.setView(pts[0],16);else PE._map.fitBounds(pts,{paddingTopLeft:[36,110],paddingBottomRight:[46,100],maxZoom:16});
+    if(pts.length===1)PE._map.setView(pts[0],17);else PE._map.fitBounds(pts,{paddingTopLeft:[36,110],paddingBottomRight:[46,100],maxZoom:18});
   }
   // Arriba: "Sin ubicación" + la tarjeta del último punto tocado
   const sinSel=sin.filter(f=>PE.sel.has(f.nro)).length;
@@ -4092,7 +4093,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-07.1';
+const VERSION='2026-11-07.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

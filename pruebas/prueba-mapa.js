@@ -44,7 +44,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
   await p.route('**/unpkg.com/leaflet@1.9.4/dist/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:LEAF_JS}));
   await p.route('**/unpkg.com/leaflet@1.9.4/dist/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:LEAF_CSS}));
-  await p.route('**/basemaps.cartocdn.com/**',r=>r.fulfill({status:200,contentType:'image/png',body:PNG}));
+  await p.route('**/tile.openstreetmap.org/**',r=>r.fulfill({status:200,contentType:'image/png',body:PNG}));
   await p.route('https://shlolncjhfzqmcllwjrk.supabase.co/**',async r=>{
     const u=r.request().url().replace('https://shlolncjhfzqmcllwjrk.supabase.co',LOCAL);
     const h={...r.request().headers(),authorization:'Bearer '+JWT,apikey:JWT};

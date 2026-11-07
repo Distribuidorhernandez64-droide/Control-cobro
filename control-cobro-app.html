@@ -605,6 +605,8 @@
   .pe-mapadiv{position:absolute;inset:0;font-family:inherit}
   .pe-mapa .leaflet-control-attribution{font-size:9px;background:rgba(255,255,255,.7)}
   .pe-mapa .leaflet-control-zoom{border:none;box-shadow:0 2px 10px rgba(28,36,51,.16);border-radius:12px;overflow:hidden;margin:10px 10px 0 0}
+  .pe-mapa .leaflet-control-rotate{border:none!important;box-shadow:0 2px 10px rgba(28,36,51,.16);border-radius:12px;overflow:hidden;margin:10px 10px 0 0}
+  .pe-mapa .leaflet-control-rotate a{width:36px;height:36px;line-height:36px;background-color:#fff}
   .pe-mapa .leaflet-control-zoom a{width:36px;height:36px;line-height:36px;font-size:18px;color:var(--ink)}
   .pe-mcarga{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--mut);z-index:5;pointer-events:none}
   .pe-mcarga.no{display:none}
@@ -3282,7 +3284,7 @@ function peTarjetaLista(){
 
 function peAbrir(){
   if(modoLectura)return;
-  PE.abierto=true;
+  PE.abierto=true;PE.mapa=false;PE.mapaInfo=null;PE.mapaSin=false;
   const ov=document.getElementById('overlay'),sh=document.getElementById('sheet');
   sh.innerHTML='';sh.classList.add('pe-sheet');ov.classList.add('open','pe-modo');
   document.body.classList.add('pe-bloqueo');
@@ -3560,17 +3562,19 @@ function peLeaflet(){
   if(!_peLeaf)_peLeaf=new Promise((ok,mal)=>{
     const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);
     const sc=document.createElement('script');sc.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    sc.onload=()=>ok();sc.onerror=()=>{_peLeaf=null;css.remove();sc.remove();mal(new Error('sin internet'));};document.head.appendChild(sc);});
+    // Girar el mapa con dos dedos (como Google Maps): complemento leaflet-rotate. Si no carga, el mapa sirve igual sin girar.
+    sc.onload=()=>{const r=document.createElement('script');r.src='https://unpkg.com/leaflet-rotate@0.5.3/dist/leaflet-rotate.js';
+      r.onload=()=>ok();r.onerror=()=>{r.remove();ok();};document.head.appendChild(r);};
+    sc.onerror=()=>{_peLeaf=null;css.remove();sc.remove();mal(new Error('sin internet'));};document.head.appendChild(sc);});
   return _peLeaf;
 }
 function peMapaQuitar(){if(PE._map){try{PE._map.remove();}catch(e){}PE._map=null;PE._capa=null;}}
 function peMapaToggle(){
   PE.mapa=!PE.mapa;PE.mapaInfo=null;PE.mapaSin=false;PE._mapaFit=null;peMapaQuitar();
-  try{localStorage.setItem('cc_pe_mapa',PE.mapa?'1':'');}catch(e){}
   const cont=document.getElementById('peLista');if(cont){cont.innerHTML='';cont.scrollTop=0;}
   peRenderPanel();
 }
-try{PE.mapa=localStorage.getItem('cc_pe_mapa')==='1';}catch(e){}
+// Por entregar siempre abre en la lista (el mapa se usa de vez en cuando): ver peAbrir.
 function peMapaBtn(){
   const b=document.getElementById('peMapaBtn');if(!b)return;
   b.classList.toggle('on',!!PE.mapa);
@@ -3626,7 +3630,9 @@ function peRenderMapa(){
   const Lf=window.L;
   if(PE._map&&!document.body.contains(PE._map.getContainer()))peMapaQuitar();
   if(!PE._map){
-    const m=Lf.map('peMapaDiv',{zoomControl:false,attributionControl:true});
+    const m=Lf.map('peMapaDiv',{zoomControl:false,attributionControl:true,
+      rotate:true,touchRotate:true,touchPitch:false,pitchDrag:false,shiftKeyRotate:true,bearing:0,
+      rotateControl:{closeOnZeroBearing:true,visualizePitch:false,position:'topright'}});
     // Mapa de OpenStreetMap (gratis, sin clave). CARTO pide clave desde 2026: no se usa.
     Lf.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       {maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);
@@ -4140,7 +4146,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-07.5';
+const VERSION='2026-11-07.6';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

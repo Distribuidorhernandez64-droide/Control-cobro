@@ -6,6 +6,7 @@ const http=require('http'),fs=require('fs'),path=require('path'),{execSync}=requ
 const ROOT=path.join(__dirname,'..');
 const UMD=fs.readFileSync(require.resolve('@supabase/supabase-js/dist/umd/supabase.js'),'utf8');
 const LEAF_JS=fs.readFileSync(require.resolve('leaflet/dist/leaflet.js'),'utf8');
+const LEAF_ROT=fs.readFileSync(require.resolve('leaflet-rotate/dist/leaflet-rotate.js'),'utf8');
 const LEAF_CSS=fs.readFileSync(require.resolve('leaflet/dist/leaflet.css'),'utf8');
 const JWT=fs.readFileSync('/var/tmp/anon.jwt','utf8').trim();
 const LOCAL='http://127.0.0.1:3301';
@@ -43,6 +44,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.route('**/cdn.jsdelivr.net/npm/@supabase/**',r=>r.fulfill({status:200,contentType:'application/javascript',body:UMD}));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
   await p.route('**/unpkg.com/leaflet@1.9.4/dist/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:LEAF_JS}));
+  await p.route('**/unpkg.com/leaflet-rotate@0.5.3/dist/leaflet-rotate.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:LEAF_ROT}));
   await p.route('**/unpkg.com/leaflet@1.9.4/dist/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:LEAF_CSS}));
   await p.route('**/tile.openstreetmap.org/**',r=>r.fulfill({status:200,contentType:'image/png',body:PNG}));
   await p.route('https://shlolncjhfzqmcllwjrk.supabase.co/**',async r=>{
@@ -71,6 +73,16 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('Botón del mapa marcado (ahora dice "Ver como lista")', (await p.getAttribute('#peMapaBtn','aria-label'))==='Ver como lista');
   await p.screenshot({path:SHOTS+'/mapa-1-abierto.png'});
 
+  // Girar el mapa (dos dedos en el teléfono; aquí con la función del complemento)
+  ok('El mapa se puede girar (giro con dos dedos activado)', await p.evaluate(()=>typeof PE._map.setBearing==='function'&&!!(PE._map.touchRotate&&PE._map.touchRotate.enabled())));
+  await p.evaluate(()=>PE._map.setBearing(60,{animate:false}));await p.waitForTimeout(300);
+  ok('Girado: aparece la brújula para volver al norte', await p.evaluate(()=>{const c=document.querySelector('.leaflet-control-rotate');return !!c&&getComputedStyle(c).display!=='none';}));
+  await p.screenshot({path:SHOTS+'/mapa-1b-girado.png'});
+  await p.locator('.leaflet-marker-icon[title="ABARROTERIA BUENA VISTA"]').click();await p.waitForTimeout(300);
+  ok('Girado: tocar un punto sigue escogiendo', await p.evaluate(()=>PE.sel.has(30001)));
+  await p.locator('.leaflet-marker-icon[title="ABARROTERIA BUENA VISTA"]').click();await p.waitForTimeout(300);
+  await p.click('.leaflet-control-rotate a');await p.waitForTimeout(900);
+  ok('La brújula regresa al norte', await p.evaluate(()=>Math.abs(PE._map.getBearing())<0.5&&PE.sel.size===0));
   // Tocar el punto de Buena Vista
   const pinDe=async nombre=>p.locator(`.leaflet-marker-icon[title="${nombre}"]`);
   await (await pinDe('ABARROTERIA BUENA VISTA')).click();await p.waitForTimeout(300);
@@ -188,8 +200,11 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   else console.log('   (no se pudo enviar la ruta en la prueba; se omite)');
 
   // Ubicación que llega después (Monica la tenía vacía y la llenan): la nota que no ha salido se actualiza
-  const pref=await p.evaluate(()=>localStorage.getItem('cc_pe_mapa'));
-  ok('Se recuerda que estaba en el mapa', pref==='1');
+  await p.evaluate(()=>{peAbrir();});await p.waitForTimeout(400);
+  await p.evaluate(()=>{if(!PE.mapa)peMapaToggle();});await p.waitForTimeout(500);
+  await p.evaluate(()=>peCerrar());await p.waitForTimeout(300);
+  await p.evaluate(()=>peAbrir());await p.waitForTimeout(600);
+  ok('Al volver a abrir Por entregar siempre empieza en la lista', await p.evaluate(()=>!PE.mapa)&&!(await p.$('.pe-mapa'))&&(await p.getAttribute('#peMapaBtn','aria-label'))==='Ver en el mapa');
   ok('Sin errores en la página', errs.length===0);
   if(errs.length)console.log(errs);
   await b.close();srv.close();

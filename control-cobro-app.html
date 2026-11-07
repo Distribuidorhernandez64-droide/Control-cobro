@@ -1440,6 +1440,7 @@ async function confirmarRecibido(vid,quien){
   renderZona();
   toast('⚠ NO se guardó ('+(_errGuardar||'no quedó recibido')+'). Volvé a tocar Recibido',true);
 }
+const AUD_IMPORTA=new Set(['CAMBIÓ MONTO','CAMBIÓ NOMBRE']);
 function logAudit(accion,detalle){auditoria.unshift({hora:new Date().toISOString(),accion,detalle,quien:sesion?sesion.nombre:'?'});}
 
 async function reabrir(vid){if(!esMaestro())return;const v=viajes.find(x=>x.id===vid);if(v){
@@ -2164,13 +2165,17 @@ function abrirAuditoria(){
     });
     h+=`<div class="rm"><div class="mh"><div class="mn" style="font-size:15px">Pendientes a crédito</div></div><div style="margin-top:8px">${pend}</div></div>`;
   }
-  // Movimientos después de cerrar (auditoría) al final
-  if(auditoria.length>0){
+  // Movimientos después de cerrar (auditoría) al final.
+  // 6/11/2026: solo lo que se cambia a mano en Control (monto o nombre de un pedido que ya salió). Lo demás
+  // (facturas a ruta, devoluciones de Monica, no se entregó, para mañana, reabrir, eliminar vendedor) ya se ve en
+  // los viajes, en "Cambios" o en Monica: se sigue guardando, pero no se muestra aquí.
+  const audVer=auditoria.filter(a=>AUD_IMPORTA.has(a.accion));
+  if(audVer.length>0){
     let aud='';
-    auditoria.forEach(a=>{
+    audVer.forEach(a=>{
       aud+=`<div style="padding:11px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between"><span style="font-weight:800;color:var(--bad);font-size:13px">${a.accion}</span><span style="font-size:12px;color:var(--mut)">${hhmm(a.hora)}</span></div><div style="font-size:13.5px;margin-top:2px">${a.detalle}</div></div>`;
     });
-    h+=`<div class="rm"><div class="mh"><div class="mn" style="font-size:15px;color:var(--bad)">⚠ Movimientos después de cerrar (${auditoria.length})</div></div><div style="margin-top:8px">${aud}</div></div>`;
+    h+=`<div class="rm"><div class="mh"><div class="mn" style="font-size:15px;color:var(--bad)">⚠ Movimientos después de cerrar (${audVer.length})</div></div><div style="margin-top:8px">${aud}</div></div>`;
   }
   h+=`<button class="btn copyb" style="margin:10px 0 0" onclick="copiarReporteUnico()">Copiar reporte para WhatsApp</button>`;
   if(esMaestro())h+=`<button class="btn sec" style="width:100%;margin-top:9px" onclick="abrirRespaldos()">🛟 Respaldos y recuperación</button>`;
@@ -3832,7 +3837,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-06.1';
+const VERSION='2026-11-06.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -3571,7 +3571,8 @@ function peMapaTocar(nros){
   if(PE.filtro==='__m'){PE.mapaInfo={nros};peRenderLista();toast('Están para mañana · en la lista, mantené presionada para regresarlas a hoy');return;}
   const todas=nros.every(n=>PE.sel.has(n));
   nros.forEach(n=>todas?PE.sel.delete(n):PE.sel.add(n));
-  PE.mapaInfo={nros};peRenderLista();
+  PE.mapaInfo=todas?null:{nros};   // al quitarlo se cierra su tarjeta
+  peRenderLista();
 }
 function peMapaInfoCerrar(){PE.mapaInfo=null;peRenderLista();}
 function peMapaSin(on){PE.mapaSin=!!on;peRenderLista();}
@@ -4093,7 +4094,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-07.2';
+const VERSION='2026-11-07.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

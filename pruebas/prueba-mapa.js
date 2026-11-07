@@ -81,10 +81,11 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.screenshot({path:SHOTS+'/mapa-2-escogidas.png'});
   await (await pinDe('ADELAIDA GABRIEL · ADELAIDA GABRIEL')).click();await p.waitForTimeout(300);
   ok('Tocar otra vez lo quita', await p.evaluate(()=>!PE.sel.has(30002)&&!PE.sel.has(30003)&&PE.sel.size===1));
+  ok('Al quitarlo se cierra su tarjeta', !(await p.$('#peMTop .pe-minfo'))&&!(await p.textContent('#peMTop')).includes('ADELAIDA'));
+  await (await pinDe('ADELAIDA GABRIEL · ADELAIDA GABRIEL')).click();await p.waitForTimeout(300);
   await p.click('.pe-mi-r button');await p.waitForTimeout(500);
   ok('"Ver" abre la vista previa de la nota', await p.evaluate(()=>PE.vista===30002));
   await p.evaluate(()=>peVerCerrar());await p.waitForTimeout(400);
-  await (await pinDe('ADELAIDA GABRIEL · ADELAIDA GABRIEL')).click();await p.waitForTimeout(300);
   // Punto gris: ya va en otra ruta
   await (await p.locator('.leaflet-marker-icon:has(.pe-pin.gris)')).click();await p.waitForTimeout(300);
   ok('Punto gris: dice que ya va en la ruta de Pedro y no se escoge', (await p.textContent('#peMTop')).includes('Ya va en la ruta de Pedro')&&await p.evaluate(()=>!PE.sel.has(30006)));

@@ -222,7 +222,8 @@
   .chathd .cmas:active{transform:scale(.92)}
   .modalR{position:fixed;inset:0;background:rgba(20,25,35,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
   .modalR.open{display:flex}
-  .modalRcard{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .2s}
+  .modalRcard{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .2s;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .modalR{overscroll-behavior:contain}
   @keyframes pop{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
   .vfoot{padding:14px 16px;display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);background:#faf8f3}
   .vfoot .vtot{flex:1;font-size:13px}.vfoot .vtot b{color:var(--green);font-size:17px}
@@ -639,8 +640,17 @@
   /* Ruta en Google Maps (viaje) */
   .rmaps-b{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:10px}
   .rmaps-b svg{width:17px;height:17px;flex-shrink:0}
-  .rm-lista{list-style:none;margin:0 0 12px;padding:0;max-height:42vh;overflow-y:auto}
-  .rm-lista li{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px;font-weight:700}
+  .modalRcard.rm-card{display:flex;flex-direction:column;overflow:hidden;padding:18px 18px 14px;max-width:380px}
+  .rm-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-shrink:0;margin-bottom:6px}
+  .rm-cab b{display:block;font-size:18px;font-weight:900;line-height:1.2}.rm-cab span{display:block;font-size:12.5px;color:var(--mut);font-weight:700;margin-top:2px}
+  .rm-x{width:32px;height:32px}
+  .rm-cuerpo{flex:1 1 auto;min-height:60px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
+  .rm-card .rm-btns{flex-shrink:0;padding-top:12px;border-top:1px solid var(--line);gap:8px}
+  .rm-card .rm-btns .btn{padding:11px 12px;font-size:14px;white-space:nowrap}
+  .rm-fila{display:flex;gap:8px}.rm-fila>*{flex:1;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center}
+  .rm-card .rm-nota{flex-shrink:0;margin:10px 0 0;text-align:center;font-size:11.5px}
+  .rm-lista{list-style:none;margin:0 0 10px;padding:0}
+  .rm-lista li{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px;font-weight:700}
   .rm-lista li:last-child{border-bottom:none}
   .rm-n{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .rm-lista li span{min-width:0}.rm-lista li small{display:block;color:var(--mut);font-size:12px;font-weight:700}
@@ -1469,7 +1479,7 @@ function mostrarQuienRecibio(vid){
     </div>`;
   m.classList.add('open');
 }
-function cerrarModalRecibe(){document.getElementById('modalRecibe').classList.remove('open');}
+function cerrarModalRecibe(){document.getElementById('modalRecibe').classList.remove('open');const c=document.getElementById('modalRecibeBody');if(c)c.classList.remove('rm-card');}
 async function confirmarRecibido(vid,quien){
   const v0=viajes.find(x=>x.id===vid);
   if(!v0){cerrarModalRecibe();toast('No encontré esa ruta. Tocá 🔄 y probá de nuevo',true);return;}
@@ -3766,18 +3776,21 @@ function rmTexto(v){
 function rutaMaps(vid){
   const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
   const {paradas,sin}=rmParadas(v),en=rmEnlaces(paradas);
-  document.getElementById('modalRecibeBody').innerHTML=`
-    <div class="pm-cab"><b>Ruta de ${esc(v.rutero)}</b><span>${paradas.length} parada${paradas.length===1?'':'s'} · sale de ${esc(BODEGA.nombre)}</span></div>
-    ${paradas.length?`<div class="rm-nota">En el orden de la ruta. Google Maps sale de donde esté el teléfono del rutero.</div>
-    <ol class="rm-lista">${paradas.map((x,i)=>`<li><span class="rm-n">${i+1}</span><span>${esc(x.noms.join(' / '))}${x.facs.length?`<small>Nota ${x.facs.join(', ')}</small>`:''}</span></li>`).join('')}</ol>`:''}
+  const card=document.getElementById('modalRecibeBody');
+  card.classList.add('rm-card');
+  card.innerHTML=`
+    <div class="rm-cab"><div><b>Ruta de ${esc(v.rutero)}</b><span>${paradas.length} parada${paradas.length===1?'':'s'} · sale de ${esc(BODEGA.nombre)}</span></div>
+      <button class="pe-mi-x rm-x" onclick="cerrarModalRecibe()" aria-label="Cerrar">${ICO_X_S}</button></div>
+    <div class="rm-cuerpo">
+    ${paradas.length?`<ol class="rm-lista">${paradas.map((x,i)=>`<li><span class="rm-n">${i+1}</span><span>${esc(x.noms.join(' / '))}${x.facs.length?`<small>Nota ${x.facs.join(', ')}</small>`:''}</span></li>`).join('')}</ol>`:''}
     ${sin.length?`<div class="rm-sin"><b>Sin ubicación (${sin.length})</b><br>${sin.map(x=>esc(x.nom)).join(' · ')}<br><small>No tienen coordenadas en Monica; no van en el enlace ni en el archivo.</small></div>`:''}
-    <div class="rm-btns">
-      ${paradas.length?`<button class="btn ok" onclick="rmWhats(${v.id})">Google Maps por WhatsApp</button>
-      <div class="rm-omw"><button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo para Organic Maps</button><button class="btn sec rm-omc" onclick="rmKmlEnviar(${v.id},true)" aria-label="Compartir el archivo">${ICO_COMPARTIR}</button></div>
-      ${en.map(e=>`<a class="btn sec" href="${e.url}" target="_blank" rel="noopener">Abrir en Google Maps${en.length>1?` · paradas ${e.desde} a ${e.hasta}`:''}</a>`).join('')}
-      <button class="btn sec" onclick="rmCopiar(${v.id})">Copiar</button>`:''}
-      <button class="btn sec pm-cancel" onclick="cerrarModalRecibe()">Cerrar</button>
-    </div>`;
+    </div>
+    ${paradas.length?`<div class="rm-btns">
+      <button class="btn ok" onclick="rmWhats(${v.id})">Google Maps por WhatsApp</button>
+      <div class="rm-omw"><button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo Organic Maps</button><button class="btn sec rm-omc" onclick="rmKmlEnviar(${v.id},true)" aria-label="Compartir el archivo">${ICO_COMPARTIR}</button></div>
+      <div class="rm-fila">${en.map(e=>`<a class="btn sec" href="${e.url}" target="_blank" rel="noopener">${en.length>1?`Maps ${e.desde}–${e.hasta}`:'Abrir Google Maps'}</a>`).join('')}<button class="btn sec" onclick="rmCopiar(${v.id})">Copiar</button></div>
+    </div>
+    <div class="rm-nota">En el orden de la ruta · Google Maps sale de donde esté el teléfono del rutero</div>`:''}`;
   document.getElementById('modalRecibe').classList.add('open');
 }
 function rmWhats(vid){const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
@@ -4146,7 +4159,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-07.6';
+const VERSION='2026-11-07.7';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -163,7 +163,7 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('Avisa la que no tiene ubicación', modal.includes('Sin ubicación (1)')&&modal.includes('CLTE GCO.'));
   const href=await p.getAttribute('.rm-btns a','href');
   ok('Enlace de Google Maps: destino la última, las otras en orden', href==='https://www.google.com/maps/dir/?api=1&destination=14.5006218,-90.9906239&waypoints='+encodeURIComponent('14.4965337,-90.9617256|14.4816749,-91.0451764')+'&travelmode=driving');
-  ok('Botones WhatsApp, Organic Maps y Copiar', modal.includes('Google Maps por WhatsApp')&&modal.includes('Archivo para Organic Maps')&&modal.includes('Copiar'));
+  ok('Botones WhatsApp, Organic Maps y Copiar', modal.includes('Google Maps por WhatsApp')&&modal.includes('Archivo Organic Maps')&&modal.includes('Copiar'));
   ok('Dice que sale de la bodega', modal.includes('Ruta de Juan')&&modal.includes('sale de Distribuidora Hernández'));
   const kml=await p.evaluate(id=>rmKml(viajes.find(x=>x.id===id),new Date(2026,10,7)),v.id);
   const esperado='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>Ruta Juan 7 noviembre</name>\n'+
@@ -185,6 +185,21 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   await p.click('.rm-btns button.ok');await p.waitForTimeout(300);
   ok('WhatsApp se abre con el mensaje', abierto&&abierto.startsWith('https://wa.me/?text=')&&decodeURIComponent(abierto.split('text=')[1])===txt);
   await p.evaluate(()=>cerrarModalRecibe());
+  // Ventana con muchas paradas: cabe en la pantalla, centrada, la lista se desplaza por dentro
+  for(const [w,h] of [[390,844],[375,667]]){
+    await p.setViewportSize({width:w,height:h});
+    const caja=await p.evaluate(()=>{const ps=[];for(let i=0;i<9;i++)ps.push({id:9000+i,nombre:'TIENDA PRUEBA '+(i+1),total:100+i,estado:'pagado',fac:40100+i,lat:14.49+i/1000,lng:-90.95-i/1000});
+      ps.push({id:9100,nombre:'YOHANA QUISQUE',total:50,estado:'pagado',fac:40199});
+      viajes.push({id:777,uid:'u777',rutero:'Gerson',pedidos:ps});rutaMaps(777);
+      const r=document.getElementById('modalRecibeBody').getBoundingClientRect();return {top:r.top,bottom:r.bottom,h:innerHeight};});
+    await p.waitForTimeout(300);
+    await p.screenshot({path:SHOTS+`/mapa-6-ruta-larga-${w}x${h}.png`});
+    ok(`Ventana de ruta cabe en ${w}×${h} y queda centrada`, caja.top>=8&&caja.bottom<=caja.h-8&&Math.abs(caja.top-(caja.h-caja.bottom))<4);
+    ok(`Los botones se ven sin desplazar (${w}×${h})`, await p.evaluate(()=>{const b=document.querySelector('.rm-btns .btn.ok').getBoundingClientRect();return b.bottom<=innerHeight&&b.top>=0;}));
+    await p.evaluate(()=>{cerrarModalRecibe();viajes=viajes.filter(v=>v.id!==777);});
+  }
+  await p.setViewportSize({width:390,height:844});
+  ok('Al cerrar, las otras ventanas vuelven a su estilo', await p.evaluate(()=>!document.getElementById('modalRecibeBody').classList.contains('rm-card')));
   // Muchas paradas: de 10 en 10
   const partes=await p.evaluate(()=>{const ps=[];for(let i=0;i<23;i++)ps.push({u:[14.4+i/1000,-90.9-i/1000]});return rmEnlaces(ps).map(e=>[e.desde,e.hasta,(e.url.match(/waypoints=([^&]*)/)||[,''])[1]]);});
   ok('23 paradas = 3 enlaces (1-10, 11-20, 21-23)', partes.length===3&&partes[0][0]===1&&partes[0][1]===10&&partes[2][0]===21&&partes[2][1]===23);

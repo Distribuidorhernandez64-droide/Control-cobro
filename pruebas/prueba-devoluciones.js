@@ -242,6 +242,27 @@ const nota=(nro,cliente,total,hora,det)=>({nro,fecha:hoy,hora,cliente,codigo_cli
   ok('Solo cambió el comentario: "Abierta en Monica · solo cambió un comentario"', (await p.textContent('#zona')).includes('solo cambió un comentario'));
   await p.evaluate(()=>volverLista());await p.waitForTimeout(300);
 
+  // ---- 8/11: después de salir cambian un producto por otro (quitan Pepsi retornable, agregan Coca retornable) ----
+  await rest('POST','pendientes_entrega',[nota(21905,'CLTE GCO. dorcas zelda',300.9,'09:00',[L('336','----pepsi retornable 2lt 8ud',1,74),L('500','---agua pura',1,226.9)])]);
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1500);
+  await p.evaluate(()=>{PE.sel=new Set([21905]);return peAsignar('Lucas');});await p.waitForTimeout(1500);
+  await rest('POST','puente?on_conflict=id',[{id:'facturacion',latido:Date.now()%100000}],'resolution=merge-duplicates,return=minimal');
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Lucas');return terminarPedidos(v.id);});await p.waitForTimeout(2500);
+  await rest('PATCH','pendientes_entrega?nro=eq.21905',{monica_cambio:true,monica_total:308.9,monica_detalle:[L('176','----coca retornable 1x8',1,82),L('500','---agua pura',1,226.9)]});
+  await recargar();x=await ped(21905);
+  ok('Cambio de producto: descuenta lo que quitaron (−Q74.00) y suma lo que agregaron (+Q82.00)', x.devMon===74&&x.agrMon===82&&x.totalSalio===300.9);
+  ok('Cambio de producto: se cobra Q308.90 (igual que Monica)', Math.abs(x.efectivo-308.9)<0.001);
+  await p.evaluate(()=>{PE.abierto&&peCerrar();entrarVendedor('Lucas');});await p.waitForTimeout(400);
+  z=await p.textContent('#zona');
+  ok('Pedido: "−Q74.00 +Q82.00 · Cambios ›" y etiqueta "cambió producto"', z.includes('−Q74.00 +Q82.00 · Cambios ›')&&z.includes('cambió producto'));
+  ok('Viaje: "Cambió en Monica · +Q8.00"', z.includes('Cambió en Monica · +Q8.00'));
+  await p.screenshot({path:SHOTS+'/s1-cambio-producto.png'});
+  await p.click('.ped:has-text("dorcas") .pe-verl');await p.waitForTimeout(400);
+  m=await p.textContent('#modalRecibeBody');
+  ok('Cambios: "Agregado sumado +Q82.00", salió Q300.90 y se cobra Q308.90', m.includes('Agregado sumado')&&m.includes('+Q82.00')&&m.includes('Q300.90')&&m.includes('Q308.90'));
+  await p.screenshot({path:SHOTS+'/s2-ventana-cambio.png'});
+  await p.evaluate(()=>{cerrarModalRecibe();volverLista();});await p.waitForTimeout(300);
+
   // ---- 7) Gesto: si la lista se refresca a media arrastrada, el gesto sigue ----
   await p.evaluate(()=>peAbrir());await p.waitForTimeout(800);
   const cdp=await ctx.newCDPSession(p);

@@ -573,7 +573,7 @@
   .t-reg{background:#e9eef5;color:#5b6b82;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;vertical-align:1px;margin-left:4px}
   .pe-regl{color:#6b7a90!important;font-weight:700}
   .pe-verl{cursor:pointer;color:var(--bad)!important;font-weight:800;font-size:12.5px!important;margin-top:2px}
-  .pe-devm{color:var(--warn);font-weight:800}
+  .pe-devm{color:var(--warn);font-weight:800}.pe-agrm{color:#1f8a52;font-weight:800}
   .pe-abl{color:var(--mut)!important;font-size:12px!important;font-weight:600}
   .pe-abv{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;font-weight:700;color:#8a919c}
   .pe-abv svg,.pe-abh svg{width:13px;height:13px;flex-shrink:0}
@@ -1692,7 +1692,7 @@ function renderPedidos(v,editable){
     let montoShow;
     if(p.estado==='credito')montoShow=`<span style="color:var(--credit)">${q(creditoDe(p))}</span><div class="sub" style="color:var(--credit)">a crédito</div>`;
     else if(p.estado==='cancelado')montoShow=`<span style="color:var(--bad)">${q(p.total)}</span><div class="sub" style="color:var(--bad)">no entregó</div>`;
-    else if(ajusteDe(p)>0)montoShow=`<span style="text-decoration:line-through;color:var(--mut);font-weight:600;font-size:13px">${q(p.total)}</span> ${q(ef)}`;
+    else if(ajusteDe(p)>0||(p.totalSalio!=null&&Math.abs(p.totalSalio-ef)>0.001))montoShow=`<span style="text-decoration:line-through;color:var(--mut);font-weight:600;font-size:13px">${q(peSalio(p))}</span> ${q(ef)}`;
     else montoShow=q(ef);
     const btnX=puedeBorrar?`<button onclick="event.stopPropagation();borrarPedido(${v.id},${p.id})" title="Quitar" style="margin-left:8px;width:30px;height:30px;border:none;border-radius:8px;background:#fdeede;color:#d4583e;font-size:17px;font-weight:900;flex-shrink:0;cursor:pointer">×</button>`:'';
     const swipeAttrs = puedeBorrar?`data-swipe="1" data-vid="${v.id}" data-pid="${p.id}"`:'';
@@ -2568,27 +2568,29 @@ function peRegAnulada(p){if(!p||!p.facReg)return false;const f=PE.filas.find(x=>
 function peSoloAbierta(p,c){
   if(!c||c.monica_anulada)return null;
   const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
-  if(mt===null||Math.abs(mt-(p.total||0))>0.001)return null;
-  const d=peDiffMonica(c,p.total);
+  if(mt===null||Math.abs(mt-(peSalio(p)||0))>0.001)return null;
+  const d=peDiffMonica(c,peSalio(p));
   if(d&&(d.menos.length||d.precio.length||d.mas.length))return null;
   if(!d)return 'Abierta en Monica · mismo total';
   const com=ls=>JSON.stringify((ls||[]).map(l=>[String(l.c||''),String(l.m||'').trim()]).sort());
   return com(c.detalle)!==com(c.monica_detalle)?'Abierta en Monica · solo cambió un comentario':'Abierta en Monica · sin cambios';
 }
 function peAvisosDe(vs){
-  const a={n:0,dev:0,anul:0,total:0,abiertas:0};
+  const a={n:0,dev:0,agr:0,anul:0,total:0,abiertas:0};
   vs.forEach(v=>{if(!v)return;(v.pedidos||[]).forEach(p=>{
     if(!p||!p.fac)return;
     if(p.facReg){if(peRegAnulada(p))a.anul++;return;}
-    const c=peCambioDe(p);if(c){if(peSoloAbierta(p,c))a.abiertas++;else{a.n++;a.dev+=p.devMon||0;}}
+    const c=peCambioDe(p);if(c){if(peSoloAbierta(p,c))a.abiertas++;else{a.n++;a.dev+=p.devMon||0;a.agr+=p.agrMon||0;}}
   });});
-  a.dev=peR2(a.dev);a.total=a.n+a.anul;return a;
+  a.dev=peR2(a.dev);a.agr=peR2(a.agr||0);a.total=a.n+a.anul;return a;
 }
 function peAvisoTxt(a){
   const t=[];
   // Corto: "Devolución −Q130.00" · "2 cambios · −Q130.00" · "Cambió en Monica" · "1 anulada"
-  if(a.n===1)t.push(a.dev>0?'Devolución −'+q(a.dev):'Cambió en Monica');
-  else if(a.n>1)t.push(a.n+' cambios'+(a.dev>0?' · −'+q(a.dev):' en Monica'));
+  // con producto agregado: el neto ("Cambió en Monica · +Q8.00")
+  const neto=peR2((a.agr||0)-a.dev),sn=v=>(v<0?'−':'+')+q(Math.abs(v));
+  if(a.n===1)t.push(a.agr>0?(a.dev>0?'Cambió en Monica · '+sn(neto):'Agregado +'+q(a.agr)):a.dev>0?'Devolución −'+q(a.dev):'Cambió en Monica');
+  else if(a.n>1)t.push(a.n+' cambios'+(a.agr>0||a.dev>0?' · '+sn(neto):' en Monica'));
   if(a.anul)t.push(a.anul+(a.anul===1?' anulada':' anuladas'));
   return t.join(' · ');
 }
@@ -2599,15 +2601,17 @@ function peModLinea(v){const a=peAvisosDe([v]);return (a.total?`<div class="pe-m
 function peModificadasDe(r){return peAvisosDe(viajes.filter(v=>v&&v.rutero===r));}
 function peCambioDe(p){return p&&p.fac&&p.facEnv&&!p.facReg?PE.cambios[p.fac]:null;}
 const peR2=n=>Math.round((Number(n)||0)*100)/100;
+const peSalio=p=>p&&p.totalSalio!=null?p.totalSalio:(p?p.total:0);
 // Línea que explica qué cambió: "Salió Q500.00 · Monica ahora Q450.00 · devolución −Q50.00 ya descontada"
 function peCambioTxt(p,c,v){
-  if(c.monica_anulada)return 'Salió '+q(p.total)+' · anulada en Monica';
-  const ya=p.devMon||0,d=peDiffMonica(c,p.total);
+  if(c.monica_anulada)return 'Salió '+q(peSalio(p))+' · anulada en Monica';
+  const ya=p.devMon||0,d=peDiffMonica(c,peSalio(p));
   // devolución: el monto ya se ve arriba ("devolución Q46.00"); aquí solo si falta descontar algo
   if(d&&Math.abs(d.dev-ya)>0.001)return 'Monica: devolución −'+q(d.dev)+' sin descontar'+(v&&v.cerrado?' (ruta ya recibida)':'');
+  if(d&&Math.abs((d.agr||0)-(p.agrMon||0))>0.001)return 'Monica: agregado +'+q(d.agr)+' sin sumar'+(v&&v.cerrado?' (ruta ya recibida)':'');
   if(ya>0&&!(d&&d.precio.length))return 'Devolución de Monica ya descontada';
   const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
-  return (mt!==null&&Math.abs(mt-(p.total||0))>0.001)?'Salió '+q(p.total)+' · ahora '+q(mt):'Modificada · mismo total '+q(p.total);
+  return (mt!==null&&Math.abs(mt-(peSalio(p)||0))>0.001)?'Salió '+q(peSalio(p))+' · ahora '+q(mt):'Modificada · mismo total '+q(peSalio(p));
 }
 // ---- Devoluciones: qué cambió en Monica después de que la nota salió ----
 // Compara los productos con que salió la nota contra como están AHORA en Monica (por código de producto):
@@ -2631,14 +2635,15 @@ function peDiffMonica(c,totalSalio){
     if(qn<g.q-E){const r=g.q-qn,todo=qn<=E;
       const monto=todo?peR2(g.G-g.X):peR2(Math.max(0,r*Ps-(g.X-h.X)));
       menos.push({c:g.c,d:g.d,q:r,todo,monto});}
-    else if(qn>g.q+E)mas.push({c:g.c,d:g.d,q:qn-g.q});
+    else if(qn>g.q+E){const Pn=h.G/qn;mas.push({c:g.c,d:g.d,q:qn-g.q,monto:peR2(Math.max(0,(qn-g.q)*Pn-(h.X-g.X)))});}
     if(h&&qn>E&&g.q>E){const Pn=h.G/qn;
       if(Math.abs(Pn-Ps)>0.00005)precio.push({c:g.c,d:g.d,tipo:'precio',antes:Ps,ahora:Pn});
       else if(qn>=g.q-E&&Math.abs(h.X-g.X)>0.005)precio.push({c:g.c,d:g.d,tipo:'desc',antes:g.X,ahora:h.X});}
   });
-  M.forEach((h,k)=>{if(!S.has(k)&&h.q>E)mas.push({c:h.c,d:h.d,q:h.q,nuevo:true});});
+  M.forEach((h,k)=>{if(!S.has(k)&&h.q>E)mas.push({c:h.c,d:h.d,q:h.q,nuevo:true,monto:peR2(Math.max(0,h.G-h.X))});});
   const dev=Math.max(0,Math.min(peR2(totalSalio),peR2(menos.reduce((a,x)=>a+x.monto,0))));
-  return {dev,menos,precio,mas};
+  const sumaAgr=peR2(mas.reduce((a,x)=>a+(x.monto||0),0));   // 8/11/2026: lo que agregaron después de salir se suma
+  return {dev,agr:sumaAgr,menos,precio,mas};
 }
 // Si en Monica descontaron producto de una nota que ya salió, la ruta (mientras no se reciba) lo descuenta sola
 // en "Devolución". Se guarda cuánto puso el sistema (devMon) para no sumarlo dos veces y para ajustarlo si
@@ -2651,10 +2656,19 @@ function peAplicarDevoluciones(sinRender){
     (v.pedidos||[]).forEach(p=>{
       if(!p||!p.fac||!p.facEnv||p.facReg||p.estado!=='pagado')return;
       const c=PE.cambios[p.fac];if(!c)return;
-      const d=peDiffMonica(c,p.total);if(!d)return;
-      const ya=p.devMon||0;if(Math.abs(ya-d.dev)<0.001)return;
-      p.devolucion=peR2(Math.max(0,(p.devolucion||0)-ya+d.dev));p.devMon=d.dev;
-      logAudit('DEVOLUCIÓN DESDE MONICA',`${p.nombre} · nota ${p.fac} (${v.rutero}): ${ya?q(ya)+' → ':''}${q(d.dev)}${d.menos.length?' — '+d.menos.map(x=>peCant(x.q)+' '+x.d).join(', '):''}`);
+      const d=peDiffMonica(c,peSalio(p));if(!d)return;
+      const ya=p.devMon||0,yaA=p.agrMon||0;
+      if(Math.abs(ya-d.dev)<0.001&&Math.abs(yaA-d.agr)<0.001)return;
+      if(Math.abs(ya-d.dev)>=0.001){
+        p.devolucion=peR2(Math.max(0,(p.devolucion||0)-ya+d.dev));p.devMon=d.dev;
+        logAudit('DEVOLUCIÓN DESDE MONICA',`${p.nombre} · nota ${p.fac} (${v.rutero}): ${ya?q(ya)+' → ':''}${q(d.dev)}${d.menos.length?' — '+d.menos.map(x=>peCant(x.q)+' '+x.d).join(', '):''}`);
+      }
+      // 8/11/2026: si facturaron algo más después de salir, se suma a la cuenta (el total con que salió queda en totalSalio)
+      if(Math.abs(yaA-d.agr)>=0.001){
+        if(p.totalSalio==null)p.totalSalio=p.total;
+        p.total=peR2(p.totalSalio+d.agr);p.agrMon=d.agr;
+        logAudit('AGREGADO DESDE MONICA',`${p.nombre} · nota ${p.fac} (${v.rutero}): ${yaA?q(yaA)+' → ':''}${q(d.agr)}${d.mas.length?' — '+d.mas.map(x=>peCant(x.q)+' '+x.d).join(', '):''}`);
+      }
       if(p.snapEf!==undefined&&Math.abs(p.snapEf-efectivoDe(p))>0.001){p.snapEf=efectivoDe(p);v.modificado=true;}
       tv=true;
     });
@@ -2669,7 +2683,7 @@ function peAplicarDevoluciones(sinRender){
 function peVerCambio(vid,pid){
   const v=viajes.find(x=>x.id===vid),p=v&&(v.pedidos||[]).find(x=>x.id===pid);if(!p)return;
   const c=peCambioDe(p);if(!c)return;
-  const d=peDiffMonica(c,p.total);
+  const d=peDiffMonica(c,peSalio(p));
   const mt=c.monica_total===null||c.monica_total===undefined?null:Number(c.monica_total);
   const L=(a,b,cl)=>`<div class="dv-l${cl?' '+cl:''}"><span>${a}</span><b>${b}</b></div>`;
   let h='';
@@ -2678,14 +2692,16 @@ function peVerCambio(vid,pid){
   else{
     if(d.menos.length)h+=`<div class="dv-t">Devolvió</div>`+d.menos.map(x=>L(`<i class="dv-q">−${peCant(x.q)}</i>${esc(x.d)}${x.c?` <span style="color:var(--mut);font-size:11.5px">· ${esc(x.c)}</span>`:''}`,'−'+q(x.monto))).join('');
     if(d.precio.length)h+=`<div class="dv-t mal">${ICO_ALERTA} Cambió ${d.precio.every(x=>x.tipo==='desc')?'el descuento':'el precio'} · no se descuenta</div>`+d.precio.map(x=>L(esc(x.d),x.tipo==='desc'?`desc. ${q(x.antes)} → ${q(x.ahora)}`:`${peQP(x.antes)} → ${peQP(x.ahora)}`)).join('');
-    if(d.mas.length)h+=`<div class="dv-t">Agregaron · no se cobra aquí</div>`+d.mas.map(x=>L(`<i class="dv-q mas">+${peCant(x.q)}</i>${esc(x.d)}`,'')).join('');
+    if(d.mas.length)h+=`<div class="dv-t">Agregaron</div>`+d.mas.map(x=>L(`<i class="dv-q mas">+${peCant(x.q)}</i>${esc(x.d)}`,'+'+q(x.monto||0))).join('');
     if(!d.menos.length&&!d.precio.length&&!d.mas.length)h+=`<div class="dv-av gris">Los productos están igual que cuando salió.</div>`;
   }
   const sinDesc=d&&Math.abs(d.dev-(p.devMon||0))>0.001;
-  h+=`<div class="dv-tot">${L('Salió',q(p.total))}${mt!==null&&!c.monica_anulada?L('Monica ahora',q(mt)):''}
+  const sinSum=d&&Math.abs((d.agr||0)-(p.agrMon||0))>0.001;
+  h+=`<div class="dv-tot">${L('Salió',q(peSalio(p)))}${mt!==null&&!c.monica_anulada?L('Monica ahora',q(mt)):''}
     ${(p.devMon||0)>0?L('Devolución descontada','−'+q(p.devMon),'ok'):''}${sinDesc?L('Devolución según Monica (sin descontar)','−'+q(d.dev),'mal'):''}
+    ${(p.agrMon||0)>0?L('Agregado sumado','+'+q(p.agrMon),'ok'):''}${sinSum?L('Agregado según Monica (sin sumar)','+'+q(d.agr),'mal'):''}
     ${p.estado==='pagado'?L('Se cobra',q(efectivoDe(p)),'fuerte'):''}</div>`;
-  if(sinDesc)h+=`<div class="pm-nota">${v.cerrado?'La ruta ya se había recibido: no se descontó sola. Si hay que corregir, reabra la ruta.':p.estado!=='pagado'?'El pedido no está como "Pagó completo": no se descontó solo.':''}</div>`;
+  if(sinDesc||sinSum)h+=`<div class="pm-nota">${v.cerrado?'La ruta ya se había recibido: no se descontó sola. Si hay que corregir, reabra la ruta.':p.estado!=='pagado'?'El pedido no está como "Pagó completo": no se descontó solo.':''}</div>`;
   document.getElementById('modalRecibeBody').innerHTML=`
     <div class="pm-cab"><b>${esc(p.nombre)}</b><span>Nota ${p.fac} · ${esc(v.rutero)}${c.monica_cambio_en?' · cambiada '+hhmm(c.monica_cambio_en):''}</span></div>
     <div class="dv-cuerpo">${h}</div>
@@ -2702,11 +2718,11 @@ function peAvisoPedido(v,p){
   let tags=p.facAnul?'<span class="tag t-canc">anulada en Monica</span>':'';
   const c=peCambioDe(p);if(!c)return {tags,linea:''};
   const sa=peSoloAbierta(p,c);if(sa)return {tags,linea:`<div class="sub pe-abl">${sa}</div>`};
-  const d=peDiffMonica(c,p.total);
-  tags+=`<span class="tag t-mod">${ICO_ALERTA} ${d&&d.dev>0?'devolución':d&&d.precio.length?'cambió precio':'cambió en Monica'}</span>`;
-  const ya=p.devMon||0, limpio=d&&ya>0&&Math.abs(d.dev-ya)<=0.001&&!d.precio.length;
+  const d=peDiffMonica(c,peSalio(p));
+  tags+=`<span class="tag t-mod">${ICO_ALERTA} ${d&&d.dev>0&&d.agr>0?'cambió producto':d&&d.dev>0?'devolución':d&&d.agr>0?'agregado':d&&d.precio.length?'cambió precio':'cambió en Monica'}</span>`;
+  const ya=p.devMon||0,yaA=p.agrMon||0, limpio=d&&(ya>0||yaA>0)&&Math.abs(d.dev-ya)<=0.001&&Math.abs(d.agr-yaA)<=0.001&&!d.precio.length;
   const solaDev=limpio&&!(p.descuento>0)&&!(p.vuelto>0)&&(p.devolucion||0)<=ya+0.001&&p.estado==='pagado';
-  if(limpio)return {tags,sinSub:solaDev,linea:`<div class="sub pe-verl" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${solaDev?`<span class="pe-devm">−${q(ya)}</span> · `:''}<span style="white-space:nowrap">Cambios ›</span></div>`};
+  if(limpio)return {tags,sinSub:solaDev,linea:`<div class="sub pe-verl" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${solaDev?(ya>0?`<span class="pe-devm">−${q(ya)}</span> `:'')+(yaA>0?`<span class="pe-agrm">+${q(yaA)}</span> `:'')+'· ':''}<span style="white-space:nowrap">Cambios ›</span></div>`};
   return {tags,linea:`<div class="sub pe-modl pe-vercam" onclick="event.stopPropagation();peVerCambio(${v.id},${p.id})">${esc(peCambioTxt(p,c,v))} · <span style="white-space:nowrap">Cambios ›</span></div>`};
 }
 
@@ -4214,7 +4230,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-07.9';
+const VERSION='2026-11-08.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

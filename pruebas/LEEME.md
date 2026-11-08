@@ -52,3 +52,5 @@ con sus notas para escogerlas a mano, filtro y búsqueda, arrastrar el mapa no c
 Al mandar a un rutero las notas quedan en el orden en que se escogieron y con su ubicación; en el viaje, "Ruta en Google
 Maps": paradas en orden (mismo cliente = una parada), enlaces de 10 en 10, WhatsApp y Copiar. Misma base local que
 `prueba-por-entregar.js` y Leaflet local (`npm i leaflet@1.9.4`).
+  Cambió después (7/11): si quitan/agregan productos de cajas a una nota de un consolidado de hoy (antes de salir),
+  el reloj lleva puntito, el historial dice "Cambió después −0.50 … · cliente" y al enviar la ruta sale un aviso corto.

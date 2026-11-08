@@ -504,7 +504,11 @@
   .pe-cerrar:active{transform:scale(.92)}
   .pe-tbtns{display:flex;align-items:center;gap:8px;flex-shrink:0}
   .pe-histb{width:34px;height:34px;border-radius:50%;border:none;background:#f1f0ec;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
-  .pe-histb.ver{display:flex}.pe-histb:active{transform:scale(.92)}
+  .pe-histb.ver{display:flex}.pe-histb{position:relative}
+  .pe-histb.aviso::after{content:"";position:absolute;top:3px;right:3px;width:9px;height:9px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px #fff}
+  .ch-cam{margin:-3px 0 9px;display:flex;flex-direction:column;gap:3px}
+  .ch-cam span{font-size:12px;font-weight:800;color:var(--bad);line-height:1.3}
+  .ch-cam b{font-size:10.5px;font-weight:900;letter-spacing:.3px;text-transform:uppercase;color:var(--bad);opacity:.8}.pe-histb:active{transform:scale(.92)}
   /* notas que fueron en el último consolidado de hoy: solo un tono suave, no estorba */
   .pe-card.cons{background:#fffaea;border-color:#ecd9a0}
   .ch-lista{padding:4px 16px 14px}
@@ -1273,6 +1277,7 @@ async function terminarPedidos(vid,confirmado){if(modoLectura)return;const v=via
     if(!rv.ok){_enviando=false;const elE0=document.getElementById('env-'+vid);if(elE0)v.envases=elE0.value;peAvisoEnvio(vid,rv);return;}
   }
   const elE=document.getElementById('env-'+vid);if(elE)v.envases=elE.value;
+  let desdeCons=[];try{desdeCons=peHistCambiosDeRuta(v);}catch(e){}
   v.pedidos.forEach(p=>{if(p&&p.fac)p.facEnv=true;}); // ya no cambian
   // Si la ruta ya había salido hace más de 5 minutos y se volvió a enviar tras
   // una corrección, el rutero ya iba en camino: se respeta su hora de salida.
@@ -1283,6 +1288,10 @@ async function terminarPedidos(vid,confirmado){if(modoLectura)return;const v=via
   renderZona();
   const ok=await guardarAhora('ruta enviada');
   toast(ok?'Ruta enviada y guardada ✓':'⚠ No se pudo guardar. Revisá internet',!ok);
+  // Aviso corto si desde el consolidado quitaron/agregaron algo en estas notas (no detiene el envío)
+  if(ok&&desdeCons.length)setTimeout(()=>{const t=document.getElementById('toast');if(!t)return;
+    t.textContent='Desde el consolidado: '+csCambioTxt(desdeCons[0])+(desdeCons.length>1?' y '+(desdeCons.length-1)+' más':'');
+    t.className='toast show err';clearTimeout(_toastT);_toastT=setTimeout(()=>t.className='toast',5000);},1700);
   _enviando=false;
   if(ok&&v.pedidos.some(p=>p&&p.fac))peSellar(v);}
 async function terminarAnotar(vid){if(modoLectura)return;const v=viajes.find(x=>x.id===vid);if(!v)return;
@@ -2772,9 +2781,44 @@ function peHistGuardar(nros){
   let h=peHistLeer().filter(x=>x&&x.t&&new Date(x.t)>=lim);
   const clave=notas.map(x=>x.nro).sort((a,b)=>a-b).join(',');
   if(h.length&&h[0].clave===clave)h.shift();            // el mismo otra vez: solo se actualiza la hora
-  h.unshift({t:new Date().toISOString(),clave,notas});
+  h.unshift({t:new Date().toISOString(),clave,notas,solo:PE.consSolo!==false});
   try{localStorage.setItem(PE_HIST_K,JSON.stringify(h.slice(0,20)));}catch(e){try{localStorage.setItem(PE_HIST_K,JSON.stringify(h.slice(0,5)));}catch(e2){}}
 }
+// ---- 7/11/2026: cambios en notas DESPUÉS de sacar el consolidado (antes de que salga la ruta) ----
+// Se compara la copia guardada al sacarlo con cómo está la nota ahora, solo en los productos del consolidado
+// (con guiones, sin excluidos). Ej.: "−0.50 jugo de la granja 500ml 12ud · VICTORIA VARGAS".
+function csCantidades(det,solo){const m=new Map();
+  for(const l of (det||[])){const d=String(l.d||''),k=csN(d);
+    if(solo&&!d.trimStart().startsWith('-'))continue;if(CS_EXCLUIR.some(rx=>rx.test(k)))continue;
+    const x=m.get(l.c)||{nombre:csNombre(d),q:0};x.q=csR2(x.q+(+l.q||0));m.set(l.c,x);}
+  return m;}
+function peHistCambios(h){
+  const por={};PE.filas.forEach(f=>por[f.nro]=f);const out=[];
+  (h&&h.notas||[]).forEach(n=>{const f=por[n.nro];if(!f||!Array.isArray(n.detalle))return;
+    if(f.anulada){out.push({nro:n.nro,cliente:f.cliente||n.cliente,anulada:true});return;}
+    if(!Array.isArray(f.detalle))return;
+    const a=csCantidades(n.detalle,h.solo!==false),b=csCantidades(f.detalle,h.solo!==false);
+    new Set([...a.keys(),...b.keys()]).forEach(c=>{const qa=a.has(c)?a.get(c).q:0,qb=b.has(c)?b.get(c).q:0,dq=csR2(qb-qa);
+      if(Math.abs(dq)>0.0001)out.push({nro:n.nro,cliente:f.cliente||n.cliente,nombre:(b.get(c)||a.get(c)).nombre,dq});});});
+  return out;}
+const csCli=c=>csNombre(c).replace(/\s+/g,' ');
+const csCambioTxt=x=>x.anulada?`Anulada · ${csCli(x.cliente)}`:`${x.dq<0?'−':'+'}${csF2(Math.abs(x.dq))} ${x.nombre} · ${csCli(x.cliente)}`;
+const PE_HIST_VK='cc_consolidados_vistos';
+function peHistFirma(h,c){return h.t+'|'+c.map(csCambioTxt).join('|');}
+function peHistVistos(){try{return JSON.parse(localStorage.getItem(PE_HIST_VK)||'[]');}catch(e){return [];}}
+// ¿Hay cambios de hoy que todavía no viste en el historial? (puntito en el reloj)
+function peHistHayAviso(){const hoy=peHoyF(),v=new Set(peHistVistos());
+  return peHistLeer().some(h=>new Date(h.t).toLocaleDateString('en-CA')===hoy&&(c=>c.length&&!v.has(peHistFirma(h,c)))(peHistCambios(h)));}
+function peHistMarcarVistos(){const v=peHistVistos();
+  peHistLeer().forEach(h=>{const c=peHistCambios(h);if(c.length){const k=peHistFirma(h,c);if(!v.includes(k))v.push(k);}});
+  try{localStorage.setItem(PE_HIST_VK,JSON.stringify(v.slice(-60)));}catch(e){}
+  const hb=document.getElementById('peHistBtn');if(hb)hb.classList.remove('aviso');}
+// Al enviar la ruta: cambios desde el consolidado en las notas que van en ella (aviso corto, no detiene nada)
+function peHistCambiosDeRuta(v){const nros=new Set((v.pedidos||[]).filter(p=>p&&p.fac&&!p.facReg).map(p=>p.fac));if(!nros.size)return [];
+  const hoy=peHoyF(),vistos=new Set(),out=[];
+  peHistLeer().filter(h=>new Date(h.t).toLocaleDateString('en-CA')===hoy&&h.notas.some(n=>nros.has(n.nro))).forEach(h=>
+    peHistCambios(h).forEach(c=>{const k=csCambioTxt(c);if(nros.has(c.nro)&&!vistos.has(k)){vistos.add(k);out.push(c);}}));
+  return out;}
 // Notas del último consolidado de HOY (para el tono suave en las tarjetas)
 function peHistUltimo(){const h=peHistLeer()[0];if(!h)return new Set();
   return new Date(h.t).toLocaleDateString('en-CA')===peHoyF()?new Set(h.notas.map(x=>x.nro)):new Set();}
@@ -2800,6 +2844,7 @@ function peRenderHist(hoja){
     return `<div class="ch-f">
       <div class="ch-l1"><b>${peHistTxtDia(x.t)}</b><span>${x.notas.length} nota${x.notas.length===1?'':'s'} · ${q(tot)}</span></div>
       <div class="ch-cli">${x.notas.map(n=>`<span><i>${n.nro}</i>${esc(csNombre(n.cliente))}</span>`).join('')}</div>
+      ${(c=>c.length?`<div class="ch-cam"><b>Cambió después</b>${c.map(y=>`<span>${esc(csCambioTxt(y))}</span>`).join('')}</div>`:'')(peHistCambios(x))}
       <div class="ch-btns"><button class="ch-b" onclick="peHistVer(${i})">${ICO_CONS}Ver consolidado</button>${pend?`<button class="ch-b osc" onclick="peHistEscoger(${i})">Escoger ${pend===x.notas.length?'otra vez':pend+' que siguen'}</button>`:'<span class="ch-ya">Ya salieron</span>'}</div>
     </div>`;}).join('');
   hoja.innerHTML=`<div class="pv-asa"></div>
@@ -3480,7 +3525,7 @@ function peRenderVista(){
   PE.vistaPend=false;
   const hoja=el.querySelector('.pv-hoja');if(!hoja)return;
   if(PE.vista==='cons'){hoja.classList.add('alta');return peRenderCons(hoja);}
-  if(PE.vista==='hist'){hoja.classList.add('alta');return peRenderHist(hoja);}
+  if(PE.vista==='hist'){hoja.classList.add('alta');peRenderHist(hoja);peHistMarcarVistos();return;}
   const nro=PE.vista, rf=PE.rutaFila&&PE.rutaFila.nro===nro?PE.rutaFila:null, f=rf?(rf.cliente!==undefined?rf:null):PE.filas.find(x=>x.nro===nro);
   const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   if(!f){hoja.innerHTML=`<div class="pv-asa"></div><div class="pv-cab"><div class="pv-tit"><b>Nota ${nro}</b></div>${cerrar}</div>
@@ -3930,7 +3975,7 @@ function peRenderLista(){
 }
 function peRenderBarra(){
   const cb=document.getElementById('peConsBtn');if(cb)cb.classList.toggle('ver',PE.sel.size>0);
-  const hb=document.getElementById('peHistBtn');if(hb)hb.classList.toggle('ver',peHistLeer().length>0);
+  const hb=document.getElementById('peHistBtn');if(hb){hb.classList.toggle('ver',peHistLeer().length>0);hb.classList.toggle('aviso',PE.vista!=='hist'&&peHistHayAviso());}
   const b=document.getElementById('peBarra');if(!b)return;
   if(!PE.sel.size){b.innerHTML='';return;}
   const fs=PE.filas.filter(f=>PE.sel.has(f.nro)), tot=fs.reduce((s,f)=>s+f.total,0);
@@ -4169,7 +4214,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-07.8';
+const VERSION='2026-11-07.9';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

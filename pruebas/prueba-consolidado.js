@@ -109,6 +109,27 @@ const JSPDF=process.env.JSPDF;
   await p.evaluate(()=>{PE.sel=new Set();peRenderPanel();});await p.waitForTimeout(300);
   ok('Nuevo consolidado: el tono suave ahora solo en esa nota', (await p.$$('.pe-card.cons')).length===1);
   ok('El historial guarda los dos', (await p.evaluate(()=>peHistLeer().length))===2);
+  // ---- 7/11: quitan un producto de cajas DESPUÉS de sacar el consolidado (antes de enviar la ruta) ----
+  ok('Sin cambios todavía: el reloj no tiene puntito', !(await p.$('#peHistBtn.aviso')));
+  await rest('PATCH','pendientes_entrega?nro=eq.22303',{detalle:[L('023','---jugos pulp 250ml manzana 24ud',0.5,50),L('781179001059','---azucar caña real 5lb',1,23.5)]});
+  await p.evaluate(()=>peCargar());await p.waitForTimeout(1500);
+  ok('Quitaron un producto del consolidado: puntito en el reloj', !!(await p.$('#peHistBtn.aviso')));
+  await p.screenshot({path:SHOTS+'/k5-puntito.png'});
+  await p.click('#peHistBtn');await p.waitForTimeout(500);
+  t=await p.textContent('#peVista');
+  ok('Historial: "Cambió después −1.00 pepsi 1 1/4lt 12ud · CLIENTE milton"', t.includes('Cambió después')&&t.includes('−1.00 pepsi 1 1/4lt 12ud · CLIENTE milton'));
+  await p.screenshot({path:SHOTS+'/k6-cambio-despues.png'});
+  await p.evaluate(()=>peVerCerrar());await p.waitForTimeout(300);
+  await p.evaluate(()=>peRenderPanel());
+  ok('Ya lo viste: el puntito se quita (la línea sigue en el historial)', !(await p.$('#peHistBtn.aviso')));
+  // Al enviar la ruta con esa nota: aviso corto
+  await rest('POST','puente?on_conflict=id',[{id:'facturacion',latido:Date.now()%100000}],'resolution=merge-duplicates,return=minimal');
+  await p.evaluate(()=>{PE.sel=new Set([22303]);return peAsignar('Pedro');});await p.waitForTimeout(1500);
+  await p.evaluate(()=>{const v=viajes.find(x=>x.rutero==='Pedro');return terminarPedidos(v.id);});
+  await p.waitForTimeout(2600);
+  const tt=await p.textContent('#toast');
+  ok('Al enviar la ruta: "Desde el consolidado: −1.00 pepsi 1 1/4lt 12ud · CLIENTE milton"', tt.includes('Desde el consolidado: −1.00 pepsi 1 1/4lt 12ud · CLIENTE milton'));
+  await p.screenshot({path:SHOTS+'/k7-aviso-envio.png'});
   ok('Sin errores en la página', errs.length===0);
   if(errs.length)console.log(errs);
   await b.close();srv.close();

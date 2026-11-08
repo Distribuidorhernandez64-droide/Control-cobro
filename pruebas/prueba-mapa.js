@@ -89,8 +89,23 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
   ok('Tocar un punto escoge su nota', await p.evaluate(()=>PE.sel.has(30001)&&PE.sel.size===1));
   ok('El punto escogido cambia (✓)', (await p.$$('.pe-pin.on')).length===1);
   ok('Tarjeta compacta arriba: cliente, nota, total (sin instrucciones)', await p.evaluate(()=>{const t=document.getElementById('peMTop').textContent;return t.includes('ABARROTERIA BUENA VISTA')&&t.includes('Nota 30001')&&t.includes('Q300.00')&&!/toca el punto|Escogida/i.test(t);}));
+  // Con el dedo (como en el iPhone): tocar puntos escoge, tocar uno escogido quita SOLO ese, tocar fuera quita todos
+  {const centro=async nombre=>p.evaluate(n=>{const e=document.querySelector(`.leaflet-marker-icon[title="${n}"]`).getBoundingClientRect();return [e.left+e.width/2,e.top+e.height/2];},nombre);
+    await p.evaluate(()=>{PE.sel.clear();PE.mapaInfo=null;peRenderLista();});await p.waitForTimeout(200);
+    let c=await centro('ABARROTERIA BUENA VISTA');await p.touchscreen.tap(c[0],c[1]);await p.waitForTimeout(350);
+    c=await centro('ALFA Y OMEGA #2');await p.touchscreen.tap(c[0],c[1]);await p.waitForTimeout(350);
+    ok('Dedo: tocar 2 puntos escoge los 2', await p.evaluate(()=>PE.sel.has(30001)&&PE.sel.has(30005)&&PE.sel.size===2));
+    c=await centro('ALFA Y OMEGA #2');await p.touchscreen.tap(c[0],c[1]);await p.waitForTimeout(350);
+    ok('Dedo: tocar uno escogido quita solo ese (el otro sigue)', await p.evaluate(()=>PE.sel.has(30001)&&!PE.sel.has(30005)&&PE.sel.size===1));
+    c=await centro('ALFA Y OMEGA #2');await p.touchscreen.tap(c[0],c[1]);await p.waitForTimeout(700);
+    await p.touchscreen.tap(28,640);await p.waitForTimeout(350);
+    ok('Dedo: tocar fuera de los puntos quita todos', await p.evaluate(()=>PE.sel.size===0));
+    await p.click('.pe-desh');await p.waitForTimeout(300);
+    ok('Dedo: Deshacer los regresa', await p.evaluate(()=>PE.sel.size===2));
+    await p.evaluate(()=>{PE.sel.clear();PE._desh=null;PE.mapaInfo=null;peRenderLista();});await p.waitForTimeout(200);
+    c=await centro('ABARROTERIA BUENA VISTA');await p.mouse.click(c[0],c[1]);await p.waitForTimeout(300);}
   // Tocar fuera de los puntos: se quita lo escogido y sale "Deshacer"
-  await p.mouse.click(28,640);await p.waitForTimeout(300);
+  await p.waitForTimeout(400);await p.mouse.click(28,640);await p.waitForTimeout(300);
   ok('Tocar el mapa fuera de los puntos quita lo escogido y cierra la tarjeta', await p.evaluate(()=>PE.sel.size===0&&!document.querySelector('#peMTop .pe-minfo')));
   ok('Sale "Se quitó 1 · Deshacer"', (await p.textContent('#peMTop')).includes('Se quitó 1')&&(await p.textContent('#peMTop')).includes('Deshacer'));
   await p.click('.pe-desh');await p.waitForTimeout(300);

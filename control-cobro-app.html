@@ -3665,6 +3665,7 @@ function peMapaBtn(){
 }
 function peMapaTocar(nros){
   if(PE.filtro==='__m'){PE.mapaInfo={nros};peRenderLista();toast('Están para mañana · en la lista, mantené presionada para regresarlas a hoy');return;}
+  PE._tocoPin=Date.now();
   const todas=nros.every(n=>PE.sel.has(n));
   nros.forEach(n=>todas?PE.sel.delete(n):PE.sel.add(n));
   PE.mapaInfo=todas?null:{nros};   // al quitarlo se cierra su tarjeta
@@ -3672,12 +3673,27 @@ function peMapaTocar(nros){
 }
 function peMapaInfoCerrar(){PE.mapaInfo=null;peRenderLista();}
 function peMapaFuera(){
+  if(Date.now()-(PE._tocoPin||0)<350)return;   // fue un punto, no el mapa
   const ns=[...PE.sel];
   if(!ns.length){if(PE.mapaInfo||PE.mapaSin){PE.mapaInfo=null;PE.mapaSin=false;peRenderLista();}return;}
   PE.sel.clear();PE.mapaInfo=null;PE.mapaSin=false;
   clearTimeout(PE._deshT);PE._desh={nros:ns};
   PE._deshT=setTimeout(()=>{PE._desh=null;if(PE.abierto&&PE.mapa)peRenderLista();},5000);
   peRenderLista();
+}
+// Toque en el mapa fuera de los puntos = quitar lo escogido. Se detecta a mano (no con el 'click' de Leaflet,
+// que en el iPhone también salía al tocar un punto): un solo dedo, casi sin moverse, corto, y que no sea un
+// punto, un botón del mapa ni la tarjeta de arriba.
+function peMapaToqueFuera(el){
+  if(!el||el.__toque)return;el.__toque=true;
+  const t={n:0,ok:false,x:0,y:0,ts:0};
+  el.addEventListener('pointerdown',e=>{t.n++;
+    t.ok=t.n===1&&!e.target.closest('.leaflet-marker-icon,.leaflet-control,.pe-mtop,#peMSin');
+    t.x=e.clientX;t.y=e.clientY;t.ts=Date.now();},true);
+  const fin=e=>{const ok=t.ok&&e.type==='pointerup'&&Math.hypot(e.clientX-t.x,e.clientY-t.y)<10&&Date.now()-t.ts<600;
+    t.n=Math.max(0,t.n-1);if(t.n)t.ok=false;
+    if(ok&&!e.target.closest('.leaflet-marker-icon,.leaflet-control'))setTimeout(peMapaFuera,0);};
+  el.addEventListener('pointerup',fin,true);el.addEventListener('pointercancel',fin,true);
 }
 function peMapaDeshacer(){
   const d=PE._desh;if(!d)return;clearTimeout(PE._deshT);PE._desh=null;
@@ -3734,7 +3750,7 @@ function peRenderMapa(){
     Lf.control.zoom({position:'topright'}).addTo(m);
     m.setView([14.4965,-90.9617],14);
     PE._capa=Lf.layerGroup().addTo(m);PE._map=m;PE._mapaFit=null;
-    m.on('click',()=>peMapaFuera());
+    peMapaToqueFuera(document.getElementById('peMapaDiv'));
     const c=document.getElementById('peMCarga');if(c)c.classList.add('no');
     setTimeout(()=>{if(PE._map)PE._map.invalidateSize();},60);
   }

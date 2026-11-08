@@ -3671,7 +3671,10 @@ function peMapaTocar(nros){
   PE.mapaInfo=todas?null:{nros};   // al quitarlo se cierra su tarjeta
   peRenderLista();
 }
-function peMapaInfoCerrar(){PE.mapaInfo=null;peRenderLista();}
+function peMapaInfoCerrar(){
+  const inf=PE.mapaInfo;if(inf&&inf.nros)inf.nros.forEach(n=>PE.sel.delete(n));   // X = quitar ese punto
+  PE.mapaInfo=null;peRenderLista();
+}
 function peMapaFuera(){
   if(Date.now()-(PE._tocoPin||0)<350)return;   // fue un punto, no el mapa
   const ns=[...PE.sel];
@@ -3681,19 +3684,23 @@ function peMapaFuera(){
   PE._deshT=setTimeout(()=>{PE._desh=null;if(PE.abierto&&PE.mapa)peRenderLista();},5000);
   peRenderLista();
 }
-// Toque en el mapa fuera de los puntos = quitar lo escogido. Se detecta a mano (no con el 'click' de Leaflet,
-// que en el iPhone también salía al tocar un punto): un solo dedo, casi sin moverse, corto, y que no sea un
-// punto, un botón del mapa ni la tarjeta de arriba.
-function peMapaToqueFuera(el){
-  if(!el||el.__toque)return;el.__toque=true;
-  const t={n:0,ok:false,x:0,y:0,ts:0};
-  el.addEventListener('pointerdown',e=>{t.n++;
-    t.ok=t.n===1&&!e.target.closest('.leaflet-marker-icon,.leaflet-control,.pe-mtop,#peMSin');
-    t.x=e.clientX;t.y=e.clientY;t.ts=Date.now();},true);
-  const fin=e=>{const ok=t.ok&&e.type==='pointerup'&&Math.hypot(e.clientX-t.x,e.clientY-t.y)<10&&Date.now()-t.ts<600;
-    t.n=Math.max(0,t.n-1);if(t.n)t.ok=false;
-    if(ok&&!e.target.closest('.leaflet-marker-icon,.leaflet-control'))setTimeout(peMapaFuera,0);};
-  el.addEventListener('pointerup',fin,true);el.addEventListener('pointercancel',fin,true);
+// Toque en el mapa fuera de los puntos = quitar lo escogido. Se escucha en la ventana (lo primero que recibe el
+// toque, antes que Leaflet o el giro del mapa puedan detenerlo), con el dedo (touchstart/touchend, lo más seguro en
+// el iPhone) y con el ratón en la PC: un solo dedo, casi sin moverse, corto, dentro del mapa y que no empiece en un
+// punto, en un botón del mapa ni en la tarjeta de arriba.
+function peMapaToqueFuera(){
+  if(window.__peToque)return;window.__peToque=true;
+  const enMapa=t=>!!(PE.mapa&&PE.abierto&&t&&t.closest&&t.closest('#peMapaDiv')&&!t.closest('.leaflet-marker-icon,.leaflet-control'));
+  const op={capture:true,passive:true};let ini=null,m=null;
+  window.addEventListener('touchstart',e=>{ini=e.touches.length===1&&enMapa(e.target)?{x:e.touches[0].clientX,y:e.touches[0].clientY,ts:Date.now()}:null;},op);
+  window.addEventListener('touchmove',e=>{if(ini&&(e.touches.length>1||Math.hypot(e.touches[0].clientX-ini.x,e.touches[0].clientY-ini.y)>10))ini=null;},op);
+  window.addEventListener('touchend',e=>{const a=ini;ini=null;if(a)PE._toqueTs=Date.now();if(!a||e.touches.length)return;
+    const c=e.changedTouches&&e.changedTouches[0];
+    if(c&&Math.hypot(c.clientX-a.x,c.clientY-a.y)<10&&Date.now()-a.ts<600)setTimeout(peMapaFuera,0);},op);
+  window.addEventListener('touchcancel',()=>{ini=null;},op);
+  window.addEventListener('mousedown',e=>{m=e.button===0&&enMapa(e.target)?{x:e.clientX,y:e.clientY,ts:Date.now()}:null;},true);
+  window.addEventListener('mouseup',e=>{const a=m;m=null;if(!a||Date.now()-(PE._toqueTs||0)<800)return;   // ratón que imita un toque: ya se atendió
+    if(Math.hypot(e.clientX-a.x,e.clientY-a.y)<6&&Date.now()-a.ts<600)setTimeout(peMapaFuera,0);},true);
 }
 function peMapaDeshacer(){
   const d=PE._desh;if(!d)return;clearTimeout(PE._deshT);PE._desh=null;
@@ -3750,7 +3757,7 @@ function peRenderMapa(){
     Lf.control.zoom({position:'topright'}).addTo(m);
     m.setView([14.4965,-90.9617],14);
     PE._capa=Lf.layerGroup().addTo(m);PE._map=m;PE._mapaFit=null;
-    peMapaToqueFuera(document.getElementById('peMapaDiv'));
+    peMapaToqueFuera();
     const c=document.getElementById('peMCarga');if(c)c.classList.add('no');
     setTimeout(()=>{if(PE._map)PE._map.invalidateSize();},60);
   }
@@ -4261,7 +4268,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-08.1';
+const VERSION='2026-11-08.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

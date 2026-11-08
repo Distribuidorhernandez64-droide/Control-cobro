@@ -102,6 +102,20 @@ let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
     ok('Dedo: tocar fuera de los puntos quita todos', await p.evaluate(()=>PE.sel.size===0));
     await p.click('.pe-desh');await p.waitForTimeout(300);
     ok('Dedo: Deshacer los regresa', await p.evaluate(()=>PE.sel.size===2));
+    await p.waitForTimeout(400);
+    // Arrastrar el mapa con el dedo NO quita lo escogido
+    await p.evaluate(()=>{const el=document.getElementById('peMapaDiv');const T=(x,y)=>new Touch({identifier:7,target:el,clientX:x,clientY:y});
+      el.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[T(40,650)],targetTouches:[T(40,650)],changedTouches:[T(40,650)]}));
+      el.dispatchEvent(new TouchEvent('touchmove',{bubbles:true,cancelable:true,touches:[T(90,690)],targetTouches:[T(90,690)],changedTouches:[T(90,690)]}));
+      el.dispatchEvent(new TouchEvent('touchend',{bubbles:true,cancelable:true,touches:[],targetTouches:[],changedTouches:[T(90,690)]}));});
+    await p.waitForTimeout(300);
+    ok('Dedo: arrastrar el mapa no quita lo escogido', await p.evaluate(()=>PE.sel.size===2));
+    // X de la tarjeta = quitar ese punto
+    c=await centro('ABARROTERIA BUENA VISTA');await p.touchscreen.tap(c[0],c[1]);await p.waitForTimeout(350);
+    c=await centro('ABARROTERIA BUENA VISTA');await p.touchscreen.tap(c[0],c[1]);await p.waitForTimeout(350);
+    ok('Tarjeta abierta del punto escogido', await p.evaluate(()=>PE.sel.has(30001)&&!!document.querySelector('#peMTop .pe-minfo')));
+    await p.touchscreen.tap(...await p.evaluate(()=>{const r=document.querySelector('#peMTop .pe-mi-x').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];}));await p.waitForTimeout(350);
+    ok('X de la tarjeta: se cierra y se quita ese punto (el otro sigue)', await p.evaluate(()=>!PE.sel.has(30001)&&PE.sel.has(30005)&&!document.querySelector('#peMTop .pe-minfo')));
     await p.evaluate(()=>{PE.sel.clear();PE._desh=null;PE.mapaInfo=null;peRenderLista();});await p.waitForTimeout(200);
     c=await centro('ABARROTERIA BUENA VISTA');await p.mouse.click(c[0],c[1]);await p.waitForTimeout(300);}
   // Tocar fuera de los puntos: se quita lo escogido y sale "Deshacer"

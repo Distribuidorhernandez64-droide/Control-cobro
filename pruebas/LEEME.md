@@ -54,3 +54,16 @@ Maps": paradas en orden (mismo cliente = una parada), enlaces de 10 en 10, Whats
 `prueba-por-entregar.js` y Leaflet local (`npm i leaflet@1.9.4`).
   Cambió después (7/11): si quitan/agregan productos de cajas a una nota de un consolidado de hoy (antes de salir),
   el reloj lleva puntito, el historial dice "Cambió después −0.50 … · cliente" y al enviar la ruta sale un aviso corto.
+
+## Inicio de sesión con Supabase (10/11/2026)
+
+Desde la v2026-11-10.1 las contraseñas ya no están en el código: Cobros entra con
+`sb.auth.signInWithPassword` (usuario@cobros.local, usuarios creados en Supabase →
+Authentication) y la base solo deja leer/cambiar a quien inició sesión
+(`supabase/seguridad.sql`). Las pruebas viejas que escriben un PIN en `#loginPin`
+ya no entran: hay que darles una sesión simulada como en `prueba-login-supabase.js`.
+
+`prueba-login-supabase.js` — sin sesión no se lee nada; usuario o contraseña mala no
+entra; con la buena entra con su rol, todo va con la sesión (no con la clave pública),
+al volver a abrir no pide contraseña, "salir" la borra. Necesita
+`npm i playwright-core @supabase/supabase-js@2`.

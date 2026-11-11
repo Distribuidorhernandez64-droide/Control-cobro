@@ -715,31 +715,54 @@
 
 <script>
 // ===== USUARIOS Y PERMISOS =====
+// Las contraseñas NO están aquí: las revisa Supabase (Authentication → Users).
+// Cada usuario entra con su nombre; por dentro es "nombre@DOMINIO_USUARIOS".
 // rol 'maestro' = todo · rol 'anotador' = solo anotar nombre+cantidad
-// Cambiá nombres y PIN como quieras (mínimo 4 dígitos)
-const USUARIOS=[
-  {usuario:'cesar',  pass:'19881987', nombre:'César',  rol:'maestro'},
-  {usuario:'tienda', pass:'123',      nombre:'Tienda', rol:'anotador'},
-];
+// Los nombres y roles no son secreto; lo secreto es la contraseña.
+const DOMINIO_USUARIOS='cobros.local';
+const ROLES={
+  cesar: {nombre:'César',  rol:'maestro'},
+  tienda:{nombre:'Tienda', rol:'anotador'},
+};
 let sesion=null; // {nombre, rol}
 function esMaestro(){return !modoLectura && sesion && sesion.rol==='maestro';}
-
-function hacerLogin(){
-  const n=(document.getElementById('loginUser').value||'').trim().toLowerCase();
-  const pass=document.getElementById('loginPin').value.trim();
-  const err=document.getElementById('loginErr');
-  const u=USUARIOS.find(x=>x.usuario===n);
-  if(!u){err.textContent='Usuario incorrecto';return;}
-  if(pass!==u.pass){err.textContent='Contraseña incorrecta';document.getElementById('loginPin').value='';return;}
-  sesion={nombre:u.nombre,rol:u.rol};
-  try{sessionStorage.setItem('sesionCC',JSON.stringify(sesion));}catch(e){}
+// De la sesión de Supabase saca quién es (por el nombre antes de la @)
+function sesionDe(user){
+  const n=String((user&&user.email)||'').split('@')[0].toLowerCase();
+  const r=ROLES[n];
+  return r?{nombre:r.nombre,rol:r.rol,usuario:n}:null;
+}
+function mostrarDentro(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('quienSoy').textContent=sesion.nombre+(esMaestro()?' (maestro)':' (anotador)');
-  aplicarPermisos();
-  renderRuteros();renderZona();
 }
-function cerrarSesion(){
-  try{sessionStorage.removeItem('sesionCC');}catch(e){}
+let _entrando=false;
+async function hacerLogin(){
+  if(_entrando)return;
+  const n=(document.getElementById('loginUser').value||'').trim().toLowerCase();
+  const pass=document.getElementById('loginPin').value;
+  const err=document.getElementById('loginErr');
+  if(!ROLES[n]){err.textContent='Usuario incorrecto';return;}
+  if(!pass){err.textContent='Escribí la contraseña';return;}
+  _entrando=true;err.textContent='Entrando…';
+  let res;
+  try{res=await sb.auth.signInWithPassword({email:n+'@'+DOMINIO_USUARIOS,password:pass});}
+  catch(e){res={error:e};}
+  _entrando=false;
+  if(res.error||!res.data||!res.data.session){
+    const m=String((res.error&&res.error.message)||'');
+    err.textContent=/invalid login|credentials/i.test(m)?'Contraseña incorrecta'
+      :/fetch|network|failed/i.test(m)?'Sin internet, probá otra vez':'No se pudo entrar: '+m;
+    document.getElementById('loginPin').value='';return;
+  }
+  err.textContent='';
+  sesion=sesionDe(res.data.session.user);
+  document.getElementById('loginPin').value='';
+  mostrarDentro();
+  arrancarDentro();
+}
+async function cerrarSesion(){
+  try{await sb.auth.signOut();}catch(e){}
   sesion=null;location.reload();
 }
 // Oculta botones/funciones según rol
@@ -4268,7 +4291,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-08.3';
+const VERSION='2026-11-10.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});
@@ -4329,17 +4352,23 @@ async function iniciar(){
 }
 
 // ===== Arranque: login primero =====
-// ¿Ya había sesión en este dispositivo?
-try{
-  const s=sessionStorage.getItem('sesionCC');
-  if(s){sesion=JSON.parse(s);
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('quienSoy').textContent=sesion.nombre+(esMaestro()?' (maestro)':' (anotador)');
-  }
-}catch(e){}
-// Cargar datos de la nube siempre (para mostrar apenas entra)
+// Sin sesión de Supabase no se lee ni se guarda nada en la nube.
+function arrancarDentro(){
+  if(_initDone){aplicarPermisos();renderRuteros();renderZona();return;}
+  iniciar().then(()=>{ if(sesion)aplicarPermisos(); });
+}
 try{const fh=document.getElementById('fechaHist');if(fh)fh.max=HOY;}catch(e){}
-iniciar().then(()=>{ if(sesion)aplicarPermisos(); });
+(async()=>{
+  let ses=null;
+  try{const r=await sb.auth.getSession();ses=r&&r.data&&r.data.session;}catch(e){}
+  const s=ses&&sesionDe(ses.user);
+  if(s){sesion=s;mostrarDentro();arrancarDentro();}
+  else if(ses){try{await sb.auth.signOut();}catch(e){}} // usuario que no es de Cobros
+})();
+// Si la sesión se cierra (desde otro lado o venció sin poder renovarse), volver a pedir contraseña
+sb.auth.onAuthStateChange((ev)=>{
+  if(ev==='SIGNED_OUT'&&sesion){sesion=null;location.reload();}
+});
 </script>
 </body>
 </html>

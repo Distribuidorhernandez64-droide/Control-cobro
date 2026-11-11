@@ -84,7 +84,7 @@ const ST={pkApagado:false};
   let p=await nuevaPagina();
   await p.evaluate(()=>localStorage.setItem('sb-shlolncjhfzqmcllwjrk-auth-token','{"viejo":1}'));
   ok('Pantalla de entrar', await vis(p,'#loginScreen'));
-  ok('Sin Face ID activado en este teléfono: no sale el botón', !(await vis(p,'#btnFaceId')));
+  ok('Sin Face ID activado en este teléfono: solo usuario y contraseña', !(await vis(p,'#pkZona'))&&await vis(p,'#loginForm')&&!(await vis(p,'#lnkPk')));
   await p.fill('#loginUser','cesar');await p.fill('#loginPin','clave-buena');await p.press('#loginPin','Enter');await p.waitForTimeout(2200);
   ok('Entra con contraseña (Enter en el formulario)', (await p.textContent('#quienSoy'))==='César (maestro)');
   ok('Ofrece activar Face ID después de entrar', await vis(p,'#modalRecibe.open')&&(await p.textContent('#modalRecibeBody')).includes('Activar en este teléfono'));
@@ -98,40 +98,52 @@ const ST={pkApagado:false};
   ok('Recargar (actualización) no pide entrar', await p.isHidden('#loginScreen'));
   await p._guardar();await p.close();
 
-  // --- 2) Cerrar la app y abrirla: pide entrar, ahora con Face ID
-  p=await nuevaPagina();
-  ok('Al volver a abrir la app pide entrar (como antes)', await vis(p,'#loginScreen'));
-  ok('Sale el botón "Entrar con Face ID / huella"', await vis(p,'#btnFaceId'));
+  // --- 2) Cerrar la app y abrirla: Face ID se abre solo
   const r0=rest.length;
-  ok('Sin entrar no lee la base', rest.length===r0);
-  await p.click('#btnFaceId');await p.waitForTimeout(2200);
-  ok('Entra con Face ID como César (maestro), sin escribir nada', (await p.textContent('#quienSoy'))==='César (maestro)'&&await p.isHidden('#loginScreen'));
+  p=await nuevaPagina();await p.waitForTimeout(1500);
+  ok('Al abrir la app, Face ID se abre solo y entra como César (maestro)', (await p.textContent('#quienSoy'))==='César (maestro)'&&await p.isHidden('#loginScreen'));
   ok('Con Face ID todo va con la sesión de cesar', rest.length>r0&&rest.slice(r0).every(x=>x.quien==='cesar@cobros.local'));
   ok('No vuelve a ofrecer activar', !(await vis(p,'#modalRecibe.open')));
-  await p.click('#btnSalir');await p.waitForTimeout(1500);
-  ok('Salir: pide entrar otra vez', await vis(p,'#loginScreen'));
+  await p.click('#btnSalir');await p.waitForTimeout(1800);
+  ok('Salir: pide entrar y NO abre Face ID solo', await vis(p,'#loginScreen')&&!(await p.evaluate(()=>!!sesion)));
+  ok('Pantalla minimalista: botón de Face ID, sin usuario/contraseña a la vista', await vis(p,'#btnFaceId')&&!(await vis(p,'#loginForm'))&&await vis(p,'#lnkPass'));
+  ok('Texto del botón', (await p.textContent('#btnFaceIdTxt'))==='Entrar con huella o rostro');
+  await p.click('#lnkPass');await p.waitForTimeout(200);
+  ok('"Entrar con contraseña" muestra el formulario y "Usar..." para volver', await vis(p,'#loginForm')&&!(await vis(p,'#pkZona'))&&await vis(p,'#lnkPk'));
+  await p.click('#lnkPk');await p.waitForTimeout(200);
+  ok('"Usar huella o rostro" regresa al botón', await vis(p,'#pkZona')&&!(await vis(p,'#loginForm')));
+  await p.click('#btnFaceId');await p.waitForTimeout(2000);
+  ok('Tocar el botón entra', (await p.textContent('#quienSoy'))==='César (maestro)');
+  await p.click('#btnSalir');await p.waitForTimeout(1800);
 
   // --- 3) Tienda en el mismo teléfono: "Ahora no"
+  await p.click('#lnkPass');
   await p.fill('#loginUser','tienda');await p.fill('#loginPin','clave-tienda');await p.click('#loginForm button[type=submit]');await p.waitForTimeout(2200);
   ok('Tienda entra con contraseña como anotador', (await p.textContent('#quienSoy'))==='Tienda (anotador)');
   ok('A tienda también le ofrece activar', await vis(p,'#modalRecibe.open'));
   await p.click('#modalRecibeBody button:has-text("Ahora no")');await p.waitForTimeout(400);
   ok('"Ahora no" cierra y deja el enlace para después', !(await vis(p,'#modalRecibe.open'))&&await vis(p,'#lnkFaceId'));
-  await p.click('#btnSalir');await p.waitForTimeout(1500);
+  await p.click('#btnSalir');await p.waitForTimeout(1800);
+  await p.click('#lnkPass');
   await p.fill('#loginUser','tienda');await p.fill('#loginPin','clave-tienda');await p.press('#loginPin','Enter');await p.waitForTimeout(2200);
   ok('Después de "Ahora no" ya no insiste al entrar', !(await vis(p,'#modalRecibe.open')));
-  await p.click('#btnSalir');await p.waitForTimeout(1500);
+  await p.click('#btnSalir');await p.waitForTimeout(1800);
 
   // --- 4) Si Supabase apaga la beta: la contraseña sigue
   ST.pkApagado=true;
   await p.click('#btnFaceId');await p.waitForTimeout(1500);
   ok('Beta apagada: avisa y no entra', await vis(p,'#loginScreen')&&/contraseña/.test(await p.textContent('#loginErr')));
+  await p.click('#lnkPass');
   await p.fill('#loginUser','cesar');await p.fill('#loginPin','clave-buena');await p.press('#loginPin','Enter');await p.waitForTimeout(2200);
   ok('Beta apagada: con contraseña entra igual', (await p.textContent('#quienSoy'))==='César (maestro)');
-  await p.click('#btnSalir');await p.waitForTimeout(1500);
+  await p.click('#btnSalir');await p.waitForTimeout(1800);
   ST.pkApagado=false;
+  const p2=await nuevaPagina();await p2.waitForTimeout(800);
+  ok('Al abrir con la beta encendida otra vez, entra solo', (await p2.textContent('#quienSoy'))==='César (maestro)');
+  await p2.close();
 
   // --- 5) Contraseña mala sigue igual
+  await p.click('#lnkPass');
   await p.fill('#loginUser','cesar');await p.fill('#loginPin','mala');await p.press('#loginPin','Enter');await p.waitForTimeout(1000);
   ok('Contraseña mala: no entra', (await p.textContent('#loginErr'))==='Contraseña incorrecta'&&await vis(p,'#loginScreen'));
 

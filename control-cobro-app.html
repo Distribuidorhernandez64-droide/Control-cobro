@@ -674,12 +674,17 @@
     <div style="font-size:34px;margin-bottom:6px">🚚</div>
     <h2 style="font-family:Nunito;font-weight:900;color:#1c2433;font-size:24px;margin:0 0 4px">Control de Cobro</h2>
     <p style="color:#6b7280;font-size:13px;margin:0 0 22px">Distribuidora Hernández</p>
-    <button id="btnFaceId" type="button" onclick="entrarConPasskey()" style="display:none;width:100%;padding:15px;border:none;border-radius:12px;background:#1c2433;color:#fff;font-family:Nunito;font-size:17px;font-weight:800;margin-bottom:16px;align-items:center;justify-content:center;gap:9px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 15.5c1.4 1 3.6 1 5 0"/></svg><span id="btnFaceIdTxt">Entrar con Face ID</span></button>
+    <div id="pkZona" style="display:none;flex-direction:column;align-items:center;padding:8px 0 2px">
+      <button id="btnFaceId" type="button" onclick="entrarConPasskey(false)" aria-label="Entrar con Face ID" style="width:92px;height:92px;border-radius:28px;border:none;background:#1c2433;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(28,36,51,.22);cursor:pointer;-webkit-tap-highlight-color:transparent"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.3 15.6c1.5 1.1 3.9 1.1 5.4 0"/></svg></button>
+      <div id="btnFaceIdTxt" style="font-family:Nunito;font-weight:800;color:#1c2433;font-size:15px;margin-top:14px">Entrar con Face ID</div>
+      <button type="button" id="lnkPass" onclick="verFormPass(true)" style="background:none;border:none;color:#8a909a;font-family:Nunito;font-size:14px;font-weight:700;margin-top:34px;padding:8px;cursor:pointer">Entrar con contraseña</button>
+    </div>
     <form id="loginForm" autocomplete="on" onsubmit="event.preventDefault();hacerLogin()">
     <input id="loginUser" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Usuario" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #d8dcd6;font-family:Nunito;font-size:16px;font-weight:700;color:#1c2433;background:#fff;margin-bottom:12px;box-sizing:border-box" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('loginPin').focus()}">
     <input id="loginPin" name="password" type="password" autocomplete="current-password" placeholder="Contraseña" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #d8dcd6;font-family:Nunito;font-size:16px;font-weight:700;text-align:center;margin-bottom:14px;box-sizing:border-box">
     <button type="submit" style="width:100%;padding:15px;border:none;border-radius:12px;background:#2fae74;color:#fff;font-family:Nunito;font-size:17px;font-weight:800">Entrar</button>
     </form>
+    <button type="button" id="lnkPk" onclick="verFormPass(false)" style="display:none;background:none;border:none;color:#8a909a;font-family:Nunito;font-size:14px;font-weight:700;margin-top:14px;padding:8px;cursor:pointer"></button>
     <p id="loginErr" style="color:#d4583e;font-size:13px;font-weight:700;margin:12px 0 0;min-height:18px"></p>
   </div>
 </div>
@@ -747,9 +752,20 @@ function pkKey(u,x){return 'cc_pk_'+(x||'')+u;}
 function pkActivo(u){try{return localStorage.getItem(pkKey(u))==='1';}catch(e){return false;}}
 function hayPasskeyAqui(){try{return Object.keys(localStorage).some(k=>/^cc_pk_[a-z]+$/.test(k)&&localStorage.getItem(k)==='1');}catch(e){return false;}}
 function prepararLogin(){
-  const b=document.getElementById('btnFaceId');if(!b)return;
+  const z=document.getElementById('pkZona');if(!z)return;
   document.getElementById('btnFaceIdTxt').textContent='Entrar con '+NOMBRE_BIO;
-  b.style.display=(PUEDE_PASSKEY&&hayPasskeyAqui())?'flex':'none';
+  document.getElementById('btnFaceId').setAttribute('aria-label','Entrar con '+NOMBRE_BIO);
+  document.getElementById('lnkPk').textContent='Usar '+NOMBRE_BIO;
+  verFormPass(!(PUEDE_PASSKEY&&hayPasskeyAqui()));
+}
+// Con Face ID activado se ve solo el botón; la contraseña queda detrás de "Entrar con contraseña"
+function verFormPass(ver){
+  const pk=PUEDE_PASSKEY&&hayPasskeyAqui();
+  document.getElementById('pkZona').style.display=(!ver&&pk)?'flex':'none';
+  document.getElementById('loginForm').style.display=ver?'':'none';
+  document.getElementById('lnkPk').style.display=(ver&&pk)?'':'none';
+  document.getElementById('loginErr').textContent='';
+  if(ver&&pk)setTimeout(()=>{const u=document.getElementById('loginUser');if(u&&!u.value)u.focus();},50);
 }
 function entrarListo(user,pass){
   const s=sesionDe(user);
@@ -786,17 +802,19 @@ async function hacerLogin(){
   }
   if(entrarListo(res.data.session.user,pass))setTimeout(()=>ofrecerPasskey(false),900);
 }
-async function entrarConPasskey(){
+async function entrarConPasskey(auto){
   if(_entrando)return;
   const err=document.getElementById('loginErr');
-  _entrando=true;err.textContent='Esperando '+NOMBRE_BIO+'…';
+  _entrando=true;err.textContent=auto?'':'Esperando '+NOMBRE_BIO+'…';
   let res;
   try{res=await sb.auth.signInWithPasskey();}catch(e){res={error:e};}
   _entrando=false;
   const ses=res&&res.data&&res.data.session;
   if(res.error||!ses){
     const e=res.error||{},m=String(e.message||''),c=String(e.code||'');
-    err.textContent=(c==='ERROR_CEREMONY_ABORTED'||/NotAllowed|cancel|abort/i.test(m+c))?'Cancelado. Entrá con '+NOMBRE_BIO+' otra vez o con tu contraseña.'
+    const cancelado=c==='ERROR_CEREMONY_ABORTED'||/NotAllowed|cancel|abort/i.test(m+c+String(e.name||''));
+    if(auto&&cancelado){err.textContent='';return;} // al abrir: si el teléfono no dejó o lo cerraron, queda el botón
+    err.textContent=cancelado?'Tocá el ícono para entrar con '+NOMBRE_BIO+'.'
       :/fetch|network|failed to/i.test(m)?'Sin internet, probá otra vez'
       :'No se pudo con '+NOMBRE_BIO+'. Entrá con tu contraseña. ('+(m||c||e.name||'error')+')';
     return;
@@ -838,6 +856,7 @@ async function activarPasskey(){
   toast(NOMBRE_BIO.charAt(0).toUpperCase()+NOMBRE_BIO.slice(1)+' activado ✓');
 }
 async function cerrarSesion(){
+  try{sessionStorage.setItem('cc_salio','1');}catch(e){} // al salir no abrir Face ID solo
   try{await sb.auth.signOut();}catch(e){}
   sesion=null;location.reload();
 }
@@ -4372,7 +4391,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-10.2';
+const VERSION='2026-11-10.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});
@@ -4444,7 +4463,13 @@ try{const fh=document.getElementById('fechaHist');if(fh)fh.max=HOY;}catch(e){}
   try{const r=await sb.auth.getSession();ses=r&&r.data&&r.data.session;}catch(e){}
   const s=ses&&sesionDe(ses.user);
   if(s){sesion=s;mostrarDentro();arrancarDentro();marcarLnkPasskey();}
-  else{if(ses){try{await sb.auth.signOut();}catch(e){}} prepararLogin();} // sin sesión (o usuario que no es de Cobros)
+  else{
+    if(ses){try{await sb.auth.signOut();}catch(e){}} // usuario que no es de Cobros
+    prepararLogin();
+    // Al abrir la app con Face ID activado: se abre solo (si el teléfono lo deja); si no, queda el botón
+    let salio=false;try{salio=sessionStorage.getItem('cc_salio')==='1';sessionStorage.removeItem('cc_salio');}catch(e){}
+    if(PUEDE_PASSKEY&&hayPasskeyAqui()&&!salio)setTimeout(()=>{if(!sesion&&document.visibilityState==='visible')entrarConPasskey(true);},350);
+  }
 })();
 // Si la sesión se cierra (desde otro lado o venció sin poder renovarse), volver a pedir contraseña
 sb.auth.onAuthStateChange((ev)=>{

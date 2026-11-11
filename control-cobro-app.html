@@ -661,7 +661,8 @@
   .rm-lista li span{min-width:0}.rm-lista li small{display:block;color:var(--mut);font-size:12px;font-weight:700}
   .rm-sin{background:#fbf3e6;color:#8a5a12;border-radius:11px;padding:9px 11px;font-size:12.5px;font-weight:700;margin-bottom:12px;line-height:1.45}.rm-sin small{font-size:11.5px;opacity:.85}
   .rm-btns{display:flex;flex-direction:column;gap:9px}
-  .rm-omw{display:flex;gap:8px}.rm-omw .rm-om{flex:1}
+  .rm-omw{display:flex;gap:8px}.rp-kml{margin-top:10px}.rp-kml .btn{padding:12px 14px;font-size:14.5px}
+  .rp-est{white-space:normal}.rm-omw .rm-om{flex:1}
   .rm-omc{width:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0}.rm-omc svg{width:20px;height:20px}
   .rm-om{background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;gap:7px}.rm-om svg{width:17px;height:17px}
   .rm-btns a.btn{text-decoration:none;text-align:center;display:block}
@@ -3371,7 +3372,8 @@ function rpAbrir(){
       <div class="rp-card"><div class="rp-t">Mapeo por vendedor</div><div class="rp-s">Un vendedor · rango de fechas</div>
         <label class="rp-l">Vendedor<select id="rpVen">${rpOpciones()}</select></label>
         <div class="rp-2"><label class="rp-l">Desde<input type="date" id="rpDe" value="${h}" max="${h}"></label><label class="rp-l">Hasta<input type="date" id="rpA" value="${h}" max="${h}"></label></div>
-        <button class="pv-btn" id="rpBtnM" onclick="rpMapa()">PDF</button></div>
+        <button class="pv-btn" id="rpBtnM" onclick="rpMapa()">PDF</button>
+        <div class="rm-omw rp-kml"><button class="btn rm-om" id="rpBtnK" onclick="rpKml()">${ICO_PIN}Archivo Organic Maps</button><button class="btn sec rm-omc" id="rpBtnKc" onclick="rpKml(true)" aria-label="Compartir el archivo">${ICO_COMPARTIR}</button></div></div>
       <div class="rp-est" id="rpEst"></div>
     </div>`;
   rpCargarVendedores();
@@ -3422,6 +3424,48 @@ function rpMapa(){const v=document.getElementById('rpVen').value,de=document.get
   if(!v){rpEstado('Escogé el vendedor',true);return;}if(!de){rpEstado('Escogé la fecha',true);return;}
   try{localStorage.setItem('rpVenSel',v);}catch(e){}
   rpGenerar('rpBtnM',{tipo:'mapa',desde:de<=a?de:a,hasta:de<=a?a:de,vendedor_id:Number(v)},r=>`Mapa ${(((r.grupos||[])[0]||{}).vendedor||'').replace(/[\\/:*?"<>|]/g,' ').trim()} ${rpF(r.hasta)}.pdf`);}
+// Mapeo por vendedor en archivo KML para Organic Maps (8/11 pedido de César): mismos datos que el PDF (la PC
+// los lee de Monica con la latitud y longitud de cada cliente); un punto por cliente, en el orden del reporte.
+function rpNum(t){let s=String(t==null?'':t).trim().replace(/[\s,;]+$/,'');if(/^-?\d+,\d+$/.test(s))s=s.replace(',','.');const n=parseFloat(s);return isFinite(n)?n:null;}
+function rpUbic(f){const a=rpNum(f&&f.lat),b=rpNum(f&&f.lon);if(a==null||b==null)return null;
+  return peUbic({ubic_lat:a,ubic_lng:b})||peUbic({ubic_lat:b,ubic_lng:a});}
+function rpParadas(r){
+  const paradas=[],sin=[],por={};
+  for(const g of (r&&r.grupos)||[])for(const f of g.filas||[]){
+    const nom=String(f.cliente||'').trim()||('Nota '+f.nro),u=rpUbic(f),tot=Number(f.total)||0;
+    if(!u){sin.push(nom);continue;}
+    const k=u[0].toFixed(5)+','+u[1].toFixed(5);
+    if(por[k]){if(!por[k].noms.includes(nom))por[k].noms.push(nom);por[k].facs.push(f.nro);por[k].tot+=tot;continue;}
+    por[k]={u,noms:[nom],facs:[f.nro],tot};paradas.push(por[k]);
+  }
+  return {paradas,sin};
+}
+function rpKmlArmar(r){
+  const {paradas,sin}=rpParadas(r),ven=String((((r.grupos||[])[0]||{}).vendedor)||'').trim();
+  const fd=s=>{const [a,m,d]=String(s).split('-').map(Number);return {d,m:RM_MESES[m-1]};};
+  const de=fd(r.desde),a=fd(r.hasta||r.desde);
+  const cuando=r.desde===(r.hasta||r.desde)?`${de.d} ${de.m}`:de.m===a.m?`${de.d} al ${a.d} ${a.m}`:`${de.d} ${de.m} al ${a.d} ${a.m}`;
+  const nombre=`Mapeo ${ven} ${cuando}`.replace(/\s+/g,' ').trim();
+  const archivo=`mapeo_${kmlSlug(ven)||'vendedor'}_${kmlSlug(cuando).replace(/_al_/g,'al').replace(/_/g,'')}.kml`;
+  return {txt:kmlTexto(nombre,paradas),archivo,nombre,n:paradas.length,sin};
+}
+async function rpKml(directo){
+  const v=document.getElementById('rpVen').value,de=document.getElementById('rpDe').value,a=document.getElementById('rpA').value||de;
+  if(!v){rpEstado('Escogé el vendedor',true);return;}if(!de){rpEstado('Escogé la fecha',true);return;}
+  if(RP.ocupado)return;RP.ocupado=true;try{localStorage.setItem('rpVenSel',v);}catch(e){}
+  const b=document.getElementById('rpBtnK'),bc=document.getElementById('rpBtnKc'),txt=b?b.innerHTML:'';
+  if(b){b.disabled=true;b.textContent='Preparando…';}if(bc)bc.disabled=true;rpEstado('La PC está leyendo Monica…');
+  try{
+    const r=await rpPedir({tipo:'mapa',desde:de<=a?de:a,hasta:de<=a?a:de,vendedor_id:Number(v)});
+    if(!r||!r.documentos){rpEstado('No hay ventas en esas fechas');return;}
+    const k=rpKmlArmar(r);
+    if(!k.n){rpEstado('Ningún cliente de esas notas tiene ubicación en Monica',true);return;}
+    logAudit('MAPEO ORGANIC MAPS',`${k.archivo} (${k.n} clientes${k.sin.length?', '+k.sin.length+' sin ubicación':''})`);
+    await kmlEntregar(k,directo);
+    rpEstado(`Archivo listo · ${k.n} cliente${k.n===1?'':'s'}`+(k.sin.length?` · ${k.sin.length} sin ubicación (no van en el archivo): ${k.sin.join(', ')}`:''));
+  }catch(e){rpEstado(e.message||'No se pudo',true);}
+  finally{RP.ocupado=false;if(b){b.disabled=false;b.innerHTML=txt;}if(bc)bc.disabled=false;}
+}
 // Mismo diseño que el "LISTADO DE FACTURAS AGRUPADOS POR VENDEDOR" de Monica (carta horizontal)
 function monRepPdf(r){
   const doc = new jspdf.jsPDF({unit:"pt", format:"letter", orientation:"landscape"});
@@ -3957,15 +4001,29 @@ function rmParadas(v){
 const RM_MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function rmQkml(n){n=Math.round((Number(n)||0)*100)/100;return 'Q'+(Number.isInteger(n)?String(n):n.toFixed(2));}
 function rmXml(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// Texto KML: una parada por cliente, "01. CLIENTE - Q514.70", coordenadas longitud,latitud,0 (formato de César)
+function kmlTexto(nombre,paradas){
+  const pms=paradas.map((x,i)=>`<Placemark><name>${rmXml(String(i+1).padStart(2,'0')+'. '+x.noms.join(' / ')+' - '+rmQkml(x.tot))}</name><Point><coordinates>${x.u[1]},${x.u[0]},0</coordinates></Point></Placemark>`);
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>${rmXml(nombre)}</name>\n${pms.join('\n')}${pms.length?'\n':''}</Document>\n</kml>\n`;
+}
+function kmlSlug(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
+// Entregar el .kml: vista previa / descarga (de ahí Organic Maps o WhatsApp); "directo" = menú de compartir
+async function kmlEntregar(k,directo){
+  const f=new File([k.txt],k.archivo,{type:'application/vnd.google-earth.kml+xml'});
+  if(directo){
+    try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:k.nombre});return true;}}
+    catch(e){if(e&&e.name==='AbortError')return false;}
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=k.archivo;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+  return true;
+}
 function rmKml(v,fecha){
   const {paradas}=rmParadas(v),d=fecha||new Date();
   const rut=String(v.rutero||'').trim(),Rut=rut.charAt(0).toUpperCase()+rut.slice(1);
   const nombre=`Ruta ${Rut} ${d.getDate()} ${RM_MESES[d.getMonth()]}`;
-  const slug=rut.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'ruta';
-  const archivo=`ruta_${slug}_${d.getDate()}${RM_MESES[d.getMonth()]}.kml`;
-  const pms=paradas.map((x,i)=>`<Placemark><name>${rmXml(String(i+1).padStart(2,'0')+'. '+x.noms.join(' / ')+' - '+rmQkml(x.tot))}</name><Point><coordinates>${x.u[1]},${x.u[0]},0</coordinates></Point></Placemark>`);
-  const txt=`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>${rmXml(nombre)}</name>\n${pms.join('\n')}${pms.length?'\n':''}</Document>\n</kml>\n`;
-  return {txt,archivo,nombre,n:paradas.length};
+  const archivo=`ruta_${kmlSlug(rut)||'ruta'}_${d.getDate()}${RM_MESES[d.getMonth()]}.kml`;
+  return {txt:kmlTexto(nombre,paradas),archivo,nombre,n:paradas.length};
 }
 // "Archivo para Organic Maps" abre la vista previa del archivo (en el iPhone: la del sistema, con su botón
 // de compartir, desde donde se abre en Organic Maps o se manda por WhatsApp). "Compartir" abre el menú directo.
@@ -3973,14 +4031,7 @@ async function rmKmlEnviar(vid,directo){
   const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
   const k=rmKml(v);if(!k.n){toast('Ninguna parada tiene ubicación',true);return;}
   logAudit('RUTA ORGANIC MAPS',`${v.rutero}: ${k.archivo} (${k.n} paradas)${directo?' · compartir':''}`);
-  const f=new File([k.txt],k.archivo,{type:'application/vnd.google-earth.kml+xml'});
-  if(directo){
-    try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:k.nombre});return;}}
-    catch(e){if(e&&e.name==='AbortError')return;}
-  }
-  const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=k.archivo;document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
-  toast('Archivo listo: '+k.archivo);
+  if(await kmlEntregar(k,directo)&&!directo)toast('Archivo listo: '+k.archivo);
 }
 function rmEnlaces(paradas){
   const out=[];
@@ -4391,7 +4442,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-10.3';
+const VERSION='2026-11-10.5';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

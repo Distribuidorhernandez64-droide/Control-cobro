@@ -79,3 +79,9 @@ teléfono guarde y llene la contraseña.
 `prueba-faceid.js` — con un autenticador virtual de Chrome: ofrece activar después de
 entrar con contraseña, registra, al reabrir entra con Face ID, "Ahora no" no insiste,
 si Supabase apaga la beta la contraseña sigue funcionando.
+
+`prueba-kml-reporte.js` — Reportes ⚙️ › Mapeo por vendedor › "Archivo Organic Maps" (10/11/2026): con los datos del
+PDF (lat/lon de cada cliente que manda la PC) arma el .kml igual al de la ruta ("01. CLIENTE - Q total", mismo cliente =
+un punto con la suma), nombre `mapeo_<vendedor>_<día><mes>.kml` (rangos "8al10noviembre"), avisa los que no tienen
+ubicación, compartir directo, y la ruta del viaje sigue igual. Base falsa en la página (no necesita Postgres).
+Nota: prueba-mapa.js y prueba-reportes.js entran con el PIN viejo; desde el cambio de seguridad hay que adaptarlas.

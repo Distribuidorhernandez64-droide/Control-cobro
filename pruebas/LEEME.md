@@ -67,3 +67,15 @@ ya no entran: hay que darles una sesión simulada como en `prueba-login-supabase
 entra; con la buena entra con su rol, todo va con la sesión (no con la clave pública),
 al volver a abrir no pide contraseña, "salir" la borra. Necesita
 `npm i playwright-core @supabase/supabase-js@2`.
+
+## Entrar con Face ID / huella (10/11/2026, v2026-11-10.2)
+
+La sesión vive solo mientras la app está abierta (sessionStorage): al cerrarla pide
+entrar otra vez, como antes. "Entrar con Face ID" usa las llaves de acceso de Supabase
+(beta, `experimental.passkey`, supabase-js fijado en 2.119.0); la contraseña siempre queda
+de respaldo. El formulario tiene autocomplete username/current-password para que el
+teléfono guarde y llene la contraseña.
+
+`prueba-faceid.js` — con un autenticador virtual de Chrome: ofrece activar después de
+entrar con contraseña, registra, al reabrir entra con Face ID, "Ahora no" no insiste,
+si Supabase apaga la beta la contraseña sigue funcionando.

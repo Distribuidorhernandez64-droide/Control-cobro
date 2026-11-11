@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
 <style>
   :root{
     --bg:#f6f5f2;          /* gris muy claro de fondo */
@@ -674,13 +674,16 @@
     <div style="font-size:34px;margin-bottom:6px">🚚</div>
     <h2 style="font-family:Nunito;font-weight:900;color:#1c2433;font-size:24px;margin:0 0 4px">Control de Cobro</h2>
     <p style="color:#6b7280;font-size:13px;margin:0 0 22px">Distribuidora Hernández</p>
-    <input id="loginUser" type="text" autocapitalize="none" autocorrect="off" placeholder="Usuario" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #d8dcd6;font-family:Nunito;font-size:16px;font-weight:700;color:#1c2433;background:#fff;margin-bottom:12px;box-sizing:border-box" onkeydown="if(event.key==='Enter')document.getElementById('loginPin').focus()">
-    <input id="loginPin" type="password" placeholder="Contraseña" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #d8dcd6;font-family:Nunito;font-size:16px;font-weight:700;text-align:center;margin-bottom:14px;box-sizing:border-box" onkeydown="if(event.key==='Enter')hacerLogin()">
-    <button onclick="hacerLogin()" style="width:100%;padding:15px;border:none;border-radius:12px;background:#2fae74;color:#fff;font-family:Nunito;font-size:17px;font-weight:800">Entrar</button>
+    <button id="btnFaceId" type="button" onclick="entrarConPasskey()" style="display:none;width:100%;padding:15px;border:none;border-radius:12px;background:#1c2433;color:#fff;font-family:Nunito;font-size:17px;font-weight:800;margin-bottom:16px;align-items:center;justify-content:center;gap:9px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 15.5c1.4 1 3.6 1 5 0"/></svg><span id="btnFaceIdTxt">Entrar con Face ID</span></button>
+    <form id="loginForm" autocomplete="on" onsubmit="event.preventDefault();hacerLogin()">
+    <input id="loginUser" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Usuario" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #d8dcd6;font-family:Nunito;font-size:16px;font-weight:700;color:#1c2433;background:#fff;margin-bottom:12px;box-sizing:border-box" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('loginPin').focus()}">
+    <input id="loginPin" name="password" type="password" autocomplete="current-password" placeholder="Contraseña" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #d8dcd6;font-family:Nunito;font-size:16px;font-weight:700;text-align:center;margin-bottom:14px;box-sizing:border-box">
+    <button type="submit" style="width:100%;padding:15px;border:none;border-radius:12px;background:#2fae74;color:#fff;font-family:Nunito;font-size:17px;font-weight:800">Entrar</button>
+    </form>
     <p id="loginErr" style="color:#d4583e;font-size:13px;font-weight:700;margin:12px 0 0;min-height:18px"></p>
   </div>
 </div>
-<div class="demo" style="background:#e8f4ec;color:#1f6b4e">☁ <span id="quienSoy"></span> · <span id="btnSalir" onclick="cerrarSesion()" style="text-decoration:underline;cursor:pointer">salir</span> <span id="verApp" style="opacity:.55;font-weight:600;margin-left:4px"></span></div>
+<div class="demo" style="background:#e8f4ec;color:#1f6b4e">☁ <span id="quienSoy"></span> · <span id="btnSalir" onclick="cerrarSesion()" style="text-decoration:underline;cursor:pointer">salir</span><span id="lnkFaceId" onclick="ofrecerPasskey(true)" style="display:none;text-decoration:underline;cursor:pointer;margin-left:8px"></span> <span id="verApp" style="opacity:.55;font-weight:600;margin-left:4px"></span></div>
 <div id="avisoVersion" onclick="recargarApp()" style="display:none;background:#e8902a;color:#fff;text-align:center;font-size:13px;font-weight:800;padding:9px 12px;cursor:pointer">Hay una versión nueva de la app · <u>Tocá para actualizar</u></div>
 <header>
   <div class="htop"><h1 class="hcab"><span class="htit">Control de Cobro<span id="syncDot" class="dot ok" title="guardado"></span></span><span class="hicos">
@@ -737,6 +740,32 @@ function mostrarDentro(){
   document.getElementById('quienSoy').textContent=sesion.nombre+(esMaestro()?' (maestro)':' (anotador)');
 }
 let _entrando=false;
+const ES_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const NOMBRE_BIO=ES_IOS?'Face ID':'huella o rostro';
+const PUEDE_PASSKEY=!!(window.PublicKeyCredential&&navigator.credentials&&window.isSecureContext);
+function pkKey(u,x){return 'cc_pk_'+(x||'')+u;}
+function pkActivo(u){try{return localStorage.getItem(pkKey(u))==='1';}catch(e){return false;}}
+function hayPasskeyAqui(){try{return Object.keys(localStorage).some(k=>/^cc_pk_[a-z]+$/.test(k)&&localStorage.getItem(k)==='1');}catch(e){return false;}}
+function prepararLogin(){
+  const b=document.getElementById('btnFaceId');if(!b)return;
+  document.getElementById('btnFaceIdTxt').textContent='Entrar con '+NOMBRE_BIO;
+  b.style.display=(PUEDE_PASSKEY&&hayPasskeyAqui())?'flex':'none';
+}
+function entrarListo(user,pass){
+  const s=sesionDe(user);
+  if(!s){try{sb.auth.signOut();}catch(e){};document.getElementById('loginErr').textContent='Ese usuario no es de Cobros';return false;}
+  sesion=s;
+  // Android/Chrome: guardar usuario y contraseña en el administrador de contraseñas del teléfono
+  if(pass&&window.PasswordCredential&&navigator.credentials&&navigator.credentials.store){
+    try{navigator.credentials.store(new PasswordCredential({id:s.usuario,password:pass,name:s.nombre})).catch(()=>{});}catch(e){}
+  }
+  document.getElementById('loginPin').value='';
+  document.getElementById('loginErr').textContent='';
+  mostrarDentro();
+  arrancarDentro();
+  marcarLnkPasskey();
+  return true;
+}
 async function hacerLogin(){
   if(_entrando)return;
   const n=(document.getElementById('loginUser').value||'').trim().toLowerCase();
@@ -755,11 +784,58 @@ async function hacerLogin(){
       :/fetch|network|failed/i.test(m)?'Sin internet, probá otra vez':'No se pudo entrar: '+m;
     document.getElementById('loginPin').value='';return;
   }
-  err.textContent='';
-  sesion=sesionDe(res.data.session.user);
-  document.getElementById('loginPin').value='';
-  mostrarDentro();
-  arrancarDentro();
+  if(entrarListo(res.data.session.user,pass))setTimeout(()=>ofrecerPasskey(false),900);
+}
+async function entrarConPasskey(){
+  if(_entrando)return;
+  const err=document.getElementById('loginErr');
+  _entrando=true;err.textContent='Esperando '+NOMBRE_BIO+'…';
+  let res;
+  try{res=await sb.auth.signInWithPasskey();}catch(e){res={error:e};}
+  _entrando=false;
+  const ses=res&&res.data&&res.data.session;
+  if(res.error||!ses){
+    const e=res.error||{},m=String(e.message||''),c=String(e.code||'');
+    err.textContent=(c==='ERROR_CEREMONY_ABORTED'||/NotAllowed|cancel|abort/i.test(m+c))?'Cancelado. Entrá con '+NOMBRE_BIO+' otra vez o con tu contraseña.'
+      :/fetch|network|failed to/i.test(m)?'Sin internet, probá otra vez'
+      :'No se pudo con '+NOMBRE_BIO+'. Entrá con tu contraseña. ('+(m||c||e.name||'error')+')';
+    return;
+  }
+  entrarListo(ses.user,null);
+}
+// Después de entrar con contraseña: ofrecer activar Face ID / huella en ESTE teléfono (una vez)
+function marcarLnkPasskey(){
+  const l=document.getElementById('lnkFaceId');if(!l)return;
+  const ver=PUEDE_PASSKEY&&sesion&&!pkActivo(sesion.usuario);
+  l.textContent='· activar '+NOMBRE_BIO;l.style.display=ver?'':'none';
+}
+function ofrecerPasskey(manual){
+  if(!PUEDE_PASSKEY||!sesion||pkActivo(sesion.usuario))return;
+  let no=false;try{no=localStorage.getItem(pkKey(sesion.usuario,'no_'))==='1';}catch(e){}
+  if(no&&!manual)return;
+  const m=document.getElementById('modalRecibe'),c=document.getElementById('modalRecibeBody');if(!m||!c)return;
+  c.innerHTML=`<div style="text-align:center;padding:6px 4px">
+    <div style="font-size:30px;margin-bottom:6px">🔐</div>
+    <div style="font-family:Nunito;font-weight:900;font-size:19px;color:#1c2433;margin-bottom:6px">¿Entrar con ${NOMBRE_BIO}?</div>
+    <div style="font-size:14px;color:#6b7280;margin-bottom:16px">La próxima vez entrás a Cobros con ${NOMBRE_BIO}, sin escribir la contraseña. La contraseña sigue sirviendo.</div>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="activarPasskey()">Activar en este teléfono</button>
+    <button class="btn sec" style="width:100%" onclick="pkAhoraNo()">Ahora no</button></div>`;
+  m.classList.add('open');
+}
+function cerrarModalPk(){const m=document.getElementById('modalRecibe');if(m)m.classList.remove('open');}
+function pkAhoraNo(){try{localStorage.setItem(pkKey(sesion.usuario,'no_'),'1');}catch(e){}cerrarModalPk();toast('Lo podés activar después arriba, junto a "salir"');}
+async function activarPasskey(){
+  cerrarModalPk();
+  let res;
+  try{res=await sb.auth.registerPasskey();}catch(e){res={error:e};}
+  const e=res&&res.error;
+  if(e&&String(e.code||'')!=='ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED'){
+    const m=String(e.message||e.code||'error');
+    toast(/NotAllowed|cancel|abort/i.test(m+String(e.code||''))?'Cancelado':'No se pudo activar '+NOMBRE_BIO+': '+m,true);return;
+  }
+  try{localStorage.setItem(pkKey(sesion.usuario),'1');localStorage.removeItem(pkKey(sesion.usuario,'no_'));}catch(x){}
+  marcarLnkPasskey();
+  toast(NOMBRE_BIO.charAt(0).toUpperCase()+NOMBRE_BIO.slice(1)+' activado ✓');
 }
 async function cerrarSesion(){
   try{await sb.auth.signOut();}catch(e){}
@@ -775,7 +851,12 @@ function aplicarPermisos(){
 // ===== Conexión a la nube (Supabase) =====
 const SB_URL='https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
-const sb=supabase.createClient(SB_URL,SB_KEY);
+// La sesión vive solo mientras la app está abierta (como antes): al cerrarla, pide entrar otra vez.
+// passkey = "Entrar con Face ID / huella" (beta de Supabase; la contraseña siempre queda de respaldo).
+let _almSesion=null;try{_almSesion=window.sessionStorage;}catch(e){}
+const sb=supabase.createClient(SB_URL,SB_KEY,{auth:Object.assign({experimental:{passkey:true}},_almSesion?{storage:_almSesion}:{})});
+// Sesiones viejas guardadas para siempre (v2026-11-10.1): se borran
+try{Object.keys(localStorage).filter(k=>/^sb-.*-auth-token/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(e){}
 const HOY=new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
 let modoLectura=false; // true cuando se ve un día anterior (solo mirar)
 let borrados=[]; // uids de viajes eliminados (para que el merge no los reviva)
@@ -4291,7 +4372,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-10.1';
+const VERSION='2026-11-10.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});
@@ -4362,8 +4443,8 @@ try{const fh=document.getElementById('fechaHist');if(fh)fh.max=HOY;}catch(e){}
   let ses=null;
   try{const r=await sb.auth.getSession();ses=r&&r.data&&r.data.session;}catch(e){}
   const s=ses&&sesionDe(ses.user);
-  if(s){sesion=s;mostrarDentro();arrancarDentro();}
-  else if(ses){try{await sb.auth.signOut();}catch(e){}} // usuario que no es de Cobros
+  if(s){sesion=s;mostrarDentro();arrancarDentro();marcarLnkPasskey();}
+  else{if(ses){try{await sb.auth.signOut();}catch(e){}} prepararLogin();} // sin sesión (o usuario que no es de Cobros)
 })();
 // Si la sesión se cierra (desde otro lado o venció sin poder renovarse), volver a pedir contraseña
 sb.auth.onAuthStateChange((ev)=>{

@@ -50,14 +50,14 @@ const USERS={'cesar@cobros.local':'clave-buena','tienda@cobros.local':'clave-tie
   ok('Sin sesión: aparece la pantalla de entrar', await p.isVisible('#loginScreen'));
   ok('Sin sesión: no se pide nada a la base de datos ('+rest.length+')', rest.length===0);
 
-  await p.fill('#loginUser','pedro');await p.fill('#loginPin','x');await p.click('#loginScreen button');await p.waitForTimeout(300);
+  await p.fill('#loginUser','pedro');await p.fill('#loginPin','x');await p.click('#loginForm button[type=submit]');await p.waitForTimeout(300);
   ok('Usuario que no existe: "Usuario incorrecto" sin preguntar a Supabase', (await p.textContent('#loginErr'))==='Usuario incorrecto'&&auth.length===0);
 
-  await p.fill('#loginUser','cesar');await p.fill('#loginPin','mala');await p.click('#loginScreen button');await p.waitForTimeout(800);
+  await p.fill('#loginUser','cesar');await p.fill('#loginPin','mala');await p.click('#loginForm button[type=submit]');await p.waitForTimeout(800);
   ok('Contraseña mala: "Contraseña incorrecta" y sigue afuera', (await p.textContent('#loginErr'))==='Contraseña incorrecta'&&await p.isVisible('#loginScreen'));
   ok('Contraseña mala: no se lee la base', rest.length===0);
 
-  await p.fill('#loginUser','Cesar ');await p.fill('#loginPin','clave-buena');await p.click('#loginScreen button');await p.waitForTimeout(2500);
+  await p.fill('#loginUser','Cesar ');await p.fill('#loginPin','clave-buena');await p.click('#loginForm button[type=submit]');await p.waitForTimeout(2500);
   ok('Contraseña buena: entra', await p.isHidden('#loginScreen'));
   ok('Entra como maestro', (await p.textContent('#quienSoy'))==='César (maestro)');
   ok('Después de entrar sí lee la base ('+rest.length+' pedidos)', rest.length>0);
@@ -73,12 +73,12 @@ const USERS={'cesar@cobros.local':'clave-buena','tienda@cobros.local':'clave-tie
   ok('Salir: vuelve a pedir contraseña', await p.isVisible('#loginScreen'));
   ok('Salir: avisa a Supabase (logout)', auth.some(x=>x.startsWith('POST /auth/v1/logout')));
   const quedo=await p.evaluate(()=>Object.keys(localStorage).filter(k=>k.includes('auth-token')).length);
-  ok('Salir: no queda sesión guardada en el teléfono', quedo===0);
+  ok('Salir: no queda sesión guardada en el teléfono', quedo===0&&await p.evaluate(()=>!Object.keys(sessionStorage).some(k=>k.includes('auth-token'))));
 
   const n0=rest.length;await p.waitForTimeout(500);
   ok('Afuera no se lee la base', rest.length===n0);
 
-  await p.fill('#loginUser','tienda');await p.fill('#loginPin','clave-tienda');await p.click('#loginScreen button');await p.waitForTimeout(2000);
+  await p.fill('#loginUser','tienda');await p.fill('#loginPin','clave-tienda');await p.click('#loginForm button[type=submit]');await p.waitForTimeout(2000);
   ok('Tienda entra como anotador', (await p.textContent('#quienSoy'))==='Tienda (anotador)'&&!(await p.evaluate(()=>esMaestro())));
 
   ok('El código ya no trae contraseñas ni PIN', !/pass:'/.test(HTML)&&!/const USUARIOS/.test(HTML));

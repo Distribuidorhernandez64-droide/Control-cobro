@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Efectivo">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icono-180.png">
+<link rel="icon" href="icono-192.png">
+<title>Control de Efectivo</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#F5F6F4;color:#16211C;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh}
+button,input,select{font-family:inherit;color:inherit}
+button{cursor:pointer}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{position:sticky;top:0;z-index:5;background:#FFFFFF;border-bottom:1px solid #E6E9E7;padding:calc(14px + env(safe-area-inset-top)) 20px 14px;display:flex;flex-direction:column;gap:12px}
+.hrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.htit{display:flex;flex-direction:column;gap:2px;min-width:0}
+.htit h1{margin:0;font-size:18px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htit span{font-size:12px;color:#5C6862}
+.htit span.off{color:#8A3B0B;font-weight:600}
+.hico{display:flex;gap:4px}
+.ib{width:40px;height:40px;border:0;border-radius:10px;background:transparent;display:flex;align-items:center;justify-content:center;color:#16211C}
+.ib:active{background:#EEF0EE}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:#EEF0EE;padding:3px;border-radius:10px}
+.seg.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg button{height:34px;border:0;border-radius:8px;font-size:13px;font-weight:600;background:transparent;color:#5C6862}
+.seg button.on{background:#FFFFFF;color:#16211C;box-shadow:0 1px 2px rgba(22,33,28,.12)}
+main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:24px}
+.bal{border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.bal.ok{background:#E1F1E8;color:#0F3D2A}.bal.alto{background:#FBE4E1;color:#7A1A12}
+.bal .lab{font-size:13px;font-weight:600}
+.bal .monto{font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1}
+.bal.chico{padding:16px 18px;gap:8px}.bal.chico .lab{font-size:12px}.bal.chico .monto{font-size:28px;letter-spacing:-.6px}
+.bal .pie{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.est{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.bal.chico .est{font-size:13px}
+.dot{width:8px;height:8px;border-radius:999px;display:inline-block}
+.bal.ok .dot{background:#1B6B4F}.bal.alto .dot{background:#C0352A}
+.flash{font-size:12px;font-weight:600;opacity:.85}
+.ver{height:32px;padding:0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;color:inherit}
+.dos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.b{height:52px;border-radius:12px;font-size:15px;font-weight:700;border:0}
+.b.g{background:#1B6B4F;color:#FFF}.b.n{background:#16211C;color:#FFF}.b.l{background:#FFF;color:#16211C;border:1px solid #D5DBD7;font-weight:600}
+.b.grande{height:56px;border-radius:14px}
+.b.med{height:48px;font-size:14px;font-weight:600}
+.b:disabled{opacity:.5}
+.sec{display:flex;flex-direction:column;gap:8px}
+.sech{display:flex;justify-content:space-between;align-items:baseline;padding:0 4px;gap:8px}
+.sech h2{margin:0;font-size:13px;font-weight:600;color:#5C6862}
+.sech h2.rojo{color:#B42318;font-weight:700}
+.sech .der{font-size:13px;font-weight:700}
+.sech .tip{font-size:11px;color:#5C6862}
+.lista{background:#FFF;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.fila{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:56px;padding:0 16px;border-bottom:1px solid #EEF1EF;background:#FFF;width:100%;border-left:0;border-right:0;border-top:0;text-align:left;font-size:14px}
+.fila:last-child{border-bottom:0}
+.col{display:flex;flex-direction:column;gap:2px;min-width:0}
+.t1{font-size:14px;font-weight:600}
+.t2{font-size:12px;color:#5C6862}
+.mn{font-size:14px;font-weight:700;white-space:nowrap}
+.verde{color:#145238}.rojo{color:#B42318}.vino{color:#9A2A1F}
+.chev{transition:transform .2s;flex:none}
+.abierto .chev{transform:rotate(180deg)}
+.det{padding:0 16px 10px;display:flex;flex-direction:column;border-bottom:1px solid #EEF1EF}
+.det div{display:flex;justify-content:space-between;min-height:30px;align-items:center;font-size:13px;color:#5C6862}
+.mas{height:44px;border:0;background:transparent;color:#1B6B4F;font-size:13px;font-weight:700}
+.vacio{padding:16px;font-size:14px;color:#5C6862;margin:0}
+.chip{height:32px;padding:0 10px;border:1px solid #D5DBD7;border-radius:8px;background:#FFF;font-size:12px;font-weight:600}
+.sw{position:relative;overflow:hidden;border-bottom:1px solid #EEF1EF}
+.sw:last-child{border-bottom:0}
+.sw .accion{position:absolute;top:0;right:0;bottom:0;width:92px;border:0;background:#16211C;color:#FFF;font-size:14px;font-weight:700}
+.sw .fila{position:relative;border-bottom:0;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .2s ease}
+.sw.abierta .fila{transform:translateX(-92px)}
+.pend{background:#FFF;border-radius:14px;padding:6px 16px 16px;display:flex;flex-direction:column}
+.pend .d{display:flex;justify-content:space-between;min-height:40px;align-items:center;font-size:14px;color:#5C6862;border-bottom:1px solid #EEF1EF}
+.pend .tot{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0}
+.pend .tot b{font-size:20px;font-weight:800}
+.form{display:flex;flex-direction:column;gap:18px}
+.form h2{margin:0;font-size:22px;font-weight:800}
+.form .sub{margin:4px 0 0;font-size:14px;color:#5C6862}
+.campo{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:#5C6862}
+.campo input,.campo select{height:50px;border:1px solid #D5DBD7;border-radius:12px;padding:0 14px;font-size:16px;background:#FFF;color:#16211C;width:100%;-webkit-appearance:none;appearance:none}
+.campo input.dinero{height:60px;font-size:26px;font-weight:700}
+.campo input:focus,.campo select:focus{outline:2px solid #1B6B4F;outline-offset:-1px}
+.nota{margin:0;font-size:13px;color:#5C6862}
+.nota.cafe{color:#8A3B0B}
+.err{margin:0;font-size:14px;font-weight:600;color:#B42318}
+.chk{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 16px;border-bottom:1px solid #EEF1EF;font-size:15px}
+.chk:last-child{border-bottom:0}
+.chk input{width:20px;height:20px;accent-color:#1B6B4F}
+.chk span.e{flex:1}
+.total{display:flex;justify-content:space-between;align-items:baseline;padding:0 4px}
+.total span{font-size:14px;color:#5C6862}.total b{font-size:24px;font-weight:800}
+.aviso{background:#FBE4E1;color:#7A1A12;border:0;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:600;text-align:left;line-height:1.4}
+.atras{height:36px;padding:0 12px 0 4px;border:0;border-radius:10px;background:transparent;font-size:14px;font-weight:600;display:flex;align-items:center;gap:4px}
+.repcab{display:flex;justify-content:space-between;align-items:center}
+.pdf{height:36px;padding:0 14px;border:1px solid #D5DBD7;border-radius:10px;background:#FFF;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.resumen{background:#FFF;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.ini-fin{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.ini-fin .col span:first-child{font-size:12px;color:#5C6862}
+.lin{display:flex;justify-content:space-between;min-height:40px;align-items:center;font-size:14px;border-bottom:1px solid #EEF1EF}
+.lin:last-child{border-bottom:0}.lin span:first-child{color:#5C6862}.lin span:last-child{font-weight:600}
+.ins{border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45}
+.ins.ok{background:#E1F1E8;color:#0F3D2A}.ins.alto{background:#FBE4E1;color:#7A1A12}
+.sem{display:flex;flex-direction:column;gap:6px;padding:12px 16px;border-bottom:1px solid #EEF1EF}
+.sem:last-child{border-bottom:0}
+.barra{display:grid;grid-template-columns:minmax(0,1fr) 80px;gap:8px;align-items:center}
+.barra .fondo{height:6px;border-radius:3px;background:#F0F2F1}
+.barra .fondo i{display:block;height:6px;border-radius:3px}
+.barra span{font-size:12px;color:#5C6862;text-align:right}
+.ley{display:flex;gap:12px;font-size:11px;color:#5C6862}
+.ley span{display:flex;align-items:center;gap:5px}
+.ley i{width:10px;height:4px;border-radius:2px;display:inline-block}
+.login{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 24px calc(32px + env(safe-area-inset-bottom));gap:28px}
+.marca{display:flex;flex-direction:column;align-items:center;gap:12px}
+.marca img{width:64px;height:64px;border-radius:16px}
+.marca h1{margin:0;font-size:22px;font-weight:800}
+.marca p{margin:0;font-size:14px;color:#5C6862;text-align:center}
+.tog{display:flex;align-items:center;justify-content:space-between;min-height:50px;padding:0 14px;background:#FFF;border:1px solid #D5DBD7;border-radius:12px;font-size:15px}
+.tog input{width:22px;height:22px;accent-color:#1B6B4F}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+// ===== Control de Efectivo · Distribuidora Hernández =====
+// Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
+// Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
+const VERSION = '2026-11-14.1';
+const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
+const TZ = 'America/Guatemala';
+
+// ---------- utilidades ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+  const r = crypto.getRandomValues(new Uint8Array(1))[0] & 15; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+const n2 = v => Math.round(Number(v || 0) * 100) / 100;
+function fmt(n) {
+  n = Number(n || 0); const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+  return (neg ? '−' : '') + 'Q' + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + p[1];
+}
+function fmt0(n) { n = Number(n || 0); return (n < 0 ? '−' : '') + 'Q' + Math.round(Math.abs(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmtInput(raw) {
+  const t = String(raw || '').replace(/[^0-9.]/g, ''); const dot = t.indexOf('.');
+  let ent = dot >= 0 ? t.slice(0, dot) : t; const dec = dot >= 0 ? t.slice(dot + 1).replace(/\./g, '').slice(0, 2) : null;
+  ent = ent.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return dec === null ? ent : (ent || '0') + '.' + dec;
+}
+const num = t => parseFloat(String(t || '').replace(/,/g, ''));
+const hoyGT = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const diaDe = iso => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+const horaDe = iso => new Intl.DateTimeFormat('es-GT', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+function addDays(s, n) { const p = s.split('-').map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2] + n)).toISOString().slice(0, 10); }
+function dow(s) { const p = s.split('-').map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay(); }
+const fdate = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '';
+const fcorta = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) : '';
+const dia = s => ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][dow(s)] + ' ' + fcorta(s);
+const diaCorto = s => ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dow(s)] + ' ' + s.slice(8, 10);
+const ICO = {
+  salir: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
+  usuarios: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  ojo: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  chev: '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA59F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+  atras: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+  bajar: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>',
+  flecha: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA59F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom:4px"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>'
+};
+
+// ---------- estado ----------
+const LIM0 = { sin: 3, ent: 3, ing: 3, mov: 5, cam: 3 };
+const S = {
+  ses: LS.get('ce_sesion', null),           // {token, usuario, nombre, rol, tienda_id}
+  view: 'home', f: {}, err: '', flash: '', aviso: '',
+  tienda: LS.get('ce_tienda_admin', 'canasta'),
+  lim: Object.assign({}, LIM0), abiertos: {}, swiped: null,
+  rPer: '60', rDesde: '', rHasta: '',
+  online: navigator.onLine, enviando: false, hayAdmin: null,
+  usuarios: null, ultUsuario: LS.get('ce_ult_usuario', '')
+};
+const esAdmin = () => !!(S.ses && S.ses.rol === 'admin');
+const tk = () => (S.ses && S.ses.rol === 'tienda') ? S.ses.tienda_id : S.tienda;
+const keyDatos = t => 'ce_datos_' + (S.ses ? S.ses.usuario : '') + '_' + t;
+const keyCola = () => 'ce_cola_' + (S.ses ? S.ses.usuario : S.ultUsuario);
+const D = () => LS.get(keyDatos(tk()), null);
+const setD = d => LS.set(keyDatos(tk()), d);
+const cola = () => LS.get(keyCola(), []);
+function encolar(fn, args) { const c = cola(); c.push({ fn, args, t: tk() }); LS.set(keyCola(), c); }
+let _flashT = null;
+function avisar(msg) { S.flash = msg; clearTimeout(_flashT); _flashT = setTimeout(() => { S.flash = ''; const e = document.querySelector('.flash'); if (e) e.remove(); }, 3500); }
+
+// ---------- conexión ----------
+async function rpc(fn, args) {
+  let r;
+  try {
+    r = await fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args || {})
+    });
+  } catch (e) { const x = new Error('Sin internet'); x.offline = true; throw x; }
+  const txt = await r.text(); let j = null;
+  try { j = txt ? JSON.parse(txt) : null; } catch (e) {}
+  if (!r.ok) {
+    const m = (j && j.message) || ('Error ' + r.status);
+    const x = new Error(m);
+    if (m === 'SESION') x.sesion = true;
+    if (r.status >= 500 || r.status === 408 || r.status === 429) x.offline = true;
+    throw x;
+  }
+  return j;
+}
+
+async function enviarCola() {
+  if (!S.ses || !S.ses.token) return false;
+  if (S.enviando) return false;
+  S.enviando = true;
+  try {
+    let c = cola();
+    while (c.length) {
+      const op = c[0];
+      try { await rpc(op.fn, Object.assign({ p_token: S.ses.token }, op.args)); }
+      catch (e) {
+        if (e.offline) { S.online = false; return false; }
+        if (e.sesion) { sesionVencida(); return false; }
+        S.aviso = 'No se pudo guardar: ' + e.message;
+      }
+      c = cola(); c.shift(); LS.set(keyCola(), c);
+    }
+    S.online = true;
+    return true;
+  } finally { S.enviando = false; }
+}
+
+let _sincronizando = false;
+async function sync() {
+  if (!S.ses || !S.ses.token || _sincronizando) return;
+  _sincronizando = true;
+  try {
+    const ok = await enviarCola();
+    if (!ok) { pintarCab(); return; }
+    const t = tk();
+    const d = await rpc('ce_datos', { p_token: S.ses.token, p_tienda: t });
+    if (cola().length) { setTimeout(sync, 400); return; }       // anotaron algo mientras tanto
+    if (t !== tk()) return;
+    S.online = true;
+    const antes = JSON.stringify(LS.get(keyDatos(t), null));
+    LS.set(keyDatos(t), d);
+    if (d && d.yo) { S.ses.nombre = d.yo.nombre; LS.set('ce_sesion', S.ses); }
+    if ((S.view === 'home' || S.view === 'reporte') && antes !== JSON.stringify(d)) render(); else pintarCab();
+  } catch (e) {
+    if (e.sesion) sesionVencida();
+    else if (e.offline) { S.online = false; pintarCab(); }
+  } finally { _sincronizando = false; }
+}
+
+function sesionVencida() {
+  if (S.ses) { S.ultUsuario = S.ses.usuario; LS.set('ce_ult_usuario', S.ultUsuario); }
+  S.ses = null; LS.del('ce_sesion');
+  S.view = 'login'; S.f = { usuario: S.ultUsuario }; S.err = 'Tu sesión se cerró. Vuelve a entrar.';
+  render();
+}
+
+// ---------- cálculos ----------
+function balanceAl(d, t) {
+  const fi = d.tienda.fecha_ini;
+  const ing = d.ingresos.filter(i => i.fecha >= fi && i.fecha <= t).reduce((a, i) => a + Number(i.monto), 0);
+  const rec = d.entregas.filter(e => e.estado === 'recibido' && e.fecha_recibido && e.fecha_recibido >= fi && e.fecha_recibido <= t).reduce((a, e) => a + Number(e.total), 0);
+  return n2(Number(d.tienda.saldo_ini) + ing - rec);
+}
+const ventasDe = (d, eid) => d.ventas.filter(v => v.entrega_id === eid).sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+const diasCortoDe = (d, eid) => ventasDe(d, eid).map(v => diaCorto(v.fecha)).join(', ');
+const recientePrimero = k => (a, b) => (a[k] < b[k] ? 1 : a[k] > b[k] ? -1 : (a.creado_en < b.creado_en ? 1 : a.creado_en > b.creado_en ? -1 : 0));
+
+// ---------- pintar ----------
+function cabecera() {
+  const d = D(); const n = cola().length;
+  let sub = '';
+  if (n) sub = `<span class="off">${S.online ? 'Enviando…' : 'Sin internet · ' + n + ' por enviar'}</span>`;
+  else if (!S.online) sub = '<span class="off">Sin internet</span>';
+  else if (!esAdmin()) sub = `<span>${esc(S.ses.nombre || S.ses.usuario)}</span>`;
+  const titulo = esAdmin() ? 'Administración' : (d ? d.tienda.nombre : 'Tienda');
+  const ico = esAdmin()
+    ? `<button class="ib" data-a="usuarios" aria-label="Usuarios">${ICO.usuarios}</button><button class="ib" data-a="salir" aria-label="Salir">${ICO.salir}</button>`
+    : `<button class="ib" data-a="salir" aria-label="Salir">${ICO.salir}</button>`;
+  let seg = '';
+  if (esAdmin() && S.view === 'home') {
+    const ts = (d && d.tiendas) || [{ id: 'canasta', nombre: 'Tienda La Canasta' }, { id: 'morelia', nombre: 'Tienda Morelia' }];
+    seg = `<div class="seg">${ts.map(t => `<button data-a="tienda" data-id="${esc(t.id)}" class="${t.id === S.tienda ? 'on' : ''}">${esc(t.nombre.replace(/^Tienda\s+/i, ''))}</button>`).join('')}</div>`;
+  }
+  return `<header><div class="hrow"><div class="htit"><h1>${esc(titulo)}</h1>${sub}</div><div class="hico">${ico}</div></div>${seg}</header>`;
+}
+function pintarCab() {
+  const h = document.querySelector('header'); if (!h || !S.ses) return;
+  const tmp = document.createElement('div'); tmp.innerHTML = cabecera(); h.replaceWith(tmp.firstElementChild);
+}
+
+function tarjetaBalance(d, chico) {
+  const saldo = balanceAl(d, '9999-12-31'); const alto = saldo > Number(d.tienda.tope);
+  return `<section class="bal ${alto ? 'alto' : 'ok'} ${chico ? 'chico' : ''}">
+    <div class="hrow"><span class="lab">Balance de la tienda</span>${chico ? '' : `<button class="ver" data-a="reporte" aria-label="Ver reporte">${ICO.ojo}Ver</button>`}</div>
+    <span class="monto">${fmt(saldo)}</span>
+    <div class="pie"><span class="est"><span class="dot"></span>${alto ? 'Sobre el tope' : 'Normal'}</span><span>Tope ${fmt(d.tienda.tope)}</span></div>
+    ${S.flash ? `<span class="flash" role="status">${esc(S.flash)}</span>` : ''}
+  </section>`;
+}
+const avisoHtml = () => S.aviso ? `<button class="aviso" data-a="quitarAviso">${esc(S.aviso)}<br><span style="font-weight:400">Toca para cerrar.</span></button>` : '';
+const masBtn = (k, total) => total > S.lim[k] ? `<button class="mas" data-a="mas" data-k="${k}">Ver más</button>` : '';
+const cargando = () => `<p class="vacio" style="text-align:center">${S.online ? 'Cargando…' : 'Sin internet. Conéctate una vez para cargar los datos.'}</p>`;
+
+function vistaTienda() {
+  const d = D(); if (!d) return cargando();
+  const hoy = hoyGT();
+  const sin = d.ventas.filter(v => !v.entrega_id).sort(recientePrimero('fecha'));
+  const totSin = n2(sin.reduce((a, v) => a + Number(v.monto), 0));
+  const ents = d.entregas.slice().sort(recientePrimero('fecha_envio'));
+  const ings = d.ingresos.slice().sort(recientePrimero('fecha'));
+  return `${avisoHtml()}${tarjetaBalance(d, true)}
+  <div class="dos"><button class="b g grande" data-a="venta">Anotar venta</button><button class="b n grande" data-a="entrega">Entregar dinero</button></div>
+  <section class="sec"><div class="sech"><h2>Ventas sin entregar</h2><span class="der">${fmt(totSin)}</span></div>
+    <div class="lista">${sin.length ? sin.slice(0, S.lim.sin).map(v => `<div class="fila"><span>${dia(v.fecha)}</span>
+      <span style="display:flex;align-items:center;gap:10px"><span class="mn" style="font-weight:600">${fmt(v.monto)}</span>${v.fecha === hoy ? `<button class="chip" data-a="corregir" data-id="${v.id}">Corregir</button>` : ''}</span></div>`).join('')
+      : '<p class="vacio">Todo está entregado.</p>'}${masBtn('sin', sin.length)}</div></section>
+  <section class="sec"><div class="sech"><h2>Entregas</h2></div>
+    <div class="lista">${ents.length ? ents.slice(0, S.lim.ent).map(e => {
+      const rec = e.estado === 'recibido', ab = !!S.abiertos[e.id];
+      return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${e.id}" aria-expanded="${ab}"><span class="col"><span class="t1">${esc(diasCortoDe(d, e.id))}</span>
+        <span class="t2 ${rec ? 'verde' : 'rojo'}" style="font-weight:600">${rec ? 'Recibido ' + fdate(e.fecha_recibido) : 'Pendiente de recibir'}</span></span>
+        <span style="display:flex;align-items:center;gap:6px"><span class="mn">${fmt(e.total)}</span>${ICO.chev}</span></button>
+        ${ab ? `<div class="det">${ventasDe(d, e.id).map(v => `<div><span>${dia(v.fecha)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
+    }).join('') : '<p class="vacio">Todavía no hay entregas.</p>'}${masBtn('ent', ents.length)}</div></section>
+  <section class="sec"><div class="sech"><h2>Mercadería recibida</h2></div>
+    <div class="lista">${ings.length ? ings.slice(0, S.lim.ing).map(i => `<div class="fila"><span class="col"><span class="t1">Factura ${esc(i.factura)}</span><span class="t2">${fdate(i.fecha)}</span></span><span class="mn">${fmt(i.monto)}</span></div>`).join('')
+      : '<p class="vacio">Todavía no hay facturas.</p>'}${masBtn('ing', ings.length)}</div></section>`;
+}
+
+function vistaAdmin() {
+  const d = D(); if (!d) return cargando();
+  const pend = d.entregas.filter(e => e.estado === 'enviado').sort(recientePrimero('fecha_envio'));
+  const movs = d.ingresos.map(i => ({ tipo: 'ing', id: i.id, fecha: i.fecha, creado_en: i.creado_en, o: i }))
+    .concat(d.entregas.filter(e => e.estado === 'recibido').map(e => ({ tipo: 'rec', id: e.id, fecha: e.fecha_recibido, creado_en: e.creado_en, o: e })))
+    .sort(recientePrimero('fecha'));
+  const cams = (d.cambios || []).slice().sort((a, b) => b.id - a.id);
+  return `${avisoHtml()}${tarjetaBalance(d, false)}
+  ${pend.length ? `<section class="sec"><div class="sech"><h2 class="rojo">Pendiente de recibir</h2></div>
+    ${pend.map(e => `<div class="pend">${ventasDe(d, e.id).map(v => `<div class="d"><span>${dia(v.fecha)}</span><span>${fmt(v.monto)}</span></div>`).join('')}
+      <div class="tot"><span class="t2">${esc(e.quien)} · ${fdate(e.fecha_envio)}</span><b>${fmt(e.total)}</b></div>
+      <button class="b g med" data-a="aceptar" data-id="${e.id}" style="font-weight:700">Aceptar</button></div>`).join('')}</section>` : ''}
+  <div class="dos"><button class="b n med" data-a="ingreso">Ingresar mercadería</button><button class="b l med" data-a="ajustes">Saldo y tope</button></div>
+  ${cams.length ? `<section class="sec"><div class="sech"><h2>Cambios de la tienda</h2></div><div class="lista">
+    ${cams.slice(0, S.lim.cam).map(c => `<div class="fila"><span class="col"><span class="t1">${c.tipo === 'correccion' ? dia(c.fecha) + ': ' + fmt(c.antes) + ' → ' + fmt(c.despues) : dia(c.fecha) + ': ' + fmt(c.despues)}</span>
+      <span class="t2">${c.tipo === 'correccion' ? 'Corrección' : 'Anotado tarde el ' + fdate(diaDe(c.cuando))} · ${esc(c.quien)} · ${horaDe(c.cuando)}</span></span></div>`).join('')}
+    ${masBtn('cam', cams.length)}</div></section>` : ''}
+  <section class="sec"><div class="sech"><h2>Últimos movimientos</h2>${d.ingresos.length ? '<span class="tip">Desliza una factura ← para editar</span>' : ''}</div>
+    <div class="lista">${movs.length ? movs.slice(0, S.lim.mov).map(m => {
+      if (m.tipo === 'ing') return `<div class="sw ${S.swiped === m.id ? 'abierta' : ''}"><button class="accion" data-a="editarIng" data-id="${m.id}" tabindex="${S.swiped === m.id ? 0 : -1}">Editar</button>
+        <div class="fila" data-swipe="${m.id}"><span class="col"><span class="t1">Factura ${esc(m.o.factura)}</span><span class="t2">Mercadería · ${fdate(m.o.fecha)}</span></span><span class="mn vino" style="font-size:15px">+${fmt(m.o.monto)}</span></div></div>`;
+      const ab = !!S.abiertos[m.id];
+      return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${m.id}" aria-expanded="${ab}" style="min-height:58px"><span class="col"><span class="t1">Efectivo recibido</span><span class="t2">${esc(diasCortoDe(d, m.id))} · ${fdate(m.o.fecha_recibido)}</span></span>
+        <span style="display:flex;align-items:center;gap:6px"><span class="mn verde" style="font-size:15px">−${fmt(m.o.total)}</span>${ICO.chev}</span></button>
+        ${ab ? `<div class="det">${ventasDe(d, m.id).map(v => `<div><span>${dia(v.fecha)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
+    }).join('') : '<p class="vacio">Todavía no hay movimientos.</p>'}${masBtn('mov', movs.length)}</div></section>`;
+}
+
+const botones = (accion, txt, color) => `<div class="dos"><button class="b l" data-a="home">Cancelar</button><button class="b ${color || 'g'}" data-a="${accion}">${txt || 'Guardar'}</button></div>`;
+const errHtml = () => S.err ? `<p class="err" role="alert">${esc(S.err)}</p>` : '';
+
+function vistaVenta() {
+  const f = S.f;
+  return `<div class="form"><h2>Anotar venta</h2>
+    <label class="campo">Día<input type="date" data-f="fecha" max="${hoyGT()}" value="${esc(f.fecha)}"></label>
+    <label class="campo">Monto<input class="dinero" type="text" inputmode="decimal" data-f="monto" data-dinero placeholder="Q0.00" value="${esc(f.monto)}" autocomplete="off"></label>
+    <p class="nota cafe" id="notaTarde" ${f.fecha && f.fecha < hoyGT() ? '' : 'hidden'}>Día anterior: se registra como anotado tarde.</p>
+    ${errHtml()}${botones('guardarVenta')}</div>`;
+}
+function vistaCorregir() {
+  const d = D(); const v = d && d.ventas.find(x => x.id === S.f.id);
+  if (!v) return '<p class="vacio">No se encontró la venta.</p>';
+  return `<div class="form"><div><h2>Corregir venta</h2><p class="sub">${dia(v.fecha)} · antes ${fmt(v.monto)}</p></div>
+    <label class="campo">Monto correcto<input class="dinero" type="text" inputmode="decimal" data-f="monto" data-dinero value="${esc(S.f.monto)}" autocomplete="off"></label>
+    <p class="nota">Administración verá este cambio.</p>${errHtml()}${botones('guardarCorreccion')}</div>`;
+}
+function vistaEntrega() {
+  const d = D(); const sin = d ? d.ventas.filter(v => !v.entrega_id).sort(recientePrimero('fecha')) : [];
+  return `<div class="form"><div><h2>Entregar dinero</h2><p class="sub">Marca las ventas que entregas.</p></div>
+    ${sin.length ? `<div class="lista">${sin.map(v => `<label class="chk"><input type="checkbox" data-sel="${v.id}" ${S.f.sel && S.f.sel[v.id] ? 'checked' : ''}><span class="e">${dia(v.fecha)}</span><b style="font-weight:600">${fmt(v.monto)}</b></label>`).join('')}</div>`
+      : '<p class="nota">No hay ventas pendientes de entregar.</p>'}
+    <div class="total"><span>Total</span><b id="selTotal">${fmt(totalSel())}</b></div>
+    ${errHtml()}${botones('guardarEntrega', 'Entregar', 'n')}</div>`;
+}
+function totalSel() { const d = D(); if (!d || !S.f.sel) return 0; return n2(d.ventas.filter(v => !v.entrega_id && S.f.sel[v.id]).reduce((a, v) => a + Number(v.monto), 0)); }
+function vistaIngreso() {
+  const d = D(); const f = S.f;
+  return `<div class="form"><div><h2>${f.id ? 'Editar factura' : 'Ingresar mercadería'}</h2><p class="sub">${esc(d ? d.tienda.nombre : '')} · valor a precio de venta</p></div>
+    <label class="campo">No. de factura<input type="text" inputmode="numeric" pattern="[0-9]*" data-f="factura" value="${esc(f.factura)}" autocomplete="off"></label>
+    <label class="campo">Fecha<input type="date" data-f="fecha" value="${esc(f.fecha)}"></label>
+    <label class="campo">Monto<input class="dinero" type="text" inputmode="decimal" data-f="monto" data-dinero placeholder="Q0.00" value="${esc(f.monto)}" autocomplete="off"></label>
+    ${errHtml()}${botones('guardarIngreso', 'Guardar', 'n')}</div>`;
+}
+function vistaAjustes() {
+  const d = D(); const f = S.f;
+  return `<div class="form"><div><h2>Saldo y tope</h2><p class="sub">${esc(d ? d.tienda.nombre : '')} · con cuánto vas según tu control</p></div>
+    <label class="campo">Saldo inicial<input class="dinero" type="text" inputmode="decimal" data-f="saldo" data-dinero value="${esc(f.saldo)}" autocomplete="off"></label>
+    <label class="campo">Desde la fecha<input type="date" data-f="fecha" value="${esc(f.fecha)}"></label>
+    <label class="campo">Tope<input class="dinero" type="text" inputmode="decimal" data-f="tope" data-dinero value="${esc(f.tope)}" autocomplete="off"></label>
+    <p class="nota">El balance cuenta la mercadería y el dinero recibido desde esa fecha.</p>
+    ${errHtml()}${botones('guardarAjustes', 'Guardar', 'n')}</div>`;
+}
+
+// ---------- reporte ----------
+function reporte(d) {
+  let desde = S.rDesde, hasta = S.rHasta;
+  if (!desde || !hasta) return null;
+  if (desde > hasta) { const t = desde; desde = hasta; hasta = t; }
+  const fi = d.tienda.fecha_ini;
+  if (desde < fi) desde = fi;
+  if (hasta < desde) hasta = desde;
+  const en = f => f && f >= desde && f <= hasta;
+  const ingP = d.ingresos.filter(i => en(i.fecha)).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+  const recP = d.entregas.filter(e => e.estado === 'recibido' && en(e.fecha_recibido)).sort((a, b) => a.fecha_recibido < b.fecha_recibido ? -1 : 1);
+  const merc = n2(ingP.reduce((a, i) => a + Number(i.monto), 0));
+  const efec = n2(recP.reduce((a, e) => a + Number(e.total), 0));
+  const vent = n2(d.ventas.filter(v => en(v.fecha)).reduce((a, v) => a + Number(v.monto), 0));
+  const ini = balanceAl(d, addDays(desde, -1)), fin = balanceAl(d, hasta);
+  let diasTope = 0; for (let x = desde; x <= hasta; x = addDays(x, 1)) if (balanceAl(d, x) > Number(d.tienda.tope)) diasTope++;
+  const semanas = []; let w = addDays(desde, -((dow(desde) + 6) % 7));
+  while (w <= hasta) {
+    const a = w < desde ? desde : w; const fw = addDays(w, 6); const b = fw > hasta ? hasta : fw;
+    const m = n2(d.ingresos.filter(i => i.fecha >= a && i.fecha <= b).reduce((s, i) => s + Number(i.monto), 0));
+    const e = n2(d.entregas.filter(x => x.estado === 'recibido' && x.fecha_recibido >= a && x.fecha_recibido <= b).reduce((s, x) => s + Number(x.total), 0));
+    semanas.push({ a, b, m, e }); w = addDays(w, 7);
+  }
+  const cams = d.cambios || [];
+  const enC = c => en(diaDe(c.cuando));
+  const cob = merc > 0 ? efec / merc * 100 : null;
+  return { desde, hasta, ingP, recP, merc, efec, vent, ini, fin, diasTope, semanas: semanas.reverse(), cob,
+    corr: cams.filter(c => c.tipo === 'correccion' && enC(c)).length, tarde: cams.filter(c => c.tipo === 'tarde' && enC(c)).length };
+}
+function vistaReporte() {
+  const d = D(); if (!d) return cargando();
+  const r = reporte(d); const tope = Number(d.tienda.tope);
+  const max = r ? Math.max(1, ...r.semanas.map(s => Math.max(s.m, s.e))) : 1;
+  const bien = !r || r.cob === null || r.cob >= 90;
+  return `<div class="repcab"><button class="atras" data-a="home">${ICO.atras}Volver</button><button class="pdf" data-a="pdf">${ICO.bajar}PDF</button></div>
+  <div class="sec" style="gap:10px"><h2 style="margin:0;font-size:22px;font-weight:800">Reporte</h2>
+    <div class="seg tres"><button data-a="per" data-p="30" class="${S.rPer === '30' ? 'on' : ''}">30 días</button><button data-a="per" data-p="60" class="${S.rPer === '60' ? 'on' : ''}">2 meses</button><button data-a="per" data-p="custom" class="${S.rPer === 'custom' ? 'on' : ''}">Fechas</button></div>
+    ${S.rPer === 'custom' ? `<div class="dos"><label class="campo">Desde<input type="date" data-r="rDesde" max="${hoyGT()}" value="${esc(S.rDesde)}" style="height:44px;font-size:15px;padding:0 10px"></label><label class="campo">Hasta<input type="date" data-r="rHasta" max="${hoyGT()}" value="${esc(S.rHasta)}" style="height:44px;font-size:15px;padding:0 10px"></label></div>` : ''}
+    ${r ? `<span class="t2" style="font-size:13px">${esc(d.tienda.nombre)} · ${fdate(r.desde)} al ${fdate(r.hasta)}</span>` : ''}
+    ${S.flash ? `<span class="flash verde" role="status">${esc(S.flash)}</span>` : ''}</div>
+  ${!r ? '<p class="vacio">Escoge las fechas.</p>' : `
+  <section class="resumen">
+    <div class="ini-fin"><div class="col"><span>Balance al inicio</span><span style="font-size:18px;font-weight:700">${fmt(r.ini)}</span></div>${ICO.flecha}
+      <div class="col" style="align-items:flex-end"><span>Balance al final</span><span style="font-size:22px;font-weight:800" class="${r.fin > tope ? 'rojo' : 'verde'}">${fmt(r.fin)}</span></div></div>
+    <div style="display:flex;flex-direction:column;border-top:1px solid #EEF1EF">
+      <div class="lin"><span>Mercadería ingresada</span><span>${fmt(r.merc)}</span></div>
+      <div class="lin"><span>Efectivo recibido</span><span>${fmt(r.efec)}</span></div>
+      <div class="lin"><span>Ventas anotadas</span><span>${fmt(r.vent)}</span></div></div>
+    <div class="ins ${bien ? 'ok' : 'alto'}">${r.cob === null ? 'No hubo mercadería ingresada en este periodo.' : `Por cada <b>Q100</b> de mercadería, recibiste <b>Q${r.cob.toFixed(0)}</b> en efectivo.`}</div>
+  </section>
+  <section class="sec"><div class="sech"><h2>Por semana</h2><div class="ley"><span><i style="background:#B9C2BD"></i>Mercadería</span><span><i style="background:#1B6B4F"></i>Efectivo</span></div></div>
+    <div class="lista">${r.semanas.map(s => { const dif = n2(s.e - s.m); return `<div class="sem"><div class="hrow"><span style="font-size:13px;font-weight:600">${fcorta(s.a)} – ${fcorta(s.b)}</span><span style="font-size:12px;font-weight:700" class="${dif < 0 ? 'rojo' : 'verde'}">${dif > 0 ? '+' : ''}${fmt0(dif)}</span></div>
+      <div class="barra"><div class="fondo"><i style="width:${Math.round(s.m / max * 100)}%;background:#B9C2BD"></i></div><span>${fmt0(s.m)}</span></div>
+      <div class="barra"><div class="fondo"><i style="width:${Math.round(s.e / max * 100)}%;background:#1B6B4F"></i></div><span>${fmt0(s.e)}</span></div></div>`; }).join('')}</div></section>
+  <section class="sec"><div class="sech"><h2>Alertas del periodo</h2></div><div class="lista" style="padding:0 16px">
+    <div class="lin"><span>Días sobre el tope</span><span class="${r.diasTope ? 'rojo' : ''}" style="font-weight:700">${r.diasTope}</span></div>
+    <div class="lin"><span>Ventas corregidas</span><span style="font-weight:700">${r.corr}</span></div>
+    <div class="lin"><span>Ventas anotadas tarde</span><span style="font-weight:700">${r.tarde}</span></div></div></section>`}`;
+}
+function ponerPeriodo(p) {
+  const hoy = hoyGT(); S.rPer = p;
+  if (p === '30') { S.rDesde = addDays(hoy, -29); S.rHasta = hoy; }
+  else if (p === '60') { S.rDesde = addDays(hoy, -59); S.rHasta = hoy; }
+  else if (!S.rDesde) { S.rDesde = addDays(hoy, -59); S.rHasta = hoy; }
+}
+
+let _pdfLib = null;
+function cargarPdf() {
+  if (window.jspdf) return Promise.resolve();
+  if (!_pdfLib) _pdfLib = new Promise((ok, mal) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    sc.onload = () => ok(); sc.onerror = () => { _pdfLib = null; mal(new Error('sin internet')); }; document.head.appendChild(sc); });
+  return _pdfLib;
+}
+async function hacerPdf() {
+  const d = D(); const r = d && reporte(d); if (!r) return;
+  try { await cargarPdf(); } catch (e) { avisar('No se pudo preparar el PDF. Revisa el internet.'); render(); return; }
+  const doc = new jspdf.jsPDF({ unit: 'pt', format: 'letter' });
+  const _txt = doc.text.bind(doc);   // la letra del PDF no tiene el signo menos largo
+  doc.text = (t, ...a) => _txt(typeof t === 'string' ? t.replace(/\u2212/g, '-') : t, ...a);
+  const W = 612, L = 48, R = W - 48, BOT = 740; let y = 56;
+  const verde = [20, 82, 56], rojo = [180, 35, 24], gris = [92, 104, 98], negro = [22, 33, 28];
+  const color = c => doc.setTextColor(c[0], c[1], c[2]);
+  const linea = () => { doc.setDrawColor(225, 230, 227); doc.setLineWidth(.6); doc.line(L, y, R, y); };
+  const saltar = h => { if (y + h > BOT) { doc.addPage(); y = 56; } };
+  const fila = (a, b, opt) => { saltar(18); doc.setFont('helvetica', opt && opt.bold ? 'bold' : 'normal'); doc.setFontSize(10.5); color(gris); doc.text(a, L, y); color(opt && opt.c || negro); doc.text(b, R, y, { align: 'right' }); y += 18; };
+  const titulo = t => { saltar(40); y += 10; doc.setFont('helvetica', 'bold'); doc.setFontSize(12); color(negro); doc.text(t, L, y); y += 8; linea(); y += 16; };
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(18); color(negro); doc.text('Reporte de efectivo · ' + d.tienda.nombre, L, y); y += 20;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); color(gris);
+  doc.text('Del ' + fdate(r.desde) + ' al ' + fdate(r.hasta) + '   ·   Hecho el ' + fdate(hoyGT()) + ' ' + horaDe(new Date().toISOString()), L, y); y += 10;
+  titulo('Resumen');
+  fila('Balance al inicio', fmt(r.ini));
+  fila('+ Mercadería ingresada', fmt(r.merc));
+  fila('− Efectivo recibido', fmt(r.efec));
+  fila('Balance al final', fmt(r.fin), { bold: true, c: r.fin > Number(d.tienda.tope) ? rojo : verde });
+  fila('Tope', fmt(d.tienda.tope));
+  fila('Ventas anotadas por la tienda', fmt(r.vent));
+  y += 4; saltar(20); doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
+  color(r.cob === null || r.cob >= 90 ? verde : rojo);
+  doc.text(r.cob === null ? 'No hubo mercadería ingresada en este periodo.' : 'Por cada Q100 de mercadería, se recibieron Q' + r.cob.toFixed(0) + ' en efectivo.', L, y); y += 14;
+  titulo('Por semana');
+  saltar(18); doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); color(gris);
+  doc.text('Semana', L, y); doc.text('Mercadería', 330, y, { align: 'right' }); doc.text('Efectivo', 440, y, { align: 'right' }); doc.text('Diferencia', R, y, { align: 'right' }); y += 16;
+  r.semanas.slice().reverse().forEach(s => { saltar(16); const dif = n2(s.e - s.m); doc.setFont('helvetica', 'normal'); doc.setFontSize(10); color(negro);
+    doc.text(fdate(s.a) + ' – ' + fdate(s.b), L, y); doc.text(fmt(s.m), 330, y, { align: 'right' }); doc.text(fmt(s.e), 440, y, { align: 'right' });
+    color(dif < 0 ? rojo : verde); doc.text((dif > 0 ? '+' : '') + fmt(dif), R, y, { align: 'right' }); y += 16; });
+  titulo('Alertas');
+  fila('Días sobre el tope', String(r.diasTope), { c: r.diasTope ? rojo : negro });
+  fila('Ventas corregidas por la tienda', String(r.corr));
+  fila('Ventas anotadas tarde', String(r.tarde));
+  titulo('Facturas de mercadería');
+  if (!r.ingP.length) fila('Sin facturas en el periodo', '');
+  r.ingP.forEach(i => fila(fdate(i.fecha) + '   Factura ' + i.factura, fmt(i.monto)));
+  if (r.ingP.length) fila('Total', fmt(r.merc), { bold: true });
+  titulo('Efectivo recibido');
+  if (!r.recP.length) fila('Sin efectivo recibido en el periodo', '');
+  r.recP.forEach(e => fila(fdate(e.fecha_recibido) + '   ' + ventasDe(d, e.id).map(v => diaCorto(v.fecha) + '/' + v.fecha.slice(5, 7)).join(', '), fmt(e.total)));
+  if (r.recP.length) fila('Total', fmt(r.efec), { bold: true });
+  const np = doc.getNumberOfPages();
+  for (let i = 1; i <= np; i++) { doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(gris); doc.text('Control de Efectivo · Distribuidora Hernández · Página ' + i + ' de ' + np, W / 2, 770, { align: 'center' }); }
+  const nombre = 'Reporte ' + d.tienda.nombre + ' ' + fdate(r.desde).replace(/\//g, '-') + ' a ' + fdate(r.hasta).replace(/\//g, '-') + '.pdf';
+  const blob = doc.output('blob');
+  try { const file = new File([blob], nombre, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Reporte de efectivo' }); return; } }
+  catch (e) { if (e && e.name === 'AbortError') return; }
+  doc.save(nombre);
+}
+
+// ---------- usuarios (administración) ----------
+function vistaUsuarios() {
+  const us = S.usuarios; const d = D(); const ts = (d && d.tiendas) || [];
+  const nomT = id => { const t = ts.find(x => x.id === id); return t ? t.nombre : id; };
+  return `<div class="repcab"><button class="atras" data-a="home">${ICO.atras}Volver</button></div>
+  <div class="sec" style="gap:12px"><h2 style="margin:0;font-size:22px;font-weight:800">Usuarios</h2>${avisoHtml()}
+  ${us === null ? `<p class="vacio">${S.online ? 'Cargando…' : 'Necesitas internet para ver los usuarios.'}</p>` : `
+    <div class="lista">${us.map(u => `<button class="fila" data-a="usuario" data-id="${u.id}"><span class="col"><span class="t1">${esc(u.nombre || u.usuario)}</span>
+      <span class="t2">${esc(u.usuario)} · ${u.rol === 'admin' ? 'Administración' : esc(nomT(u.tienda_id))}</span></span>
+      <span class="t2 ${u.activo ? 'verde' : 'rojo'}" style="font-weight:600">${u.activo ? 'Activo' : 'Inactivo'}</span></button>`).join('')}</div>
+    <button class="b n" data-a="usuario" data-id="">Nuevo usuario</button>`}</div>`;
+}
+function vistaUsuario() {
+  const f = S.f; const d = D(); const ts = (d && d.tiendas) || [];
+  const esAdm = f.rol === 'admin';
+  return `<div class="form"><div><h2>${f.id ? 'Editar usuario' : 'Nuevo usuario'}</h2><p class="sub">${esAdm ? 'Administración' : 'Encargada de tienda'}</p></div>
+    <label class="campo">Nombre<input type="text" data-f="nombre" value="${esc(f.nombre)}" autocomplete="off"></label>
+    <label class="campo">Usuario<input type="text" data-f="usuario" value="${esc(f.usuario)}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label>
+    <label class="campo">Contraseña<input type="text" data-f="pass" value="${esc(f.pass)}" placeholder="${f.id ? 'Déjala vacía para no cambiarla' : 'Mínimo 4 caracteres'}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label>
+    ${esAdm ? '' : `<label class="campo">Tienda<select data-f="tienda">${ts.map(t => `<option value="${esc(t.id)}" ${t.id === f.tienda ? 'selected' : ''}>${esc(t.nombre)}</option>`).join('')}</select></label>
+    <label class="tog"><span>Activo</span><input type="checkbox" data-f="activo" ${f.activo ? 'checked' : ''}></label>`}
+    ${errHtml()}${botones('guardarUsuario', 'Guardar', 'n').replace('data-a="home"', 'data-a="usuarios"')}</div>`;
+}
+async function cargarUsuarios() {
+  try { S.usuarios = await rpc('ce_usuarios_lista', { p_token: S.ses.token }); }
+  catch (e) { if (e.sesion) return sesionVencida(); if (!e.offline) S.aviso = e.message; else S.online = false; }
+  if (S.view === 'usuarios') render();
+}
+
+// ---------- entrar ----------
+function vistaLogin() {
+  const crear = S.hayAdmin === false;
+  return `<div class="login"><div class="marca"><img src="icono-192.png" alt=""><h1>Control de Efectivo</h1>
+    <p>${crear ? 'Primera vez: crea el usuario de administración.' : 'Distribuidora Hernández'}</p></div>
+  <div class="form">
+    ${crear ? `<label class="campo">Tu nombre<input type="text" data-f="nombre" value="${esc(S.f.nombre)}" autocomplete="name"></label>` : ''}
+    <label class="campo">Usuario<input type="text" data-f="usuario" value="${esc(S.f.usuario)}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"></label>
+    <label class="campo">Contraseña<input type="password" data-f="pass" value="${esc(S.f.pass)}" autocomplete="${crear ? 'new-password' : 'current-password'}"></label>
+    ${crear ? `<label class="campo">Repite la contraseña<input type="password" data-f="pass2" value="${esc(S.f.pass2)}" autocomplete="new-password"></label>` : ''}
+    ${errHtml()}
+    <button class="b g" data-a="${crear ? 'crearAdmin' : 'entrar'}" id="btnEntrar">${crear ? 'Crear y entrar' : 'Entrar'}</button>
+  </div></div>`;
+}
+async function revisarAdmin() {
+  try { S.hayAdmin = await rpc('ce_hay_admin', {}); } catch (e) { S.hayAdmin = null; }
+  if (S.view === 'login') render();
+}
+async function trasEntrar(r) {
+  S.ses = { token: r.token, usuario: r.usuario, nombre: r.nombre, rol: r.rol, tienda_id: r.tienda_id };
+  LS.set('ce_sesion', S.ses); S.ultUsuario = r.usuario; LS.set('ce_ult_usuario', r.usuario);
+  S.f = {}; S.err = ''; S.view = 'home'; S.lim = Object.assign({}, LIM0);
+  render(); sync();
+}
+
+// ---------- acciones ----------
+function abrir(view, f) { S.view = view; S.f = f || {}; S.err = ''; S.swiped = null; render(); window.scrollTo(0, 0); }
+const A = {
+  home() { abrir('home'); sync(); },
+  salir() {
+    const n = cola().length;
+    if (n && !confirm('Hay ' + n + ' registro(s) sin enviar. Si sales ahora se pierden. ¿Salir de todos modos?')) return;
+    if (!n && !confirm('¿Salir de la app?')) return;
+    const tok = S.ses && S.ses.token;
+    if (tok) rpc('ce_salir', { p_token: tok }).catch(() => {});
+    if (S.ses) { LS.del(keyCola()); Object.keys(localStorage).filter(k => k.startsWith('ce_datos_' + S.ses.usuario + '_')).forEach(k => LS.del(k)); }
+    S.ses = null; LS.del('ce_sesion'); S.view = 'login'; S.f = { usuario: S.ultUsuario }; S.err = ''; render(); revisarAdmin();
+  },
+  tienda(el) { S.tienda = el.dataset.id; LS.set('ce_tienda_admin', S.tienda); S.lim = Object.assign({}, LIM0); S.swiped = null; render(); sync(); },
+  quitarAviso() { S.aviso = ''; render(); },
+  mas(el) { S.lim[el.dataset.k] += 5; render(); },
+  abrir(el) { const id = el.dataset.id; S.abiertos[id] = !S.abiertos[id]; S.swiped = null; render(); },
+  reporte() { if (!S.rDesde) ponerPeriodo('60'); S.flash = ''; abrir('reporte'); },
+  per(el) { ponerPeriodo(el.dataset.p); render(); },
+  pdf() { hacerPdf(); },
+  usuarios() { S.usuarios = null; abrir('usuarios'); cargarUsuarios(); },
+  usuario(el) {
+    const id = el.dataset.id; const d = D();
+    if (!id) return abrir('usuario', { id: null, nombre: '', usuario: '', pass: '', tienda: S.tienda || ((d && d.tiendas && d.tiendas[0] || {}).id), activo: true, rol: 'tienda' });
+    const u = (S.usuarios || []).find(x => x.id === id); if (!u) return;
+    abrir('usuario', { id: u.id, nombre: u.nombre, usuario: u.usuario, pass: '', tienda: u.tienda_id, activo: u.activo, rol: u.rol });
+  },
+  async guardarUsuario() {
+    const f = S.f; const b = $('[data-a="guardarUsuario"]'); if (b) b.disabled = true;
+    try {
+      await rpc('ce_guardar_usuario', { p_token: S.ses.token, p_id: f.id || null, p_usuario: f.usuario, p_nombre: f.nombre, p_pass: f.pass || '',
+        p_tienda: f.rol === 'admin' ? null : f.tienda, p_activo: f.rol === 'admin' ? true : !!f.activo });
+      S.usuarios = null; abrir('usuarios'); cargarUsuarios();
+    } catch (e) {
+      if (e.sesion) return sesionVencida();
+      S.err = e.offline ? 'Necesitas internet para guardar usuarios.' : e.message; render();
+    }
+  },
+  async entrar() {
+    const f = S.f; S.err = '';
+    if (!f.usuario || !f.pass) { S.err = 'Escribe tu usuario y contraseña.'; return render(); }
+    const b = $('#btnEntrar'); if (b) { b.disabled = true; b.textContent = 'Entrando…'; }
+    try {
+      const r = await rpc('ce_login', { p_usuario: f.usuario, p_pass: f.pass });
+      if (r && r.error) { S.err = r.error; return render(); }
+      trasEntrar(r);
+    } catch (e) { S.err = e.offline ? 'Necesitas internet para entrar la primera vez.' : e.message; render(); }
+  },
+  async crearAdmin() {
+    const f = S.f; S.err = '';
+    if (!f.usuario || !f.pass) { S.err = 'Escribe usuario y contraseña.'; return render(); }
+    if (f.pass !== f.pass2) { S.err = 'Las contraseñas no son iguales.'; return render(); }
+    const b = $('#btnEntrar'); if (b) b.disabled = true;
+    try { trasEntrar(await rpc('ce_crear_admin', { p_usuario: f.usuario, p_nombre: f.nombre || '', p_pass: f.pass })); }
+    catch (e) { S.err = e.offline ? 'Necesitas internet.' : e.message; render(); }
+  },
+
+  // tienda
+  venta() { abrir('venta', { fecha: hoyGT(), monto: '' }); },
+  guardarVenta() {
+    const d = D(); const f = S.f; const m = n2(num(f.monto)); const hoy = hoyGT();
+    if (!d) return;
+    if (!f.fecha) { S.err = 'Escoge el día.'; return render(); }
+    if (f.fecha > hoy) { S.err = 'No se puede anotar un día que todavía no pasa.'; return render(); }
+    if (!(m > 0)) { S.err = 'Escribe un monto mayor a 0.'; return render(); }
+    const id = uuid(), ahora = new Date().toISOString();
+    d.ventas.push({ id, fecha: f.fecha, monto: m, quien: S.ses.nombre || S.ses.usuario, entrega_id: null, creado_en: ahora }); setD(d);
+    encolar('ce_venta', { p_id: id, p_fecha: f.fecha, p_monto: m, p_creado: ahora });
+    avisar('Venta anotada · ' + fmt(m)); abrir('home'); sync();
+  },
+  corregir(el) { const d = D(); const v = d && d.ventas.find(x => x.id === el.dataset.id); if (!v) return; abrir('corregir', { id: v.id, monto: fmtInput(String(v.monto)) }); },
+  guardarCorreccion() {
+    const d = D(); const v = d && d.ventas.find(x => x.id === S.f.id); const m = n2(num(S.f.monto));
+    if (!v) return;
+    if (v.entrega_id || v.fecha !== hoyGT()) { S.err = 'Solo se pueden corregir las ventas de hoy.'; return render(); }
+    if (!(m > 0)) { S.err = 'Escribe un monto mayor a 0.'; return render(); }
+    if (m === Number(v.monto)) return abrir('home');
+    v.monto = m; setD(d);
+    encolar('ce_corregir', { p_venta: v.id, p_monto: m, p_creado: new Date().toISOString() });
+    avisar('Venta corregida · ' + fmt(m)); abrir('home'); sync();
+  },
+  entrega() { abrir('entrega', { sel: {} }); },
+  guardarEntrega() {
+    const d = D(); if (!d) return;
+    const vs = d.ventas.filter(v => !v.entrega_id && S.f.sel[v.id]);
+    if (!vs.length) { S.err = 'Marca al menos una venta.'; return render(); }
+    const id = uuid(), ahora = new Date().toISOString(), total = n2(vs.reduce((a, v) => a + Number(v.monto), 0));
+    vs.forEach(v => { v.entrega_id = id; });
+    d.entregas.push({ id, fecha_envio: hoyGT(), total, quien: S.ses.nombre || S.ses.usuario, estado: 'enviado', fecha_recibido: null, creado_en: ahora }); setD(d);
+    encolar('ce_entregar', { p_id: id, p_ventas: vs.map(v => v.id), p_creado: ahora });
+    avisar('Entrega enviada · ' + fmt(total)); abrir('home'); sync();
+  },
+
+  // administración
+  aceptar(el) {
+    const d = D(); const e = d && d.entregas.find(x => x.id === el.dataset.id); if (!e) return;
+    e.estado = 'recibido'; e.fecha_recibido = hoyGT(); setD(d);
+    encolar('ce_aceptar', { p_entrega: e.id });
+    avisar('Recibido · −' + fmt(e.total)); render(); sync();
+  },
+  ingreso() { abrir('ingreso', { id: null, factura: '', fecha: hoyGT(), monto: '' }); },
+  editarIng(el) { const d = D(); const i = d && d.ingresos.find(x => x.id === el.dataset.id); if (!i) return; abrir('ingreso', { id: i.id, factura: i.factura, fecha: i.fecha, monto: fmtInput(String(i.monto)) }); },
+  guardarIngreso() {
+    const d = D(); const f = S.f; const m = n2(num(f.monto)); const fac = String(f.factura || '').trim();
+    if (!d) return;
+    if (!fac) { S.err = 'Escribe el número de factura.'; return render(); }
+    if (!f.fecha) { S.err = 'Escoge la fecha.'; return render(); }
+    if (!(m > 0)) { S.err = 'Escribe un monto mayor a 0.'; return render(); }
+    const id = f.id || uuid();
+    const ex = d.ingresos.find(x => x.id === id);
+    if (ex) { ex.factura = fac; ex.fecha = f.fecha; ex.monto = m; } else d.ingresos.push({ id, factura: fac, fecha: f.fecha, monto: m, creado_en: new Date().toISOString() });
+    setD(d);
+    encolar('ce_ingreso', { p_tienda: tk(), p_id: id, p_factura: fac, p_fecha: f.fecha, p_monto: m });
+    avisar(ex ? 'Factura ' + fac + ' editada · ' + fmt(m) : 'Ingreso nuevo · +' + fmt(m)); abrir('home'); sync();
+  },
+  ajustes() { const d = D(); if (!d) return; abrir('ajustes', { saldo: fmtInput(String(d.tienda.saldo_ini)), fecha: d.tienda.fecha_ini, tope: fmtInput(String(d.tienda.tope)) }); },
+  guardarAjustes() {
+    const d = D(); const f = S.f; const s = num(f.saldo), t = num(f.tope);
+    if (!d) return;
+    if (!(s >= 0)) { S.err = 'Escribe el saldo inicial.'; return render(); }
+    if (!f.fecha) { S.err = 'Escoge la fecha.'; return render(); }
+    if (!(t > 0)) { S.err = 'Escribe un tope mayor a 0.'; return render(); }
+    d.tienda.saldo_ini = n2(s); d.tienda.fecha_ini = f.fecha; d.tienda.tope = n2(t); setD(d);
+    encolar('ce_ajustes', { p_tienda: tk(), p_saldo: n2(s), p_fecha: f.fecha, p_tope: n2(t) });
+    avisar('Saldo y tope guardados'); abrir('home'); sync();
+  }
+};
+
+// ---------- render ----------
+function render() {
+  const app = $('#app');
+  if (!S.ses) { app.innerHTML = vistaLogin(); return; }
+  const v = {
+    home: () => esAdmin() ? vistaAdmin() : vistaTienda(), venta: vistaVenta, corregir: vistaCorregir, entrega: vistaEntrega,
+    ingreso: vistaIngreso, ajustes: vistaAjustes, reporte: vistaReporte, usuarios: vistaUsuarios, usuario: vistaUsuario
+  }[S.view] || (() => '');
+  app.innerHTML = cabecera() + '<main>' + v() + '</main>';
+}
+
+// ---------- eventos ----------
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-a]'); if (!el) {
+    if (S.swiped && !e.target.closest('.sw')) { S.swiped = null; document.querySelectorAll('.sw.abierta').forEach(x => x.classList.remove('abierta')); }
+    return;
+  }
+  const fn = A[el.dataset.a]; if (fn) { e.preventDefault(); fn(el); }
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.f) {
+    if (el.type === 'checkbox') S.f[el.dataset.f] = el.checked;
+    else if (el.hasAttribute('data-dinero')) { const v = fmtInput(el.value); if (v !== el.value) el.value = v; S.f[el.dataset.f] = v; }
+    else S.f[el.dataset.f] = el.value;
+    if (S.view === 'venta' && el.dataset.f === 'fecha') { const n = $('#notaTarde'); if (n) n.hidden = !(el.value && el.value < hoyGT()); }
+    if (S.err) { S.err = ''; const x = document.querySelector('.err'); if (x) x.remove(); }
+  }
+  if (el.dataset.sel) { S.f.sel = S.f.sel || {}; S.f.sel[el.dataset.sel] = el.checked; const t = $('#selTotal'); if (t) t.textContent = fmt(totalSel()); }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.f && (el.type === 'checkbox' || el.tagName === 'SELECT' || el.type === 'date')) {
+    S.f[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value;
+    if (S.view === 'venta' && el.dataset.f === 'fecha') { const n = $('#notaTarde'); if (n) n.hidden = !(el.value && el.value < hoyGT()); }
+  }
+  if (el.dataset.r) { S[el.dataset.r] = el.value; render(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('.login input')) { const b = $('#btnEntrar'); if (b) b.click(); }
+});
+// Deslizar una factura a la izquierda: aparece "Editar"
+let _sx = null, _sid = null;
+document.addEventListener('pointerdown', e => { const r = e.target.closest('[data-swipe]'); _sid = r ? r.dataset.swipe : null; _sx = e.clientX; });
+document.addEventListener('pointerup', e => {
+  if (!_sid) return; const dx = e.clientX - _sx; const id = _sid; _sid = null;
+  if (dx < -35) S.swiped = id; else if (dx > 35 || (Math.abs(dx) < 6 && S.swiped === id)) S.swiped = null; else return;
+  document.querySelectorAll('.sw').forEach(x => { const f = x.querySelector('[data-swipe]'); const on = f && f.dataset.swipe === S.swiped;
+    x.classList.toggle('abierta', on); const b = x.querySelector('.accion'); if (b) b.tabIndex = on ? 0 : -1; });
+});
+document.addEventListener('pointercancel', () => { _sid = null; });
+
+window.addEventListener('online', () => { S.online = true; sync(); });
+window.addEventListener('offline', () => { S.online = false; pintarCab(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sync(); });
+setInterval(() => { if (document.visibilityState === 'visible') sync(); }, 30000);
+
+// Guardar la app en el celular para que abra sin internet
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// Arranque
+if (!S.ses) { S.view = 'login'; S.f = { usuario: S.ultUsuario }; revisarAdmin(); }
+render();
+sync();
+</script>
+</body>
+</html>

@@ -43,3 +43,14 @@ select
      where schemaname = 'public' and ('anon' = any(roles) or 'public' = any(roles))) as reglas_para_anon,
   (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace
      where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity) as tablas_sin_reglas;
+
+-- 5) Control de Efectivo (efectivo/, supabase/efectivo.sql) entra con la clave pública, pero SOLO por sus
+--    funciones ce_ (cada una revisa su propio usuario y contraseña). El paso 3 se las quita; aquí se devuelven.
+do $$
+declare f record;
+begin
+  for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' and p.proname like 'ce\_%' loop
+    execute format('grant execute on function %s to anon, authenticated', f.sig);
+  end loop;
+end $$;

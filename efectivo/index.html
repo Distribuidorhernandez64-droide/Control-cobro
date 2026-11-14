@@ -133,7 +133,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-14.1';
+const VERSION = '2026-11-14.2';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -173,6 +173,8 @@ const diaCorto = s => ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dow(s)] + ' 
 const ICO = {
   salir: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
   usuarios: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  cel: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></svg>',
+  cerrar: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>',
   ojo: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
   chev: '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA59F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
   atras: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
@@ -187,7 +189,7 @@ const S = {
   view: 'home', f: {}, err: '', flash: '', aviso: '',
   tienda: LS.get('ce_tienda_admin', 'canasta'),
   lim: Object.assign({}, LIM0), abiertos: {}, swiped: null,
-  rPer: '60', rDesde: '', rHasta: '',
+  rPer: '60', rDesde: '', rHasta: '', preview: false,
   online: navigator.onLine, enviando: false, hayAdmin: null,
   usuarios: null, ultUsuario: LS.get('ce_ult_usuario', '')
 };
@@ -292,9 +294,13 @@ function cabecera() {
   if (n) sub = `<span class="off">${S.online ? 'Enviando…' : 'Sin internet · ' + n + ' por enviar'}</span>`;
   else if (!S.online) sub = '<span class="off">Sin internet</span>';
   else if (!esAdmin()) sub = `<span>${esc(S.ses.nombre || S.ses.usuario)}</span>`;
-  const titulo = esAdmin() ? 'Administración' : (d ? d.tienda.nombre : 'Tienda');
-  const ico = esAdmin()
-    ? `<button class="ib" data-a="usuarios" aria-label="Usuarios">${ICO.usuarios}</button><button class="ib" data-a="salir" aria-label="Salir">${ICO.salir}</button>`
+  const prev = esAdmin() && S.preview && S.view === 'home';
+  if (prev && !n && S.online) sub = '<span>Vista de la encargada</span>';
+  const titulo = prev ? (d ? d.tienda.nombre : 'Tienda') : esAdmin() ? 'Administración' : (d ? d.tienda.nombre : 'Tienda');
+  const ico = prev
+    ? `<button class="ib" data-a="cerrarPreview" aria-label="Cerrar vista de la encargada">${ICO.cerrar}</button>`
+    : esAdmin()
+    ? `<button class="ib" data-a="preview" aria-label="Ver como la encargada">${ICO.cel}</button><button class="ib" data-a="usuarios" aria-label="Usuarios">${ICO.usuarios}</button><button class="ib" data-a="salir" aria-label="Salir">${ICO.salir}</button>`
     : `<button class="ib" data-a="salir" aria-label="Salir">${ICO.salir}</button>`;
   let seg = '';
   if (esAdmin() && S.view === 'home') {
@@ -321,18 +327,19 @@ const avisoHtml = () => S.aviso ? `<button class="aviso" data-a="quitarAviso">${
 const masBtn = (k, total) => total > S.lim[k] ? `<button class="mas" data-a="mas" data-k="${k}">Ver más</button>` : '';
 const cargando = () => `<p class="vacio" style="text-align:center">${S.online ? 'Cargando…' : 'Sin internet. Conéctate una vez para cargar los datos.'}</p>`;
 
-function vistaTienda() {
+function vistaTienda(prev) {
   const d = D(); if (!d) return cargando();
+  const dis = prev ? ' aria-disabled="true"' : '';
   const hoy = hoyGT();
   const sin = d.ventas.filter(v => !v.entrega_id).sort(recientePrimero('fecha'));
   const totSin = n2(sin.reduce((a, v) => a + Number(v.monto), 0));
   const ents = d.entregas.slice().sort(recientePrimero('fecha_envio'));
   const ings = d.ingresos.slice().sort(recientePrimero('fecha'));
-  return `${avisoHtml()}${tarjetaBalance(d, true)}
-  <div class="dos"><button class="b g grande" data-a="venta">Anotar venta</button><button class="b n grande" data-a="entrega">Entregar dinero</button></div>
+  return `${prev ? '<p class="nota" style="text-align:center;margin:-8px 0 -10px">Así ve la pantalla la encargada. Los botones no hacen nada aquí.</p>' : avisoHtml()}${tarjetaBalance(d, true)}
+  <div class="dos"><button class="b g grande" data-a="venta"${dis}>Anotar venta</button><button class="b n grande" data-a="entrega"${dis}>Entregar dinero</button></div>
   <section class="sec"><div class="sech"><h2>Ventas sin entregar</h2><span class="der">${fmt(totSin)}</span></div>
     <div class="lista">${sin.length ? sin.slice(0, S.lim.sin).map(v => `<div class="fila"><span>${dia(v.fecha)}</span>
-      <span style="display:flex;align-items:center;gap:10px"><span class="mn" style="font-weight:600">${fmt(v.monto)}</span>${v.fecha === hoy ? `<button class="chip" data-a="corregir" data-id="${v.id}">Corregir</button>` : ''}</span></div>`).join('')
+      <span style="display:flex;align-items:center;gap:10px"><span class="mn" style="font-weight:600">${fmt(v.monto)}</span>${v.fecha === hoy ? `<button class="chip" data-a="corregir" data-id="${v.id}"${dis}>Corregir</button>` : ''}</span></div>`).join('')
       : '<p class="vacio">Todo está entregado.</p>'}${masBtn('sin', sin.length)}</div></section>
   <section class="sec"><div class="sech"><h2>Entregas</h2></div>
     <div class="lista">${ents.length ? ents.slice(0, S.lim.ent).map(e => {
@@ -616,6 +623,8 @@ const A = {
   },
   tienda(el) { S.tienda = el.dataset.id; LS.set('ce_tienda_admin', S.tienda); S.lim = Object.assign({}, LIM0); S.swiped = null; render(); sync(); },
   quitarAviso() { S.aviso = ''; render(); },
+  preview() { S.preview = true; S.swiped = null; S.lim = Object.assign({}, LIM0); render(); window.scrollTo(0, 0); },
+  cerrarPreview() { S.preview = false; S.lim = Object.assign({}, LIM0); render(); window.scrollTo(0, 0); },
   mas(el) { S.lim[el.dataset.k] += 5; render(); },
   abrir(el) { const id = el.dataset.id; S.abiertos[id] = !S.abiertos[id]; S.swiped = null; render(); },
   reporte() { if (!S.rDesde) ponerPeriodo('60'); S.flash = ''; abrir('reporte'); },
@@ -734,7 +743,7 @@ function render() {
   const app = $('#app');
   if (!S.ses) { app.innerHTML = vistaLogin(); return; }
   const v = {
-    home: () => esAdmin() ? vistaAdmin() : vistaTienda(), venta: vistaVenta, corregir: vistaCorregir, entrega: vistaEntrega,
+    home: () => esAdmin() ? (S.preview ? vistaTienda(true) : vistaAdmin()) : vistaTienda(false), venta: vistaVenta, corregir: vistaCorregir, entrega: vistaEntrega,
     ingreso: vistaIngreso, ajustes: vistaAjustes, reporte: vistaReporte, usuarios: vistaUsuarios, usuario: vistaUsuario
   }[S.view] || (() => '');
   app.innerHTML = cabecera() + '<main>' + v() + '</main>';
@@ -746,6 +755,7 @@ document.addEventListener('click', e => {
     if (S.swiped && !e.target.closest('.sw')) { S.swiped = null; document.querySelectorAll('.sw.abierta').forEach(x => x.classList.remove('abierta')); }
     return;
   }
+  if (el.disabled || el.getAttribute('aria-disabled') === 'true') return;
   const fn = A[el.dataset.a]; if (fn) { e.preventDefault(); fn(el); }
 });
 document.addEventListener('input', e => {

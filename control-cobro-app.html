@@ -3373,7 +3373,7 @@ function rpAbrir(){
         <label class="rp-l">Vendedor<select id="rpVen">${rpOpciones()}</select></label>
         <div class="rp-2"><label class="rp-l">Desde<input type="date" id="rpDe" value="${h}" max="${h}"></label><label class="rp-l">Hasta<input type="date" id="rpA" value="${h}" max="${h}"></label></div>
         <button class="pv-btn" id="rpBtnM" onclick="rpMapa()">PDF</button>
-        <div class="rm-omw rp-kml"><button class="btn rm-om" id="rpBtnK" onclick="rpKml()">${ICO_PIN}Archivo Organic Maps</button><button class="btn sec rm-omc" id="rpBtnKc" onclick="rpKml(true)" aria-label="Compartir el archivo">${ICO_COMPARTIR}</button></div></div>
+        <div class="rm-omw rp-kml"><button class="btn rm-om" id="rpBtnK" onclick="rpKml()">${ICO_PIN}Archivo Organic Maps</button></div></div>
       <div class="rp-est" id="rpEst"></div>
     </div>`;
   rpCargarVendedores();
@@ -3410,10 +3410,11 @@ async function rpGenerar(btn,fila,nombre){
     await csCargarPdf();
     const doc=monRepPdf(r),n=nombre(r);doc.setProperties({title:n.replace(/\.pdf$/,'')});
     rpEstado('');
-    const blob=doc.output('blob');
-    try{const file=new File([blob],n,{type:'application/pdf'});
-      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:n.replace(/\.pdf$/,'')});return;}}catch(e){if(e&&e.name==='AbortError')return;}
-    doc.save(n);
+    // 13/11/2026: primero la vista previa del PDF (en el iPhone, la del sistema con su botón de compartir); de ahí
+    // César decide si lo comparte. Antes se iba directo al menú de compartir.
+    const f=new File([doc.output('blob')],n,{type:'application/pdf'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=n;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},60000);
   }catch(e){rpEstado(e.message||'No se pudo',true);}
   finally{RP.ocupado=false;if(b){b.disabled=false;b.textContent=txt;}}
 }
@@ -4442,7 +4443,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-10.5';
+const VERSION='2026-11-13.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

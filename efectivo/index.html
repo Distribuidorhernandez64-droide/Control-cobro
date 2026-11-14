@@ -32,6 +32,12 @@ header{position:sticky;top:0;z-index:5;background:#FFFFFF;border-bottom:1px soli
 .seg.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
 .seg button{height:34px;border:0;border-radius:8px;font-size:13px;font-weight:600;background:transparent;color:#5C6862}
 .seg button.on{background:#FFFFFF;color:#16211C;box-shadow:0 1px 2px rgba(22,33,28,.12)}
+.seg.tiendas{background:var(--t-seg,#EEF0EE)}
+.seg.tiendas button{display:flex;align-items:center;justify-content:center;gap:7px;height:38px;font-size:14px}
+.seg.tiendas button svg{opacity:.55}
+.seg.tiendas button.on{color:var(--t-c,#16211C);box-shadow:0 1px 3px var(--t-sh,rgba(22,33,28,.12))}
+.seg.tiendas button.on svg{opacity:1}
+header.tinta{background:var(--t-bg,#FFFFFF);border-bottom-color:var(--t-borde,#E6E9E7);transition:background .25s}
 main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:24px}
 .bal{border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px}
 .bal.ok{background:#E1F1E8;color:#0F3D2A}.bal.alto{background:#FBE4E1;color:#7A1A12}
@@ -133,7 +139,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-14.2';
+const VERSION = '2026-11-14.3';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -181,6 +187,15 @@ const ICO = {
   bajar: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>',
   flecha: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA59F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom:4px"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>'
 };
+
+// Cada tienda con su color e ícono (solo en administración, para no confundirse de tienda)
+const TEMA = {
+  canasta: { c: '#A8473A', bg: '#FCF3F0', seg: '#F6E3DE', borde: '#F0DCD6', sh: 'rgba(168,71,58,.22)',
+    ico: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10h17"/><path d="M5 10l1.4 8.4A2 2 0 0 0 8.4 20h7.2a2 2 0 0 0 2-1.6L19 10"/><path d="M8.5 10l3-6"/><path d="M15.5 10l-3-6"/><path d="M10 13.5v3.5"/><path d="M14 13.5v3.5"/></svg>' },
+  morelia: { c: '#2F7353', bg: '#F1F8F3', seg: '#DDEEE3', borde: '#D6E8DC', sh: 'rgba(47,115,83,.22)',
+    ico: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 21c.2-4.2-.3-7.6-1.6-10.4"/><path d="M11.4 10.6C9.6 8 6.4 7.4 3.6 8.6c2.6.1 4.8 1.2 6.2 3"/><path d="M11.4 10.6c.8-2.9 3.6-4.7 6.8-4.4-2.3.7-4 2.2-4.9 4.2"/><path d="M11.4 10.6c-2.9-.4-5.6 1.1-6.9 3.7 1.9-1.1 4-1.5 6-1.1"/><path d="M11.4 10.6c2.8-.6 5.7.6 7.2 3.1-2-.9-4.1-1.1-6-.6"/><path d="M8 21h9"/></svg>' }
+};
+const temaVars = t => t ? `--t-c:${t.c};--t-bg:${t.bg};--t-seg:${t.seg};--t-borde:${t.borde};--t-sh:${t.sh}` : '';
 
 // ---------- estado ----------
 const LIM0 = { sin: 3, ent: 3, ing: 3, mov: 5, cam: 3 };
@@ -305,9 +320,11 @@ function cabecera() {
   let seg = '';
   if (esAdmin() && S.view === 'home') {
     const ts = (d && d.tiendas) || [{ id: 'canasta', nombre: 'Tienda La Canasta' }, { id: 'morelia', nombre: 'Tienda Morelia' }];
-    seg = `<div class="seg">${ts.map(t => `<button data-a="tienda" data-id="${esc(t.id)}" class="${t.id === S.tienda ? 'on' : ''}">${esc(t.nombre.replace(/^Tienda\s+/i, ''))}</button>`).join('')}</div>`;
+    seg = `<div class="seg tiendas">${ts.map(t => `<button data-a="tienda" data-id="${esc(t.id)}" class="${t.id === S.tienda ? 'on' : ''}" aria-pressed="${t.id === S.tienda}">${TEMA[t.id] ? TEMA[t.id].ico : ''}<span>${esc(t.nombre.replace(/^Tienda\s+/i, ''))}</span></button>`).join('')}</div>`;
   }
-  return `<header><div class="hrow"><div class="htit"><h1>${esc(titulo)}</h1>${sub}</div><div class="hico">${ico}</div></div>${seg}</header>`;
+  // En administración el encabezado toma el color de la tienda que se está viendo
+  const tema = esAdmin() && ['home', 'ingreso', 'ajustes', 'reporte'].includes(S.view) ? TEMA[S.tienda] : null;
+  return `<header class="${tema ? 'tinta' : ''}" style="${temaVars(tema)}"><div class="hrow"><div class="htit"><h1>${esc(titulo)}</h1>${sub}</div><div class="hico">${ico}</div></div>${seg}</header>`;
 }
 function pintarCab() {
   const h = document.querySelector('header'); if (!h || !S.ses) return;

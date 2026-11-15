@@ -72,6 +72,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .mn{font-size:14px;font-weight:700;white-space:nowrap}
 .verde{color:#145238}.rojo{color:#B42318}.vino{color:#9A2A1F}
 .tarde{color:#B42318;font-weight:600}
+.tc{margin-left:6px;padding:1px 5px;border-radius:5px;background:#FDF0DC;color:#8A4B0B;font-size:11px;font-weight:700}
 .tg{margin-left:6px;padding:1px 5px;border-radius:5px;background:#FBE4E1;color:#B42318;font-size:11px;font-weight:700;letter-spacing:.2px}
 #app.marco::before{content:'';position:fixed;inset:0;border:3px solid var(--t-c);pointer-events:none;z-index:20}
 .chev{transition:transform .2s;flex:none}
@@ -142,7 +143,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-14.5';
+const VERSION = '2026-11-14.6';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -201,7 +202,7 @@ const TEMA = {
 const temaVars = t => t ? `--t-c:${t.c};--t-bg:${t.bg};--t-seg:${t.seg};--t-borde:${t.borde};--t-sh:${t.sh}` : '';
 
 // ---------- estado ----------
-const LIM0 = { sin: 3, ent: 3, ing: 3, mov: 5, cam: 3 };
+const LIM0 = { sin: 3, ent: 3, ing: 3, mov: 5, cam: 3, adm: 5 };
 const S = {
   ses: LS.get('ce_sesion', null),           // {token, usuario, nombre, rol, tienda_id}
   view: 'home', f: {}, err: '', flash: '', aviso: '',
@@ -312,6 +313,11 @@ const diasTarde = v => { const a = diaDe(v.creado_en).split('-').map(Number), b 
 const tg = v => `<span class="tg" title="Anotado ${diasTarde(v)} día(s) después">${diasTarde(v)}D</span>`;
 const diaMarca = (v, ok) => ok && esTarde(v) ? `<span class="tarde">${dia(v.fecha)}</span>${tg(v)}` : dia(v.fecha);
 const diasCortoMarca = (d, eid, ok) => ventasDe(d, eid).map(v => ok && esTarde(v) ? `<span class="tarde">${diaCorto(v.fecha)}</span>${tg(v)}` : diaCorto(v.fecha)).join(', ');
+// Correcciones de una venta, juntas: el monto que tenía al anotarla y quién la cambió por última vez
+const correccionesDe = (d, v) => (d.cambios || []).filter(c => c.tipo === 'correccion' && c.venta_id === v.id).sort((a, b) => a.id - b.id);
+const tc = (d, v) => correccionesDe(d, v).length ? '<span class="tc">Corrigió</span>' : '';
+const corrLinea = (d, v) => { const cs = correccionesDe(d, v); if (!cs.length) return '';
+  const u = cs[cs.length - 1]; return `<span class="t2">Antes ${fmt(cs[0].antes)} · ${esc(u.quien)} ${horaDe(u.cuando)}${cs.length > 1 ? ' · ' + cs.length + ' cambios' : ''}</span>`; };
 const recientePrimero = k => (a, b) => (a[k] < b[k] ? 1 : a[k] > b[k] ? -1 : (a.creado_en < b.creado_en ? 1 : a.creado_en > b.creado_en ? -1 : 0));
 
 // ---------- pintar ----------
@@ -389,17 +395,19 @@ function vistaAdmin() {
   const movs = d.ingresos.map(i => ({ tipo: 'ing', id: i.id, fecha: i.fecha, creado_en: i.creado_en, o: i }))
     .concat(d.entregas.filter(e => e.estado === 'recibido').map(e => ({ tipo: 'rec', id: e.id, fecha: e.fecha_recibido, creado_en: e.creado_en, o: e })))
     .sort(recientePrimero('fecha'));
-  const cams = (d.cambios || []).filter(c => c.tipo === 'correccion').sort((a, b) => b.id - a.id);   // lo anotado tarde va marcado en rojo junto al día
+  const hoy = hoyGT();
+  const sin = d.ventas.filter(v => !v.entrega_id).sort(recientePrimero('fecha'));
+  const hayHoy = d.ventas.some(v => v.fecha === hoy);
   return `${avisoHtml()}${tarjetaBalance(d, false)}
   ${pend.length ? `<section class="sec"><div class="sech"><h2 class="rojo">Pendiente de recibir</h2></div>
-    ${pend.map(e => `<div class="pend">${ventasDe(d, e.id).map(v => `<div class="d"><span>${diaMarca(v, true)}</span><span>${fmt(v.monto)}</span></div>`).join('')}
+    ${pend.map(e => `<div class="pend">${ventasDe(d, e.id).map(v => `<div class="d"><span>${diaMarca(v, true)}${tc(d, v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}
       <div class="tot"><span class="t2">${esc(e.quien)} · ${fdate(e.fecha_envio)}</span><b>${fmt(e.total)}</b></div>
       <button class="b g med" data-a="aceptar" data-id="${e.id}" style="font-weight:700">Aceptar</button></div>`).join('')}</section>` : ''}
+  <section class="sec"><div class="sech"><h2>Ventas sin entregar</h2>${sin.length ? `<span class="der">${fmt(n2(sin.reduce((a, v) => a + Number(v.monto), 0)))}</span>` : ''}</div>
+    <div class="lista">${hayHoy ? '' : `<div class="fila"><span class="col"><span class="t1">${dia(hoy)}</span><span class="t2">Todavía no anota la venta de hoy</span></span></div>`}
+      ${sin.slice(0, S.lim.adm).map(v => `<div class="fila"><span class="col"><span class="t1">${diaMarca(v, true)}${tc(d, v)}</span>${corrLinea(d, v)}</span><span class="mn" style="font-weight:600">${fmt(v.monto)}</span></div>`).join('')}
+      ${!sin.length && hayHoy ? '<p class="vacio">Todo lo anotado ya fue entregado.</p>' : ''}${masBtn('adm', sin.length)}</div></section>
   <div class="dos"><button class="b n med" data-a="ingreso">Ingresar mercadería</button><button class="b l med" data-a="ajustes">Saldo y tope</button></div>
-  ${cams.length ? `<section class="sec"><div class="sech"><h2>Cambios de la tienda</h2></div><div class="lista">
-    ${cams.slice(0, S.lim.cam).map(c => `<div class="fila"><span class="col"><span class="t1">${dia(c.fecha) + ': ' + fmt(c.antes) + ' → ' + fmt(c.despues)}</span>
-      <span class="t2">Corrección · ${esc(c.quien)} · ${horaDe(c.cuando)}</span></span></div>`).join('')}
-    ${masBtn('cam', cams.length)}</div></section>` : ''}
   <section class="sec"><div class="sech"><h2>Últimos movimientos</h2>${d.ingresos.length ? '<span class="tip">Desliza una factura ← para editar</span>' : ''}</div>
     <div class="lista">${movs.length ? movs.slice(0, S.lim.mov).map(m => {
       if (m.tipo === 'ing') return `<div class="sw ${S.swiped === m.id ? 'abierta' : ''}"><button class="accion" data-a="editarIng" data-id="${m.id}" tabindex="${S.swiped === m.id ? 0 : -1}">Editar</button>
@@ -407,7 +415,7 @@ function vistaAdmin() {
       const ab = !!S.abiertos[m.id], vt = tardeVigente(m.o);
       return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${m.id}" aria-expanded="${ab}" style="min-height:58px"><span class="col"><span class="t1">Efectivo recibido</span><span class="t2">${diasCortoMarca(d, m.id, vt)} · ${fdate(m.o.fecha_recibido)}</span></span>
         <span style="display:flex;align-items:center;gap:6px"><span class="mn verde" style="font-size:15px">−${fmt(m.o.total)}</span>${ICO.chev}</span></button>
-        ${ab ? `<div class="det">${ventasDe(d, m.id).map(v => `<div><span>${diaMarca(v, vt)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
+        ${ab ? `<div class="det">${ventasDe(d, m.id).map(v => `<div><span>${diaMarca(v, vt)}${tc(d, v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
     }).join('') : '<p class="vacio">Todavía no hay movimientos.</p>'}${masBtn('mov', movs.length)}</div></section>`;
 }
 

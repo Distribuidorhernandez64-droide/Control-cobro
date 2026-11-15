@@ -240,7 +240,7 @@ begin
                  'creado_en', creado_en) order by fecha, creado_en)
                  from public.ce_ingresos where tienda_id = t), '[]'::json),
     'cambios', case when u.rol = 'admin' then
-        coalesce((select json_agg(json_build_object('id', id, 'tipo', tipo, 'fecha', fecha, 'antes', antes, 'despues', despues,
+        coalesce((select json_agg(json_build_object('id', id, 'tipo', tipo, 'venta_id', venta_id, 'fecha', fecha, 'antes', antes, 'despues', despues,
                  'quien', quien, 'cuando', cuando) order by id)
                  from public.ce_cambios where tienda_id = t), '[]'::json)
       else '[]'::json end

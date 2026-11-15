@@ -72,7 +72,8 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .mn{font-size:14px;font-weight:700;white-space:nowrap}
 .verde{color:#145238}.rojo{color:#B42318}.vino{color:#9A2A1F}
 .tarde{color:#B42318;font-weight:600}
-.tg{margin-left:6px;font-size:11px;font-weight:700;color:#B42318}
+.tg{margin-left:6px;padding:1px 5px;border-radius:5px;background:#FBE4E1;color:#B42318;font-size:11px;font-weight:700;letter-spacing:.2px}
+#app.marco::before{content:'';position:fixed;inset:0;border:3px solid var(--t-c);pointer-events:none;z-index:20}
 .chev{transition:transform .2s;flex:none}
 .abierto .chev{transform:rotate(180deg)}
 .det{padding:0 16px 10px;display:flex;flex-direction:column;border-bottom:1px solid #EEF1EF}
@@ -141,7 +142,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-14.4';
+const VERSION = '2026-11-14.5';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -194,7 +195,7 @@ const ICO = {
 const TEMA = {
   canasta: { c: '#A8473A', bg: '#FCF3F0', seg: '#F6E3DE', borde: '#F0DCD6', sh: 'rgba(168,71,58,.22)',
     ico: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10h17"/><path d="M5 10l1.4 8.4A2 2 0 0 0 8.4 20h7.2a2 2 0 0 0 2-1.6L19 10"/><path d="M8.5 10l3-6"/><path d="M15.5 10l-3-6"/><path d="M10 13.5v3.5"/><path d="M14 13.5v3.5"/></svg>' },
-  morelia: { c: '#2F7353', bg: '#F1F8F3', seg: '#DDEEE3', borde: '#D6E8DC', sh: 'rgba(47,115,83,.22)',
+  morelia: { c: '#335C8E', bg: '#F1F5FA', seg: '#DFE8F3', borde: '#D5E0EE', sh: 'rgba(51,92,142,.22)',
     ico: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 21c.2-4.2-.3-7.6-1.6-10.4"/><path d="M11.4 10.6C9.6 8 6.4 7.4 3.6 8.6c2.6.1 4.8 1.2 6.2 3"/><path d="M11.4 10.6c.8-2.9 3.6-4.7 6.8-4.4-2.3.7-4 2.2-4.9 4.2"/><path d="M11.4 10.6c-2.9-.4-5.6 1.1-6.9 3.7 1.9-1.1 4-1.5 6-1.1"/><path d="M11.4 10.6c2.8-.6 5.7.6 7.2 3.1-2-.9-4.1-1.1-6-.6"/><path d="M8 21h9"/></svg>' }
 };
 const temaVars = t => t ? `--t-c:${t.c};--t-bg:${t.bg};--t-seg:${t.seg};--t-borde:${t.borde};--t-sh:${t.sh}` : '';
@@ -306,8 +307,11 @@ const diasCortoDe = (d, eid) => ventasDe(d, eid).map(v => diaCorto(v.fecha)).joi
 // Se ve mientras el dinero está pendiente y 2 días después de recibirlo; luego se quita.
 const esTarde = v => !!(v.creado_en && diaDe(v.creado_en) > v.fecha);
 const tardeVigente = e => e.estado !== 'recibido' || !!(e.fecha_recibido && e.fecha_recibido >= addDays(hoyGT(), -2));
-const diaMarca = (v, ok) => ok && esTarde(v) ? `<span class="tarde">${dia(v.fecha)}</span><span class="tg">· tarde</span>` : dia(v.fecha);
-const diasCortoMarca = (d, eid, ok) => ventasDe(d, eid).map(v => ok && esTarde(v) ? `<span class="tarde">${diaCorto(v.fecha)}</span>` : diaCorto(v.fecha)).join(', ');
+const diasTarde = v => { const a = diaDe(v.creado_en).split('-').map(Number), b = v.fecha.split('-').map(Number);
+  return Math.round((Date.UTC(a[0], a[1] - 1, a[2]) - Date.UTC(b[0], b[1] - 1, b[2])) / 864e5); };
+const tg = v => `<span class="tg" title="Anotado ${diasTarde(v)} día(s) después">${diasTarde(v)}D</span>`;
+const diaMarca = (v, ok) => ok && esTarde(v) ? `<span class="tarde">${dia(v.fecha)}</span>${tg(v)}` : dia(v.fecha);
+const diasCortoMarca = (d, eid, ok) => ventasDe(d, eid).map(v => ok && esTarde(v) ? `<span class="tarde">${diaCorto(v.fecha)}</span>${tg(v)}` : diaCorto(v.fecha)).join(', ');
 const recientePrimero = k => (a, b) => (a[k] < b[k] ? 1 : a[k] > b[k] ? -1 : (a.creado_en < b.creado_en ? 1 : a.creado_en > b.creado_en ? -1 : 0));
 
 // ---------- pintar ----------
@@ -771,6 +775,8 @@ function render() {
     home: () => esAdmin() ? (S.preview ? vistaTienda(true) : vistaAdmin()) : vistaTienda(false), venta: vistaVenta, corregir: vistaCorregir, entrega: vistaEntrega,
     ingreso: vistaIngreso, ajustes: vistaAjustes, reporte: vistaReporte, usuarios: vistaUsuarios, usuario: vistaUsuario
   }[S.view] || (() => '');
+  const tema = esAdmin() && ['home', 'ingreso', 'ajustes', 'reporte'].includes(S.view) ? TEMA[S.tienda] : null;
+  app.className = tema ? 'marco' : ''; app.style.cssText = temaVars(tema);
   app.innerHTML = cabecera() + '<main>' + v() + '</main>';
 }
 

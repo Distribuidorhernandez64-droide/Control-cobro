@@ -143,7 +143,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-14.7';
+const VERSION = '2026-11-14.8';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -318,6 +318,8 @@ const correccionesDe = (d, v) => (d.cambios || []).filter(c => c.tipo === 'corre
 const tc = (d, v) => correccionesDe(d, v).length ? '<span class="tc">Corrigió</span>' : '';
 const corrLinea = (d, v) => { const cs = correccionesDe(d, v); if (!cs.length) return '';
   const u = cs[cs.length - 1]; return `<span class="t2">Antes ${fmt(cs[0].antes)} · ${esc(u.quien)} ${horaDe(u.cuando)}${cs.length > 1 ? ' · ' + cs.length + ' cambios' : ''}</span>`; };
+const corrLineaTienda = (d, v) => { const cs = correccionesDe(d, v); if (!cs.length) return '';
+  return `<span class="t2">Antes ${fmt(cs[0].antes)} · ${horaDe(cs[cs.length - 1].cuando)}</span>`; };
 const recientePrimero = k => (a, b) => (a[k] < b[k] ? 1 : a[k] > b[k] ? -1 : (a.creado_en < b.creado_en ? 1 : a.creado_en > b.creado_en ? -1 : 0));
 
 // ---------- pintar ----------
@@ -373,7 +375,7 @@ function vistaTienda(prev) {
   return `${prev ? '<p class="nota" style="text-align:center;margin:-8px 0 -10px">Así ve la pantalla la encargada. Los botones no hacen nada aquí.</p>' : avisoHtml()}${tarjetaBalance(d, true)}
   <div class="dos"><button class="b g grande" data-a="venta"${dis}>Anotar venta</button><button class="b n grande" data-a="entrega"${dis}>Entregar dinero</button></div>
   <section class="sec"><div class="sech"><h2>Ventas sin entregar</h2><span class="der">${fmt(totSin)}</span></div>
-    <div class="lista">${sin.length ? sin.slice(0, S.lim.sin).map(v => `<div class="fila"><span>${dia(v.fecha)}</span>
+    <div class="lista">${sin.length ? sin.slice(0, S.lim.sin).map(v => `<div class="fila"><span class="col"><span class="t1" style="font-weight:400">${dia(v.fecha)}${tc(d, v)}</span>${corrLineaTienda(d, v)}</span>
       <span style="display:flex;align-items:center;gap:10px"><span class="mn" style="font-weight:600">${fmt(v.monto)}</span>${v.fecha === hoy ? `<button class="chip" data-a="corregir" data-id="${v.id}"${dis}>Corregir</button>` : ''}</span></div>`).join('')
       : '<p class="vacio">Todo está entregado.</p>'}${masBtn('sin', sin.length)}</div></section>
   <section class="sec"><div class="sech"><h2>Entregas</h2></div>
@@ -731,6 +733,9 @@ const A = {
     if (v.entrega_id || v.fecha !== hoyGT()) { S.err = 'Solo se pueden corregir las ventas de hoy.'; return render(); }
     if (!(m > 0)) { S.err = 'Escribe un monto mayor a 0.'; return render(); }
     if (m === Number(v.monto)) return abrir('home');
+    const ahoraC = new Date().toISOString();
+    d.cambios = d.cambios || [];
+    d.cambios.push({ id: Date.now(), tipo: 'correccion', venta_id: v.id, fecha: v.fecha, antes: Number(v.monto), despues: m, quien: S.ses.nombre || S.ses.usuario, cuando: ahoraC });
     v.monto = m; setD(d);
     encolar('ce_corregir', { p_venta: v.id, p_monto: m, p_creado: new Date().toISOString() });
     avisar('Venta corregida · ' + fmt(m)); abrir('home'); sync();

@@ -79,7 +79,8 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .abierto .chev{transform:rotate(180deg)}
 .det{padding:0 16px 10px;display:flex;flex-direction:column;border-bottom:1px solid #EEF1EF}
 .det div{display:flex;justify-content:space-between;min-height:30px;align-items:center;font-size:13px;color:#5C6862}
-.hora{margin-left:6px;font-size:12px;font-weight:400;color:#8A958F}
+.hora{margin-left:6px;font-size:12px;font-weight:400;color:#8A958F;display:inline-flex;align-items:center;gap:3px;vertical-align:1px}
+.hora svg{flex:none}
 .devolver{height:40px;margin-top:6px;border:0;background:transparent;color:#5C6862;font-size:13px;font-weight:600}
 .mas{height:44px;border:0;background:transparent;color:#1B6B4F;font-size:13px;font-weight:700}
 .vacio{padding:16px;font-size:14px;color:#5C6862;margin:0}
@@ -145,7 +146,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-15.3';
+const VERSION = '2026-11-15.4';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -319,11 +320,12 @@ const diasCortoMarca = (d, eid, ok) => ventasDe(d, eid).map(v => ok && esTarde(v
 // Correcciones de una venta, juntas: el monto que tenía al anotarla y quién la cambió por última vez
 const correccionesDe = (d, v) => (d.cambios || []).filter(c => c.tipo === 'correccion' && c.venta_id === v.id).sort((a, b) => a.id - b.id);
 const tc = (d, v) => correccionesDe(d, v).length ? '<span class="tc">Corrigió</span>' : '';
-const horaAnot = v => { if (!v.creado_en) return ''; const da = diaDe(v.creado_en); return (da === v.fecha ? '' : fcorta(da) + ' ') + horaDe(v.creado_en); };
-const horaTag = v => { const h = horaAnot(v); return h ? `<span class="hora">${h}</span>` : ''; };
+const RELOJ = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const horaAnot = v => { if (!v.creado_en) return ''; const da = diaDe(v.creado_en); return (da === v.fecha ? '' : fcorta(da) + ' · ') + horaDe(v.creado_en); };
+const horaTag = v => { const h = horaAnot(v); return h ? `<span class="hora" aria-label="Hora en que se anotó">${RELOJ}${h}</span>` : ''; };
 // Línea de abajo en administración: a qué hora la anotaron y, si la cambiaron, el monto de antes
 const lineaAdm = (d, v) => { const cs = correccionesDe(d, v); const h = horaAnot(v);
-  const partes = []; if (h) partes.push('Anotada ' + h);
+  const partes = []; if (h) partes.push(RELOJ + ' ' + h);
   if (cs.length) { partes.push('Antes ' + fmt(cs[0].antes)); if (cs.length > 1) partes.push(cs.length + ' cambios'); }
   return partes.length ? `<span class="t2">${partes.join(' · ')}</span>` : ''; };
 const corrLinea = (d, v) => { const cs = correccionesDe(d, v); if (!cs.length) return '';

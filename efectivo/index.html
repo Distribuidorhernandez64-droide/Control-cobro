@@ -71,7 +71,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .t2{font-size:12px;color:#5C6862}
 .mn{font-size:14px;font-weight:700;white-space:nowrap}
 .verde{color:#145238}.rojo{color:#B42318}.vino{color:#9A2A1F}
-.tarde{color:#B42318;font-weight:600}
+.tarde{color:inherit}
 .tc{margin-left:6px;padding:1px 5px;border-radius:5px;background:#FDF0DC;color:#8A4B0B;font-size:11px;font-weight:700}
 .tg{margin-left:6px;padding:1px 5px;border-radius:5px;background:#FBE4E1;color:#B42318;font-size:11px;font-weight:700;letter-spacing:.2px}
 #app.marco::before{content:'';position:fixed;inset:0;border:3px solid var(--t-c);pointer-events:none;z-index:20}
@@ -143,7 +143,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-14.8';
+const VERSION = '2026-11-15.1';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -302,6 +302,7 @@ function balanceAl(d, t) {
   const rec = d.entregas.filter(e => e.estado === 'recibido' && e.fecha_recibido && e.fecha_recibido >= fi && e.fecha_recibido <= t).reduce((a, e) => a + Number(e.total), 0);
   return n2(Number(d.tienda.saldo_ini) + ing - rec);
 }
+const ventasDeRec = (d, eid) => ventasDe(d, eid).slice().reverse();   // para las listas: el día más reciente arriba
 const ventasDe = (d, eid) => d.ventas.filter(v => v.entrega_id === eid).sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
 const diasCortoDe = (d, eid) => ventasDe(d, eid).map(v => diaCorto(v.fecha)).join(', ');
 // Venta anotada otro día (no el mismo día de la venta): marca roja en administración.
@@ -384,7 +385,7 @@ function vistaTienda(prev) {
       return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${e.id}" aria-expanded="${ab}"><span class="col"><span class="t1">${esc(diasCortoDe(d, e.id))}</span>
         <span class="t2 ${rec ? 'verde' : 'rojo'}" style="font-weight:600">${rec ? 'Recibido ' + fdate(e.fecha_recibido) : 'Pendiente de recibir'}</span></span>
         <span style="display:flex;align-items:center;gap:6px"><span class="mn">${fmt(e.total)}</span>${ICO.chev}</span></button>
-        ${ab ? `<div class="det">${ventasDe(d, e.id).map(v => `<div><span>${dia(v.fecha)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
+        ${ab ? `<div class="det">${ventasDeRec(d, e.id).map(v => `<div><span>${dia(v.fecha)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
     }).join('') : '<p class="vacio">Todavía no hay entregas.</p>'}${masBtn('ent', ents.length)}</div></section>
   <section class="sec"><div class="sech"><h2>Mercadería recibida</h2></div>
     <div class="lista">${ings.length ? ings.slice(0, S.lim.ing).map(i => `<div class="fila"><span class="col"><span class="t1">Factura ${esc(i.factura)}</span><span class="t2">${fdate(i.fecha)}</span></span><span class="mn">${fmt(i.monto)}</span></div>`).join('')
@@ -408,7 +409,7 @@ function vistaAdmin() {
   const filasAdm = vacios.concat(sin).sort((a, b) => a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (a.vacio ? -1 : b.vacio ? 1 : 0));
   return `${avisoHtml()}${tarjetaBalance(d, false)}
   ${pend.length ? `<section class="sec"><div class="sech"><h2 class="rojo">Pendiente de recibir</h2></div>
-    ${pend.map(e => `<div class="pend">${ventasDe(d, e.id).map(v => `<div class="d"><span>${diaMarca(v, true)}${tc(d, v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}
+    ${pend.map(e => `<div class="pend">${ventasDeRec(d, e.id).map(v => `<div class="d"><span>${diaMarca(v, true)}${tc(d, v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}
       <div class="tot"><span class="t2">${esc(e.quien)} · ${fdate(e.fecha_envio)}</span><b>${fmt(e.total)}</b></div>
       <button class="b g med" data-a="aceptar" data-id="${e.id}" style="font-weight:700">Aceptar</button></div>`).join('')}</section>` : ''}
   <section class="sec"><div class="sech"><h2>Ventas sin entregar</h2>${sin.length ? `<span class="der">${fmt(n2(sin.reduce((a, v) => a + Number(v.monto), 0)))}</span>` : ''}</div>
@@ -424,7 +425,7 @@ function vistaAdmin() {
       const ab = !!S.abiertos[m.id], vt = tardeVigente(m.o);
       return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${m.id}" aria-expanded="${ab}" style="min-height:58px"><span class="col"><span class="t1">Efectivo recibido</span><span class="t2">${diasCortoMarca(d, m.id, vt)} · ${fdate(m.o.fecha_recibido)}</span></span>
         <span style="display:flex;align-items:center;gap:6px"><span class="mn verde" style="font-size:15px">−${fmt(m.o.total)}</span>${ICO.chev}</span></button>
-        ${ab ? `<div class="det">${ventasDe(d, m.id).map(v => `<div><span>${diaMarca(v, vt)}${tc(d, v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
+        ${ab ? `<div class="det">${ventasDeRec(d, m.id).map(v => `<div><span>${diaMarca(v, vt)}${tc(d, v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
     }).join('') : '<p class="vacio">Todavía no hay movimientos.</p>'}${masBtn('mov', movs.length)}</div></section>`;
 }
 

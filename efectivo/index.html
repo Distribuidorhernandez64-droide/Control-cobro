@@ -79,6 +79,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .abierto .chev{transform:rotate(180deg)}
 .det{padding:0 16px 10px;display:flex;flex-direction:column;border-bottom:1px solid #EEF1EF}
 .det div{display:flex;justify-content:space-between;min-height:30px;align-items:center;font-size:13px;color:#5C6862}
+.devolver{height:40px;margin-top:6px;border:0;background:transparent;color:#5C6862;font-size:13px;font-weight:600}
 .mas{height:44px;border:0;background:transparent;color:#1B6B4F;font-size:13px;font-weight:700}
 .vacio{padding:16px;font-size:14px;color:#5C6862;margin:0}
 .chip{height:32px;padding:0 10px;border:1px solid #D5DBD7;border-radius:8px;background:#FFF;font-size:12px;font-weight:600}
@@ -143,7 +144,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-15.1';
+const VERSION = '2026-11-15.2';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -411,7 +412,8 @@ function vistaAdmin() {
   ${pend.length ? `<section class="sec"><div class="sech"><h2 class="rojo">Pendiente de recibir</h2></div>
     ${pend.map(e => `<div class="pend">${ventasDeRec(d, e.id).map(v => `<div class="d"><span>${diaMarca(v, true)}${tc(d, v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}
       <div class="tot"><span class="t2">${esc(e.quien)} · ${fdate(e.fecha_envio)}</span><b>${fmt(e.total)}</b></div>
-      <button class="b g med" data-a="aceptar" data-id="${e.id}" style="font-weight:700">Aceptar</button></div>`).join('')}</section>` : ''}
+      <button class="b g med" data-a="aceptar" data-id="${e.id}" style="font-weight:700">Aceptar</button>
+      <button class="devolver" data-a="devolver" data-id="${e.id}">Devolver a la tienda</button></div>`).join('')}</section>` : ''}
   <section class="sec"><div class="sech"><h2>Ventas sin entregar</h2>${sin.length ? `<span class="der">${fmt(n2(sin.reduce((a, v) => a + Number(v.monto), 0)))}</span>` : ''}</div>
     <div class="lista">${filasAdm.slice(0, S.lim.adm).map(v => v.vacio
         ? `<div class="fila"><span class="t1">${dia(v.fecha)}</span><span class="mn" style="color:#9AA59F;letter-spacing:2px" aria-label="Sin venta anotada">— —</span></div>`
@@ -759,6 +761,14 @@ const A = {
     e.estado = 'recibido'; e.fecha_recibido = hoyGT(); setD(d);
     encolar('ce_aceptar', { p_entrega: e.id });
     avisar('Recibido · −' + fmt(e.total)); render(); sync();
+  },
+  devolver(el) {
+    const d = D(); const e = d && d.entregas.find(x => x.id === el.dataset.id); if (!e || e.estado !== 'enviado') return;
+    if (!confirm('¿Devolver esta entrega de ' + fmt(e.total) + '? Las ventas regresan a "sin entregar" en la tienda, como si no la hubieran enviado.')) return;
+    d.ventas.forEach(v => { if (v.entrega_id === e.id) v.entrega_id = null; });
+    d.entregas = d.entregas.filter(x => x.id !== e.id); setD(d);
+    encolar('ce_devolver', { p_entrega: e.id });
+    avisar('Entrega devuelta a la tienda'); render(); sync();
   },
   ingreso() { abrir('ingreso', { id: null, factura: '', fecha: hoyGT(), monto: '' }); },
   editarIng(el) { const d = D(); const i = d && d.ingresos.find(x => x.id === el.dataset.id); if (!i) return; abrir('ingreso', { id: i.id, factura: i.factura, fecha: i.fecha, monto: fmtInput(String(i.monto)) }); },

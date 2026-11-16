@@ -1,7 +1,7 @@
 // Control de Efectivo: guarda la app en el celular para que abra sin internet.
 // La app se pide primero a internet (así siempre llega la versión nueva);
 // si no hay señal, se abre la copia guardada. Los datos NO pasan por aquí.
-const CACHE = 'efectivo-v9';
+const CACHE = 'efectivo-v10';
 const BASE = ['./', './index.html', './manifest.webmanifest', './icono-180.png', './icono-192.png', './icono-512.png'];
 
 self.addEventListener('install', e => {

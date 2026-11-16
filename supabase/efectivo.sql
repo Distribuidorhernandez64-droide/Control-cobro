@@ -338,6 +338,18 @@ begin
   end if;
 end $$;
 
+-- Devolver a la tienda una entrega que se mandó por error (administración, solo si no se ha aceptado)
+create or replace function public.ce_devolver(p_token text, p_entrega uuid) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.cei_admin(p_token);
+  if not exists (select 1 from public.ce_entregas where id = p_entrega and estado = 'enviado') then
+    raise exception 'Esa entrega ya fue recibida o ya no existe.';
+  end if;
+  update public.ce_ventas set entrega_id = null where entrega_id = p_entrega;
+  delete from public.ce_entregas where id = p_entrega and estado = 'enviado';
+end $$;
+
 -- Saldo inicial y tope (administración)
 create or replace function public.ce_ajustes(p_token text, p_tienda text, p_saldo numeric, p_fecha date, p_tope numeric) returns void
 language plpgsql security definer set search_path = public, extensions as $$

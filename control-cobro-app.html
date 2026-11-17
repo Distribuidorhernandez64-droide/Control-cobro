@@ -2856,13 +2856,23 @@ function peAvisoPedido(v,p){
 // todos), nunca Laky/azúcar/Acticlor/cloro/Ilgua/detergente, grupo 1, grupo 2 y lo demás alfabético, cada nota de
 // sabor en su renglón y Bonificaciones aparte al final. Los productos vienen de Monica (los sube Facturación rápida).
 const CS_EXCLUIR=[/laky/,/azucar/,/acticlor/,/cloro/,/ilgua/,/detergente/];
-// Tiky jumbo va justo debajo de Orange jumbo (mismo precio; 7/11/2026, igual que Facturación rápida). Sin Orange, la Tiky queda en su lugar.
-const CS_JUNTOS=[[k=>/orange/.test(k)&&/(jumbo|3 ?lt)/.test(k)&&!/vidrio/.test(k),k=>/tiky/.test(k)&&/(jumbo|3 ?lt)/.test(k)&&!/vidrio/.test(k)]];
+// Productos que van JUNTOS (en la parte alfabética), en este orden, donde cae el primero de la lista que venga.
+// Igual que Facturación rápida (CONS_JUNTOS): 7/11/2026 Tiky jumbo con Orange jumbo; 16/11/2026 latas, La Granja, boopi/agua bolsa/iso max.
+const CS_JUNTOS=[
+  [k=>/orange/.test(k)&&/(jumbo|\b3 ?lt)/.test(k)&&!/vidrio|lata/.test(k),k=>/tiky/.test(k)&&/(jumbo|\b3 ?lt)/.test(k)&&!/vidrio|lata/.test(k)],
+  [k=>/orange/.test(k)&&/lata/.test(k),k=>/tiky/.test(k)&&/lata/.test(k),k=>/canad/.test(k)&&/lata/.test(k)],
+  [k=>/granja/.test(k)&&/500/.test(k),k=>/granja/.test(k)&&/235/.test(k)],
+  [k=>/boopi/.test(k),k=>/agua/.test(k)&&/bolsa/.test(k),k=>/iso ?max/.test(k)],
+];
 function csJuntar(arr){
-  for(const [esA,esB] of CS_JUNTOS){
-    const a=arr.findIndex(x=>esA(x.k)),b=arr.findIndex(x=>esB(x.k));
-    if(a<0||b<0||arr[a].grupo!==arr[b].grupo)continue;
-    const [x]=arr.splice(b,1);arr.splice(arr.findIndex(y=>esA(y.k))+1,0,x);
+  for(const grupo of CS_JUNTOS){
+    const sel=[];
+    for(const f of grupo)for(const x of arr)if(!sel.includes(x)&&f(x.k))sel.push(x);
+    const mov=sel.filter(x=>x.grupo===(sel[0]&&sel[0].grupo));
+    if(mov.length<2)continue;
+    const resto=arr.filter(x=>x===mov[0]||!mov.includes(x));
+    resto.splice(resto.indexOf(mov[0]),1,...mov);
+    arr.splice(0,arr.length,...resto);
   }
   return arr;
 }
@@ -4443,7 +4453,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-13.1';
+const VERSION='2026-11-16.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

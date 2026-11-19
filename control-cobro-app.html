@@ -2886,7 +2886,8 @@ const CS_EXCLUIR=[/laky/,/azucar/,/acticlor/,/cloro/,/ilgua/,/detergente/];
 // Igual que Facturación rápida (CONS_JUNTOS): 7/11/2026 Tiky jumbo con Orange jumbo; 16/11/2026 latas, La Granja, boopi/agua bolsa/iso max.
 const CS_JUNTOS=[
   [k=>/orange/.test(k)&&/(jumbo|\b3 ?lt)/.test(k)&&!/vidrio|lata/.test(k),k=>/tiky/.test(k)&&/(jumbo|\b3 ?lt)/.test(k)&&!/vidrio|lata/.test(k)],
-  [k=>/orange/.test(k)&&/lata/.test(k),k=>/tiky/.test(k)&&/lata/.test(k),k=>/canad/.test(k)&&/lata/.test(k)],
+  [k=>/orange/.test(k)&&/lata/.test(k),k=>/tiky/.test(k)&&/lata/.test(k),k=>/canad/.test(k)&&/lata/.test(k),k=>/super/.test(k)&&/lata/.test(k),k=>/naranjada/.test(k)&&/lata/.test(k)],
+  [k=>/super/.test(k)&&/625/.test(k),k=>/naranjada/.test(k)&&/(pet|600|desechable)/.test(k)&&!/lata|vidrio/.test(k)],   // 19/11/2026: Super 625 y la naranjada desechable
   [k=>/granja/.test(k)&&/500/.test(k),k=>/granja/.test(k)&&/235/.test(k)],
   [k=>/boopi/.test(k),k=>/agua/.test(k)&&/bolsa/.test(k),k=>/iso ?max/.test(k)],
 ];
@@ -4479,7 +4480,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-18.2';
+const VERSION='2026-11-19.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

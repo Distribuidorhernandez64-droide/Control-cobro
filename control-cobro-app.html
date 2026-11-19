@@ -2654,6 +2654,7 @@ async function peCargar(){
     PE.filas=(r.data||[]).map(f=>({...f,total:Number(f.total)||0}));
     PE.cargado=true;PE.error='';
     camb=await peCargarCambios();
+    alRutaRecibida();
     const nuevas=pePendientes().filter(f=>!antes.has(f.nro)&&!peVistas().has(f.nro));
     if(nuevas.length&&antes.size){try{navigator.vibrate&&navigator.vibrate([40,60,40]);}catch(e){}
       const b=document.getElementById('btnPE');if(b){b.classList.remove('sacude');void b.offsetWidth;b.classList.add('sacude');}}
@@ -2669,6 +2670,31 @@ async function peCargar(){
   if(PE.vista)peRenderVista();
   else if(!vistaDetalle&&!escribiendoAhora())renderZona();
   else if(camb&&!escribiendoAhora()){const sy=window.scrollY;renderZona();window.scrollTo(0,sy);}
+}
+// 18/11/2026: si la nota cambió en Monica DESPUÉS de recibir el viaje (dinero ya entregado), va también a Cambios (arriba).
+// Si cambió antes de recibir, sigue igual: solo el aviso en el viaje. Clave r|nota|hora del cambio (la PC no la toca).
+const AL_RUTA=new Set();
+async function alRutaRecibida(){
+  try{
+    for(const v of viajes){
+      if(!v||!v.cerrado||!v.horaRecibido)continue;
+      for(const p of (v.pedidos||[])){
+        const c=peCambioDe(p);if(!c||!c.monica_cambio_en)continue;
+        if(new Date(c.monica_cambio_en)<=new Date(v.horaRecibido))continue;   // cambió antes de recibir
+        if(peSoloAbierta(p,c))continue;                                        // solo la abrieron
+        const clave='r|'+p.fac+'|'+c.monica_cambio_en;if(AL_RUTA.has(clave))continue;
+        const txt=peCambioTxt(p,c,null),d=peDiffMonica(c,peSalio(p));
+        const cods=new Set(d?[...d.menos,...d.precio,...d.mas].map(x=>x.c):[]);
+        const mt=c.monica_total==null?null:Number(c.monica_total);
+        const fila={clave,tipo:'ruta',fecha:new Date(c.monica_cambio_en).toLocaleDateString('en-CA'),hora:hhmm(c.monica_cambio_en),nro:p.fac,
+          cliente:p.nombre||('Nota '+p.fac),que:'Viaje de '+v.rutero+' ya recibido · '+txt,quien:'',
+          monto:c.monica_anulada?peR2(peSalio(p)):(mt==null?0:peR2(Math.abs(mt-peSalio(p)))),vigente:true,
+          detalle:(c.monica_detalle||[]).map(l=>({c:l.c||'',d:l.d||'',q:Number(l.q)||0,p:Number(l.p)||0,x:Number(l.x)||0,a:cods.has(l.c||'')?1:0}))};
+        const r=await sb.from('alertas').upsert(fila,{onConflict:'clave',ignoreDuplicates:true});
+        if(!r||!r.error)AL_RUTA.add(clave);
+      }
+    }
+  }catch(e){}
 }
 // Notas que YA salieron en ruta y que en Monica fueron modificadas después (solo es un aviso; lo que salió no cambia)
 async function peCargarCambios(){
@@ -3203,7 +3229,7 @@ async function peReintentarEnviadas(){
 // descuento y ticket anulado. Arriba sigue una sola palabra "Cambios" (no cabe otra); adentro dos pestañas: Notas · Ticket,
 // cada una con su lista, su PDF y sus vistas (se marcan vistas al ver esa pestaña).
 const AL={filas:[],nuevas:new Set(),abierto:false,ok:false,grupo:'n'};
-const AL_TIT={anulada:'Anulación',vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar',
+const AL_TIT={ruta:'Cambió después de recibir el viaje',anulada:'Anulación',vendedor:'Cambio de vendedor',tope:'Más de Q2 por unidad',poca:'Descuento en 1 bandeja o menos',pct:'Más del 5% del precio',precio:'Precio bajado después de facturar',
   fecha:'Fecha cambiada',t_fecha:'Fecha cambiada',t_eliminado:'Producto eliminado',t_cancelada:'Venta cancelada',t_precio:'Cambio de precio',t_descuento:'Descuento',t_subio:'Precio subido',t_anulada:'Ticket anulado'};
 const alEsT=f=>String(f.tipo||'').startsWith('t_');
 const alDeGrupo=(g,fs)=>(fs||AL.filas).filter(f=>(g==='t')===alEsT(f));
@@ -4453,7 +4479,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-18.1';
+const VERSION='2026-11-18.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -3289,7 +3289,7 @@ function alVerDet(clave,previa){
   // l.e = se pasó por el lector y lo quitaron (no está en el ticket): se ve tachado y no suma
   const filas=f.detalle.map(l=>{const imp=Math.round(((Number(l.q)||0)*(Number(l.p)||0)-(Number(l.x)||0))*100)/100;if(!l.e)suma+=imp;
     return `<div class="pv-l${l.a?' al-marca':''}${l.e?' al-elim':''}"><span class="pv-q">${peCant(l.q)}</span>
-      <span class="pv-d"><b>${esc(l.d||l.c||'')}</b><span>${l.e?'<i class="al-quit">lo quitaron</i> · ':''}${l.c?'Cód. '+esc(l.c)+' · ':''}${peQP(l.p)} c/u${Number(l.x)>0?` · <i class="pv-dsc">desc. −${q(l.x)}</i>`:''}</span></span>
+      <span class="pv-d"><b>${esc(l.d||l.c||'')}</b><span>${l.e?'<i class="al-quit">lo quitaron</i> · ':''}${l.c?'Cód. '+esc(l.c)+' · ':''}${peQP(l.p)} c/u${Number(l.n)>Number(l.p)?` · <i class="pv-dsc">desc. −${q(Number(l.n)-Number(l.p))} c/u</i>`:''}${Number(l.x)>0?` · <i class="pv-dsc">desc. −${q(l.x)}</i>`:''}</span></span>
       <span class="pv-i">${q(imp)}</span></div>`;}).join('');
   el.innerHTML=`<div class="pv-hoja"><div class="pv-asa"></div>
     <div class="pv-cab"><div class="pv-tit"><b>${esc(f.cliente||'')}</b><span>${previa&&!f.visto_en?'<i class="al-prev">Vista previa</i> · ':''}${f.nro?(alDoc(f)==='ticket'?'Ticket':'Nota')+' '+f.nro:'Venta cancelada · sin ticket'}${f.tipo==='anulada'||f.tipo==='t_anulada'?' · anulada':''}${f.tipo==='fecha'||f.tipo==='t_fecha'?' · '+esc(f.que||''):''}${f.quien?' · '+esc(f.quien):''}${f.hora?' · '+esc(f.hora):''}</span></div>
@@ -4453,7 +4453,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-16.1';
+const VERSION='2026-11-18.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

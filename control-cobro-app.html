@@ -4182,7 +4182,7 @@ function rutaMaps(vid){
       <div class="rm-cbtn">${paradas.length?`<button class="pe-mapab" onclick="rmMapaAbrir(${v.id})" aria-label="Ver la ruta en el mapa">${ICO_MAPA}</button>`:''}<button class="pe-mi-x rm-x" onclick="cerrarModalRecibe()" aria-label="Cerrar">${ICO_X_S}</button></div></div>
     <div class="rm-cuerpo">
     ${paradas.length?`<ol class="rm-lista">${paradas.map((x,i)=>`<li><span class="rm-n">${i+1}</span><span>${esc(x.noms.join(' / '))}${x.facs.length?`<small>Nota ${x.facs.join(', ')}</small>`:''}</span></li>`).join('')}</ol>`:''}
-    ${sin.length?`<div class="rm-sin"><b>Sin ubicación (${sin.length})</b><br>${sin.map(x=>esc(x.nom)).join(' · ')}<br><small>No tienen coordenadas en Monica; no van en el enlace ni en el archivo.</small></div>`:''}
+    ${sin.length?`<div class="rm-sin"><b>Sin ubicación</b><br>${sin.map(x=>esc(x.nom)).join(' · ')}</div>`:''}
     </div>
     ${paradas.length?`<div class="rm-btns">
       <button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo Organic Maps</button>
@@ -4641,7 +4641,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-21.4';
+const VERSION='2026-11-21.5';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

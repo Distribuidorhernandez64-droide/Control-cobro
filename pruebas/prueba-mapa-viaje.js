@@ -44,7 +44,8 @@ const PNG=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42
 (async()=>{
   const b=await chromium.launch();
   let fallas=0;const ok=(n,c)=>{console.log((c?'✅ ':'❌ ')+n);if(!c)fallas++;};
-  const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true});
+  const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true,
+    permissions:['geolocation'],geolocation:{latitude:14.4991,longitude:-90.9541,accuracy:15}});
   const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
   await p.route('**/@supabase/**',r=>r.fulfill({status:200,contentType:'application/javascript',body:FAKE}));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
@@ -93,6 +94,39 @@ const PNG=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42
   ok('Cerrar regresa a "Ruta de Milton"', !(await p.$('#rmMapa.open'))&&await p.isVisible('#modalRecibeBody .rm-cab'));
   await p.click('#modalRecibeBody .rm-cbtn .pe-mapab');await p.waitForTimeout(800);
   ok('Se puede abrir otra vez sin errores', await p.isVisible('#rmMapa.open .leaflet-container')&&(await p.$$('.rmm-num')).length===3);
+  // Mi ubicación (permiso ya dado): sale sola al abrir el mapa y se apaga al cerrarlo
+  await p.waitForTimeout(800);
+  ok('Mi ubicación: puntito azul al abrir el mapa (permiso dado)', (await p.$$('#rmMapa .ubi-pt')).length===1&&await p.evaluate(()=>UBI.watch!=null&&UBI.map===RMM.map));
+  ok('Mi ubicación: botón marcado en azul', await p.evaluate(()=>document.querySelector('#rmMapa .ubi-btn').classList.contains('on')));
+  await p.screenshot({path:path.join(__dirname,'capturas','mapa-viaje-ubi.png')});
+  await p.evaluate(()=>RMM.map.setView([14.52,-90.99],14,{animate:false}));
+  await p.click('#rmMapa .ubi-btn');await p.waitForTimeout(400);
+  ok('Mi ubicación: el botón centra el mapa en mí', await p.evaluate(()=>{const c=RMM.map.getCenter();return Math.abs(c.lat-14.4991)<0.001&&Math.abs(c.lng+90.9541)<0.001;}));
+  await p.click('#rmMapa .pe-cerrar');await p.waitForTimeout(300);
+  ok('Mi ubicación: al cerrar el mapa se apaga el GPS', await p.evaluate(()=>UBI.watch==null&&UBI.map==null));
+  // Cobros en segundo plano: se apaga; al volver con el mapa abierto, regresa
+  await p.click('#modalRecibeBody .rm-cbtn .pe-mapab');await p.waitForTimeout(1200);
+  await p.evaluate(()=>{Object.defineProperty(document,'hidden',{value:true,configurable:true});document.dispatchEvent(new Event('visibilitychange'));});
+  ok('Segundo plano: se apaga el GPS', await p.evaluate(()=>UBI.watch==null));
+  await p.evaluate(()=>{Object.defineProperty(document,'hidden',{value:false,configurable:true});document.dispatchEvent(new Event('visibilitychange'));});await p.waitForTimeout(800);
+  ok('Al volver con el mapa abierto: vuelve el puntito', await p.evaluate(()=>UBI.watch!=null)&&(await p.$$('#rmMapa .ubi-pt')).length===1);
+  await p.click('#rmMapa .pe-cerrar');await p.waitForTimeout(300);
+  // Sin permiso: no pregunta al abrir; solo con el botón
+  const ctx2=await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+  const p2=await ctx2.newPage();p2.on('pageerror',e=>errs.push(e.message));
+  for(const [pat,ct,body] of [['**/@supabase/**','application/javascript',FAKE],['**/unpkg.com/leaflet@1.9.4/dist/leaflet.js','application/javascript',LEAF_JS],['**/unpkg.com/leaflet@1.9.4/dist/leaflet.css','text/css',LEAF_CSS],['**/unpkg.com/leaflet-rotate@0.5.3/dist/leaflet-rotate.js','application/javascript',LEAF_ROT]])
+    await p2.route(pat,r=>r.fulfill({status:200,contentType:ct,body}));
+  await p2.route('**/tile.openstreetmap.org/**',r=>r.fulfill({status:200,contentType:'image/png',body:PNG}));
+  await p2.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+  await p2.goto('http://localhost:8898/',{waitUntil:'domcontentloaded'});await p2.waitForTimeout(800);
+  await p2.evaluate(()=>{entrarListo({email:'cesar@cobros.local'},null);window.__pide=0;const w=navigator.geolocation.watchPosition.bind(navigator.geolocation);
+    navigator.geolocation.watchPosition=(a,b,c)=>{window.__pide++;return w(a,b,c);};
+    viajes.push({id:702,rutero:'Milton',pedidos:[{id:1,nombre:'X',total:5,estado:'pagado',fac:1,lat:14.5008,lng:-90.9523}]});rmMapaAbrir(702);});
+  await p2.waitForTimeout(1200);
+  ok('Sin permiso: al abrir el mapa NO pide la ubicación', await p2.evaluate(()=>window.__pide===0&&UBI.watch==null));
+  await p2.click('#rmMapa .ubi-btn');await p2.waitForTimeout(800);
+  ok('Sin permiso: el botón la pide (y avisa si no hay permiso)', await p2.evaluate(()=>window.__pide===1));
+  await ctx2.close();
   ok('Sin errores en la página', errs.length===0);if(errs.length)console.log(errs);
   await b.close();srv.close();
   console.log(fallas?`\n${fallas} prueba(s) fallaron`:'\nTodas las pruebas pasaron');process.exit(fallas?1:0);

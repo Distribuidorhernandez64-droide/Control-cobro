@@ -676,6 +676,13 @@
   .pe-pin.rmm-num.on{width:34px;height:34px;background:var(--c);font-size:14px;box-shadow:0 3px 12px rgba(28,36,51,.45)}
   .rmm-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1c2433;color:#fff;font-size:11px;font-weight:900;margin-right:7px;vertical-align:1px}
   .rmm-sinl{overflow-y:auto;padding:4px 14px 18px}.rmm-sinl .pe-mi-r{padding:8px 0;border-bottom:1px solid var(--line);margin:0}
+  /* Mi ubicación */
+  .pe-mapa .ubi-ctl{border:none!important;box-shadow:0 2px 10px rgba(28,36,51,.16);border-radius:12px;overflow:hidden;margin:10px 10px 0 0}
+  .pe-mapa .ubi-btn{width:36px;height:36px;display:flex!important;align-items:center;justify-content:center;background:#fff;color:#1c2433}
+  .pe-mapa .ubi-btn svg{width:19px;height:19px}.pe-mapa .ubi-btn.on{color:#2f7cf6}.pe-mapa .ubi-btn.busca{color:#9aa3b2}
+  .ubi-pt{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#2f7cf6;border:3px solid #fff;box-shadow:0 1px 6px rgba(28,36,51,.4)}
+  .ubi-pt::after{content:'';position:absolute;inset:-9px;border-radius:50%;background:rgba(47,124,246,.25);animation:ubiLat 2s ease-out infinite}
+  @keyframes ubiLat{0%{transform:scale(.4);opacity:.9}100%{transform:scale(1.4);opacity:0}}
 </style>
 </head>
 <body>
@@ -3864,7 +3871,62 @@ function peLeaflet(){
     sc.onerror=()=>{_peLeaf=null;css.remove();sc.remove();mal(new Error('sin internet'));};document.head.appendChild(sc);});
   return _peLeaf;
 }
-function peMapaQuitar(){if(PE._map){try{PE._map.remove();}catch(e){}PE._map=null;PE._capa=null;}}
+// ---- Mi ubicación en los mapas (21/11/2026) ----
+// Puntito azul con la ubicación de ESTE teléfono, solo mientras un mapa está abierto: al cerrar el mapa (o si
+// Cobros pasa a segundo plano) se apaga el GPS. Si ya diste permiso, sale solo al abrir el mapa; si no, con el
+// botón de ubicación (debajo del + y −). Nunca se guarda ni se manda a ningún lado.
+const UBI={watch:null,map:null,mk:null,acc:null,ll:null,centrar:false};
+const ICO_UBI=`<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.6" fill="currentColor"/><circle cx="12" cy="12" r="7.2" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+function ubiBoton(map){
+  const Lf=window.L;
+  const C=Lf.Control.extend({options:{position:'topright'},onAdd(){
+    const d=Lf.DomUtil.create('div','leaflet-bar leaflet-control ubi-ctl');
+    const a=Lf.DomUtil.create('a','ubi-btn',d);a.href='#';a.setAttribute('role','button');a.setAttribute('aria-label','Mi ubicación');a.innerHTML=ICO_UBI;
+    Lf.DomEvent.disableClickPropagation(d);
+    Lf.DomEvent.on(a,'click',e=>{Lf.DomEvent.preventDefault(e);ubiTocar(map);});
+    return d;}});
+  new C().addTo(map);
+}
+function ubiTocar(map){
+  if(UBI.map===map&&UBI.watch!=null){if(UBI.ll)map.setView(UBI.ll,Math.max(map.getZoom(),16));else UBI.centrar=true;return;}
+  ubiIniciar(map,true);
+}
+function ubiEstado(){document.querySelectorAll('.ubi-btn').forEach(b=>{b.classList.toggle('on',UBI.watch!=null&&!!UBI.ll);b.classList.toggle('busca',UBI.watch!=null&&!UBI.ll);});}
+function ubiIniciar(map,centrar){
+  if(!map)return;ubiParar();
+  if(!navigator.geolocation){if(centrar)toast('Este teléfono no da la ubicación',true);return;}
+  UBI.map=map;UBI.centrar=!!centrar;
+  UBI.watch=navigator.geolocation.watchPosition(pos=>{
+    if(UBI.map!==map)return;const Lf=window.L,ll=[pos.coords.latitude,pos.coords.longitude],r=Math.min(pos.coords.accuracy||0,500);UBI.ll=ll;
+    if(!UBI.mk){
+      UBI.acc=Lf.circle(ll,{radius:r,stroke:false,fillColor:'#2f7cf6',fillOpacity:.12,interactive:false}).addTo(map);
+      UBI.mk=Lf.marker(ll,{icon:Lf.divIcon({className:'pe-pin-w',iconSize:[22,22],iconAnchor:[11,11],html:'<span class="ubi-pt"></span>'}),interactive:false,keyboard:false,zIndexOffset:1500}).addTo(map);
+    }else{UBI.mk.setLatLng(ll);UBI.acc.setLatLng(ll);UBI.acc.setRadius(r);}
+    if(UBI.centrar){UBI.centrar=false;map.setView(ll,Math.max(map.getZoom(),16));}
+    ubiEstado();
+  },err=>{
+    const pidio=UBI.centrar;ubiParar();
+    if(pidio||err.code!==1)toast(err.code===1?'Cobros no tiene permiso de ubicación (Ajustes del iPhone › Safari › Ubicación)':'No se pudo saber tu ubicación',true);
+  },{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+  ubiEstado();
+}
+function ubiParar(map){
+  if(map&&UBI.map!==map)return;
+  if(UBI.watch!=null){try{navigator.geolocation.clearWatch(UBI.watch);}catch(e){}}
+  if(UBI.map){try{if(UBI.mk)UBI.map.removeLayer(UBI.mk);if(UBI.acc)UBI.map.removeLayer(UBI.acc);}catch(e){}}
+  UBI.watch=null;UBI.map=null;UBI.mk=null;UBI.acc=null;UBI.ll=null;UBI.centrar=false;ubiEstado();
+}
+// Al abrir un mapa: si el permiso ya está dado, el puntito sale solo (sin preguntar nada)
+async function ubiAuto(map){
+  try{if(!navigator.permissions||!navigator.geolocation)return;
+    const st=await navigator.permissions.query({name:'geolocation'});
+    if(st&&st.state==='granted'&&map&&map._container&&document.body.contains(map._container))ubiIniciar(map,false);}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){if(UBI.map){UBI._volver=UBI.map;ubiParar();}}
+  else if(UBI._volver){const m=UBI._volver;UBI._volver=null;if(m._container&&document.body.contains(m._container))ubiAuto(m);}
+});
+function peMapaQuitar(){if(PE._map){ubiParar(PE._map);try{PE._map.remove();}catch(e){}PE._map=null;PE._capa=null;}}
 function peMapaToggle(){
   PE.mapa=!PE.mapa;PE.mapaInfo=null;PE.mapaSin=false;PE._mapaFit=null;peMapaQuitar();
   const cont=document.getElementById('peLista');if(cont){cont.innerHTML='';cont.scrollTop=0;}
@@ -3968,7 +4030,7 @@ function peRenderMapa(){
     Lf.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       {maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);
     m.attributionControl.setPrefix(false);
-    Lf.control.zoom({position:'topright'}).addTo(m);
+    Lf.control.zoom({position:'topright'}).addTo(m);ubiBoton(m);ubiAuto(m);
     m.setView([14.4965,-90.9617],14);
     PE._capa=Lf.layerGroup().addTo(m);PE._map=m;PE._mapaFit=null;
     peMapaToqueFuera();
@@ -4140,7 +4202,7 @@ function rmMapaAbrir(vid){
   peLeaflet().then(()=>{if(RMM.vid===vid&&document.getElementById('rmMapaDiv'))rmMapaPintar();})
     .catch(()=>{const c=document.getElementById('rmMCarga');if(c)c.textContent='No se pudo cargar el mapa. Revisá internet.';});
 }
-function rmMapaQuitar(){if(RMM.map){try{RMM.map.remove();}catch(e){}RMM.map=null;RMM.capa=null;}}
+function rmMapaQuitar(){if(RMM.map){ubiParar(RMM.map);try{RMM.map.remove();}catch(e){}RMM.map=null;RMM.capa=null;}}
 function rmMapaCerrar(){rmMapaQuitar();RMM.vid=null;const o=document.getElementById('rmMapa');if(o){o.className='rmm-ov';o.innerHTML='';}}
 function rmMapaPintar(){
   const v=rmMapaViaje(),Lf=window.L;if(!v||!Lf||!Lf.map)return;
@@ -4149,7 +4211,7 @@ function rmMapaPintar(){
       rotate:true,touchRotate:true,touchPitch:false,pitchDrag:false,shiftKeyRotate:true,bearing:0,
       rotateControl:{closeOnZeroBearing:true,visualizePitch:false,position:'topright'}});
     Lf.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);
-    m.attributionControl.setPrefix(false);Lf.control.zoom({position:'topright'}).addTo(m);
+    m.attributionControl.setPrefix(false);Lf.control.zoom({position:'topright'}).addTo(m);ubiBoton(m);ubiAuto(m);
     m.setView([BODEGA.lat,BODEGA.lng],15);RMM.capa=Lf.layerGroup().addTo(m);RMM.map=m;
     const c=document.getElementById('rmMCarga');if(c)c.classList.add('no');
     rmMapaToqueFuera();setTimeout(()=>{if(RMM.map)RMM.map.invalidateSize();},60);
@@ -4572,7 +4634,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-21.1';
+const VERSION='2026-11-21.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

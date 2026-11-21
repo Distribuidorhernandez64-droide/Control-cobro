@@ -3908,7 +3908,11 @@ function ubiIniciar(map,centrar){
     const pidio=UBI.centrar||UBI._toco;UBI._toco=false;
     if(err.code===3){if(pidio)toast('Todavía buscando tu ubicación…');return;}   // tardó: sigue buscando
     ubiParar();
-    if(pidio)toast(err.code===1?'El iPhone no deja usar la ubicación: Ajustes › Privacidad y seguridad › Localización › Sitios web de Safari → "Al usarse la app"'
+    // iOS 26: la app instalada en la pantalla de inicio recibe "denegado" aunque los permisos estén bien (en Safari sí
+    // funciona; confirmado por César 21/11). En ese caso se le dice que la abra en Safari.
+    const enInicio=!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
+    if(pidio)toast(err.code===1&&enInicio?'El iPhone no da la ubicación a las apps de la pantalla de inicio. Para verla, abrí Cobros en Safari'
+      :err.code===1?'El iPhone no deja usar la ubicación: Ajustes › Privacidad y seguridad › Localización › Sitios web de Safari → "Al usarse la app"'
       :'El iPhone no encuentra tu ubicación. Revisá que Localización esté encendida',true);
   },{enableHighAccuracy:true,maximumAge:5000,timeout:30000});
   ubiEstado();
@@ -4637,7 +4641,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-21.3';
+const VERSION='2026-11-21.4';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

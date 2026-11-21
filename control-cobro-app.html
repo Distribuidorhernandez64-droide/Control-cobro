@@ -4107,8 +4107,7 @@ function rutaMaps(vid){
     ${sin.length?`<div class="rm-sin"><b>Sin ubicación (${sin.length})</b><br>${sin.map(x=>esc(x.nom)).join(' · ')}<br><small>No tienen coordenadas en Monica; no van en el enlace ni en el archivo.</small></div>`:''}
     </div>
     ${paradas.length?`<div class="rm-btns">
-      <button class="btn ok" onclick="rmWhats(${v.id})">Google Maps por WhatsApp</button>
-      <div class="rm-omw"><button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo Organic Maps</button><button class="btn sec rm-omc" onclick="rmKmlEnviar(${v.id},true)" aria-label="Compartir el archivo">${ICO_COMPARTIR}</button></div>
+      <button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo Organic Maps</button>
       <div class="rm-fila">${en.map(e=>`<a class="btn sec" href="${e.url}" target="_blank" rel="noopener">${en.length>1?`Maps ${e.desde}–${e.hasta}`:'Abrir Google Maps'}</a>`).join('')}<button class="btn sec" onclick="rmCopiar(${v.id})">Copiar</button></div>
     </div>
     <div class="rm-nota">En el orden de la ruta · Google Maps sale de donde esté el teléfono del rutero</div>`:''}`;
@@ -4480,7 +4479,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-19.1';
+const VERSION='2026-11-20.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

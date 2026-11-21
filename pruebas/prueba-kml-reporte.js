@@ -46,7 +46,7 @@ window.supabase={createClient:()=>({
   await p.evaluate(()=>entrarListo({email:'cesar@cobros.local'},null));await p.waitForTimeout(600);
   ok('Entró como maestro', await p.evaluate(()=>esMaestro()));
   await p.evaluate(()=>rpAbrir());await p.waitForTimeout(2200);
-  ok('Mapeo por vendedor tiene PDF y "Archivo Organic Maps" con compartir', await p.isVisible('#rpBtnM')&&await p.isVisible('#rpBtnK')&&await p.isVisible('#rpBtnKc'));
+  ok('Mapeo por vendedor tiene PDF y "Archivo Organic Maps"', await p.isVisible('#rpBtnM')&&await p.isVisible('#rpBtnK'));
   await p.screenshot({path:path.join(__dirname,'capturas','kml-reporte-1.png')});
   await p.selectOption('#rpVen','15');
   const hoy=await p.evaluate(()=>rpHoy());
@@ -84,6 +84,13 @@ window.supabase={createClient:()=>({
   const ruta=await p.evaluate(()=>{viajes.push({id:555,rutero:'juan',pedidos:[{id:1,nombre:'LA CUCHILLA',total:514.7,estado:'pagado',fac:1,lat:14.5002191,lng:-90.9888658}]});
     return rmKml(viajes.find(v=>v.id===555),new Date(2026,10,7));});
   ok('Ruta del viaje: mismo archivo que antes', ruta.archivo==='ruta_juan_7noviembre.kml'&&ruta.txt.includes('<name>Ruta Juan 7 noviembre</name>')&&ruta.txt.includes('<name>01. LA CUCHILLA - Q514.70</name>'));
+  // Ventana "Ruta de…" (20/11, pedido de César): sin "Google Maps por WhatsApp" ni el cuadrito de compartir
+  await p.evaluate(()=>{rpCerrar();rutaMaps(555);});await p.waitForTimeout(400);
+  const bot=await p.$$eval('#modalRecibeBody .rm-btns button, #modalRecibeBody .rm-btns a',xs=>xs.map(x=>x.textContent.trim()));
+  ok('Ruta: solo "Archivo Organic Maps", "Abrir Google Maps" y "Copiar" ('+bot.join(' | ')+')', bot.length===3&&bot[0]==='Archivo Organic Maps'&&bot[1]==='Abrir Google Maps'&&bot[2]==='Copiar');
+  const [dl2]=await Promise.all([p.waitForEvent('download',{timeout:5000}).catch(()=>null),p.click('#modalRecibeBody .rm-om')]);
+  ok('Ruta: "Archivo Organic Maps" baja el .kml', dl2&&/^ruta_juan_\d+[a-z]+\.kml$/.test(dl2.suggestedFilename()));
+  await p.screenshot({path:path.join(__dirname,'capturas','ruta-botones.png')});
   ok('Sin errores en la página', errs.length===0);if(errs.length)console.log(errs);
   await b.close();srv.close();
   console.log(fallas?`\n${fallas} prueba(s) fallaron`:'\nTodas las pruebas pasaron');process.exit(fallas?1:0);

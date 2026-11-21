@@ -3888,8 +3888,8 @@ function ubiBoton(map){
   new C().addTo(map);
 }
 function ubiTocar(map){
-  if(UBI.map===map&&UBI.watch!=null){if(UBI.ll)map.setView(UBI.ll,Math.max(map.getZoom(),16));else UBI.centrar=true;return;}
-  ubiIniciar(map,true);
+  if(UBI.map===map&&UBI.watch!=null){if(UBI.ll)map.setView(UBI.ll,Math.max(map.getZoom(),16));else{UBI.centrar=true;toast('Buscando tu ubicación…');}return;}
+  ubiIniciar(map,true);UBI._toco=true;if(UBI.watch!=null)toast('Buscando tu ubicación…');
 }
 function ubiEstado(){document.querySelectorAll('.ubi-btn').forEach(b=>{b.classList.toggle('on',UBI.watch!=null&&!!UBI.ll);b.classList.toggle('busca',UBI.watch!=null&&!UBI.ll);});}
 function ubiIniciar(map,centrar){
@@ -3905,9 +3905,12 @@ function ubiIniciar(map,centrar){
     if(UBI.centrar){UBI.centrar=false;map.setView(ll,Math.max(map.getZoom(),16));}
     ubiEstado();
   },err=>{
-    const pidio=UBI.centrar;ubiParar();
-    if(pidio||err.code!==1)toast(err.code===1?'Cobros no tiene permiso de ubicación (Ajustes del iPhone › Safari › Ubicación)':'No se pudo saber tu ubicación',true);
-  },{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+    const pidio=UBI.centrar||UBI._toco;UBI._toco=false;
+    if(err.code===3){if(pidio)toast('Todavía buscando tu ubicación…');return;}   // tardó: sigue buscando
+    ubiParar();
+    if(pidio)toast(err.code===1?'El iPhone no deja usar la ubicación: Ajustes › Privacidad y seguridad › Localización › Sitios web de Safari → "Al usarse la app"'
+      :'El iPhone no encuentra tu ubicación. Revisá que Localización esté encendida',true);
+  },{enableHighAccuracy:true,maximumAge:5000,timeout:30000});
   ubiEstado();
 }
 function ubiParar(map){
@@ -4634,7 +4637,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-21.2';
+const VERSION='2026-11-21.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

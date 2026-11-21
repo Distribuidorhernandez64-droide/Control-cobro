@@ -85,3 +85,8 @@ PDF (lat/lon de cada cliente que manda la PC) arma el .kml igual al de la ruta (
 un punto con la suma), nombre `mapeo_<vendedor>_<día><mes>.kml` (rangos "8al10noviembre"), avisa los que no tienen
 ubicación, compartir directo, y la ruta del viaje sigue igual. Base falsa en la página (no necesita Postgres).
 Nota: prueba-mapa.js y prueba-reportes.js entran con el PIN viejo; desde el cambio de seguridad hay que adaptarlas.
+
+`prueba-mapa-viaje.js` — Mapa del viaje (21/11/2026): en "Ruta de…" el botón de mapa (junto a la X) abre el mapa de
+ese viaje a pantalla completa: bodega + paradas numeradas en el orden de la ruta (mismo cliente = 1 parada), girar
+con dos dedos, "N sin ubicación"; tocar una parada muestra sus notas con "Ver productos" (peVerRuta); solo para ver.
+Tocar fuera cierra la tarjeta; cerrar regresa a "Ruta de…". Base falsa en la página y Leaflet local.

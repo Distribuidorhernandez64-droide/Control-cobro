@@ -149,7 +149,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-22.1';
+const VERSION = '2026-11-22.2';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -426,6 +426,7 @@ function vistaAdmin() {
   const pend = d.entregas.filter(e => e.estado === 'enviado').sort(recientePrimero('fecha_envio'));
   const movs = d.ingresos.map(i => ({ tipo: 'ing', id: i.id, fecha: i.fecha, creado_en: i.creado_en, o: i }))
     .concat(d.entregas.filter(e => e.estado === 'recibido').map(e => ({ tipo: 'rec', id: e.id, fecha: e.fecha_recibido, creado_en: e.creado_en, o: e })))
+    .concat((d.dias || []).filter(x => !d.ventas.some(v => v.fecha === x.fecha)).map(x => ({ tipo: 'dia', id: 'dia-' + x.fecha, fecha: x.fecha, creado_en: '', o: x })))
     .sort(recientePrimero('fecha'));
   const hoy = hoyGT();
   const sin = d.ventas.filter(v => !v.entrega_id).sort(recientePrimero('fecha'));
@@ -438,7 +439,7 @@ function vistaAdmin() {
   const vacios = [], marcados = [];
   for (let x = hoy; x >= desdeV; x = addDays(x, -1)) if (!conVenta.has(x)) (marcas[x] ? marcados.push({ marcado: marcas[x], fecha: x }) : vacios.push({ vacio: true, fecha: x }));
   // Primero lo pendiente (huecos y ventas); los días ya marcados como descanso o cerrado pasan al final
-  const filasAdm = vacios.concat(sin).sort((a, b) => a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (a.vacio ? -1 : b.vacio ? 1 : 0)).concat(marcados);
+  const filasAdm = vacios.concat(sin).sort((a, b) => a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (a.vacio ? -1 : b.vacio ? 1 : 0));
   return `${avisoHtml()}${tarjetaBalance(d, false)}
   ${pend.length ? `<section class="sec"><div class="sech"><h2 class="rojo">Pendiente de recibir</h2></div>
     ${pend.map(e => `<div class="pend">${ventasDeRec(d, e.id).map(v => `<div class="d"><span>${diaMarca(v, true)}${tc(d, v)}${horaTag(v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}
@@ -455,6 +456,9 @@ function vistaAdmin() {
   <div class="dos"><button class="b n med" data-a="ingreso">Ingresar mercadería</button><button class="b l med" data-a="ajustes">Saldo y tope</button></div>
   <section class="sec"><div class="sech"><h2>Últimos movimientos</h2>${d.ingresos.length ? '<span class="tip">Desliza una factura ← para editar</span>' : ''}</div>
     <div class="lista">${movs.length ? movs.slice(0, S.lim.mov).map(m => {
+      if (m.tipo === 'dia') { const et = m.o.motivo === 'descanso' ? 'Descanso' : 'Cerrado';
+        const nota = m.o.nota && m.o.nota.trim().toLowerCase() !== et.toLowerCase() ? m.o.nota : '';
+        return `<button class="fila apagada" data-a="dia" data-fecha="${m.fecha}" style="min-height:58px"><span class="col"><span class="t1">${dia(m.fecha)}</span>${nota ? `<span class="t2">${esc(nota)}</span>` : ''}</span><span class="marca">${et}</span></button>`; }
       if (m.tipo === 'ing') return `<div class="sw ${S.swiped === m.id ? 'abierta' : ''}"><button class="accion" data-a="editarIng" data-id="${m.id}" tabindex="${S.swiped === m.id ? 0 : -1}">Editar</button>
         <div class="fila" data-swipe="${m.id}"><span class="col"><span class="t1">Factura ${esc(m.o.factura)}</span><span class="t2">Mercadería · ${fdate(m.o.fecha)}</span></span><span class="mn vino" style="font-size:15px">+${fmt(m.o.monto)}</span></div></div>`;
       const ab = !!S.abiertos[m.id], vt = tardeVigente(m.o);

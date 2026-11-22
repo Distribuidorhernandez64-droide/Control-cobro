@@ -32,6 +32,9 @@ header{position:sticky;top:0;z-index:5;background:#FFFFFF;border-bottom:1px soli
 .seg.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
 .seg button{height:34px;border:0;border-radius:8px;font-size:13px;font-weight:600;background:transparent;color:#5C6862}
 .seg button.on{background:#FFFFFF;color:#16211C;box-shadow:0 1px 2px rgba(22,33,28,.12)}
+.marca{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#EEF0EE;color:#5C6862;white-space:nowrap}
+.fila.apagada .t1{color:#5C6862;font-weight:500}
+.hueco{color:#B42318;font-weight:600}
 .seg.tiendas{background:var(--t-seg,#EEF0EE)}
 .seg.tiendas button{display:flex;align-items:center;justify-content:center;gap:7px;height:38px;font-size:14px}
 .seg.tiendas button svg{opacity:.55}
@@ -146,7 +149,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-15.4';
+const VERSION = '2026-11-22.1';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -308,6 +311,21 @@ function balanceAl(d, t) {
 const ventasDeRec = (d, eid) => ventasDe(d, eid).slice().reverse();   // para las listas: el día más reciente arriba
 const ventasDe = (d, eid) => d.ventas.filter(v => v.entrega_id === eid).sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
 const diasCortoDe = (d, eid) => ventasDe(d, eid).map(v => diaCorto(v.fecha)).join(', ');
+// Resumen de los días de una entrega: "Mar 17 – Vie 20". Si en medio falta un día, se dice cuál
+// (pendiente, o descanso / cerrado si administración lo marcó). Los días con venta en otra entrega no se mencionan.
+function rangoDe(d, eid) {
+  const fs = [...new Set(ventasDe(d, eid).map(v => v.fecha))].sort();
+  if (!fs.length) return '';
+  const a = fs[0], b = fs[fs.length - 1];
+  let txt = a === b ? diaCorto(a) : diaCorto(a) + ' – ' + diaCorto(b);
+  const conVenta = new Set(d.ventas.map(v => v.fecha)); const marcas = {}; (d.dias || []).forEach(x => { marcas[x.fecha] = x.motivo; });
+  const huecos = [];
+  for (let x = addDays(a, 1); x < b; x = addDays(x, 1)) {
+    if (fs.includes(x) || conVenta.has(x)) continue;
+    huecos.push(marcas[x] ? `${diaCorto(x)} ${marcas[x]}` : `<span class="hueco">${diaCorto(x)} pendiente</span>`);
+  }
+  return txt + (huecos.length ? ' · ' + huecos.join(', ') : '');
+}
 // Venta anotada otro día (no el mismo día de la venta): marca roja en administración.
 // Se ve mientras el dinero está pendiente y 2 días después de recibirlo; luego se quita.
 const esTarde = v => !!(v.creado_en && diaDe(v.creado_en) > v.fecha);
@@ -355,7 +373,7 @@ function cabecera() {
     seg = `<div class="seg tiendas">${ts.map(t => `<button data-a="tienda" data-id="${esc(t.id)}" class="${t.id === S.tienda ? 'on' : ''}" aria-pressed="${t.id === S.tienda}">${TEMA[t.id] ? TEMA[t.id].ico : ''}<span>${esc(t.nombre.replace(/^Tienda\s+/i, ''))}</span></button>`).join('')}</div>`;
   }
   // En administración el encabezado toma el color de la tienda que se está viendo
-  const tema = esAdmin() && ['home', 'ingreso', 'ajustes', 'reporte'].includes(S.view) ? TEMA[S.tienda] : null;
+  const tema = esAdmin() && ['home', 'ingreso', 'ajustes', 'reporte', 'dia'].includes(S.view) ? TEMA[S.tienda] : null;
   return `<header class="${tema ? 'tinta' : ''}" style="${temaVars(tema)}"><div class="hrow"><div class="htit"><h1>${esc(titulo)}</h1>${sub}</div><div class="hico">${ico}</div></div>${seg}</header>`;
 }
 function pintarCab() {
@@ -393,7 +411,7 @@ function vistaTienda(prev) {
   <section class="sec"><div class="sech"><h2>Entregas</h2></div>
     <div class="lista">${ents.length ? ents.slice(0, S.lim.ent).map(e => {
       const rec = e.estado === 'recibido', ab = !!S.abiertos[e.id];
-      return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${e.id}" aria-expanded="${ab}"><span class="col"><span class="t1">${esc(diasCortoDe(d, e.id))}</span>
+      return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${e.id}" aria-expanded="${ab}"><span class="col"><span class="t1">${rangoDe(d, e.id)}</span>
         <span class="t2 ${rec ? 'verde' : 'rojo'}" style="font-weight:600">${rec ? 'Recibido ' + fdate(e.fecha_recibido) : 'Pendiente de recibir'}</span></span>
         <span style="display:flex;align-items:center;gap:6px"><span class="mn">${fmt(e.total)}</span>${ICO.chev}</span></button>
         ${ab ? `<div class="det">${ventasDeRec(d, e.id).map(v => `<div><span>${dia(v.fecha)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
@@ -416,8 +434,11 @@ function vistaAdmin() {
   const primera = d.ventas.reduce((m, v) => v.fecha < m ? v.fecha : m, hoy);
   let desdeV = d.tienda.fecha_ini > primera ? d.tienda.fecha_ini : primera;
   if (desdeV < addDays(hoy, -30)) desdeV = addDays(hoy, -30);
-  const vacios = []; for (let x = hoy; x >= desdeV; x = addDays(x, -1)) if (!conVenta.has(x)) vacios.push({ vacio: true, fecha: x });
-  const filasAdm = vacios.concat(sin).sort((a, b) => a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (a.vacio ? -1 : b.vacio ? 1 : 0));
+  const marcas = {}; (d.dias || []).forEach(x => { marcas[x.fecha] = x; });
+  const vacios = [], marcados = [];
+  for (let x = hoy; x >= desdeV; x = addDays(x, -1)) if (!conVenta.has(x)) (marcas[x] ? marcados.push({ marcado: marcas[x], fecha: x }) : vacios.push({ vacio: true, fecha: x }));
+  // Primero lo pendiente (huecos y ventas); los días ya marcados como descanso o cerrado pasan al final
+  const filasAdm = vacios.concat(sin).sort((a, b) => a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (a.vacio ? -1 : b.vacio ? 1 : 0)).concat(marcados);
   return `${avisoHtml()}${tarjetaBalance(d, false)}
   ${pend.length ? `<section class="sec"><div class="sech"><h2 class="rojo">Pendiente de recibir</h2></div>
     ${pend.map(e => `<div class="pend">${ventasDeRec(d, e.id).map(v => `<div class="d"><span>${diaMarca(v, true)}${tc(d, v)}${horaTag(v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}
@@ -426,7 +447,9 @@ function vistaAdmin() {
       <button class="devolver" data-a="devolver" data-id="${e.id}">Devolver a la tienda</button></div>`).join('')}</section>` : ''}
   <section class="sec"><div class="sech"><h2>Ventas sin entregar</h2>${sin.length ? `<span class="der">${fmt(n2(sin.reduce((a, v) => a + Number(v.monto), 0)))}</span>` : ''}</div>
     <div class="lista">${filasAdm.slice(0, S.lim.adm).map(v => v.vacio
-        ? `<div class="fila"><span class="t1">${dia(v.fecha)}</span><span class="mn" style="color:#9AA59F;letter-spacing:2px" aria-label="Sin venta anotada">— —</span></div>`
+        ? `<button class="fila" data-a="dia" data-fecha="${v.fecha}" aria-label="${dia(v.fecha)}: sin venta anotada. Toca para marcar"><span class="t1">${dia(v.fecha)}</span><span class="mn" style="color:#9AA59F;letter-spacing:2px">— —</span></button>`
+        : v.marcado
+        ? `<button class="fila apagada" data-a="dia" data-fecha="${v.fecha}"><span class="col"><span class="t1">${dia(v.fecha)}</span>${v.marcado.nota ? `<span class="t2">${esc(v.marcado.nota)}</span>` : ''}</span><span class="marca">${v.marcado.motivo === 'descanso' ? 'Descanso' : 'Cerrado'}</span></button>`
         : `<div class="fila"><span class="col"><span class="t1">${diaMarca(v, true)}${tc(d, v)}</span>${lineaAdm(d, v)}</span><span class="mn" style="font-weight:600">${fmt(v.monto)}</span></div>`).join('')}
       ${!filasAdm.length ? '<p class="vacio">Todo lo anotado ya fue entregado.</p>' : ''}${masBtn('adm', filasAdm.length)}</div></section>
   <div class="dos"><button class="b n med" data-a="ingreso">Ingresar mercadería</button><button class="b l med" data-a="ajustes">Saldo y tope</button></div>
@@ -435,13 +458,22 @@ function vistaAdmin() {
       if (m.tipo === 'ing') return `<div class="sw ${S.swiped === m.id ? 'abierta' : ''}"><button class="accion" data-a="editarIng" data-id="${m.id}" tabindex="${S.swiped === m.id ? 0 : -1}">Editar</button>
         <div class="fila" data-swipe="${m.id}"><span class="col"><span class="t1">Factura ${esc(m.o.factura)}</span><span class="t2">Mercadería · ${fdate(m.o.fecha)}</span></span><span class="mn vino" style="font-size:15px">+${fmt(m.o.monto)}</span></div></div>`;
       const ab = !!S.abiertos[m.id], vt = tardeVigente(m.o);
-      return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${m.id}" aria-expanded="${ab}" style="min-height:58px"><span class="col"><span class="t1">Efectivo recibido</span><span class="t2">${diasCortoMarca(d, m.id, vt)} · ${fdate(m.o.fecha_recibido)}</span></span>
+      return `<button class="fila ${ab ? 'abierto' : ''}" data-a="abrir" data-id="${m.id}" aria-expanded="${ab}" style="min-height:58px"><span class="col"><span class="t1">Efectivo recibido</span><span class="t2">${rangoDe(d, m.id)} · ${fdate(m.o.fecha_recibido)}</span></span>
         <span style="display:flex;align-items:center;gap:6px"><span class="mn verde" style="font-size:15px">−${fmt(m.o.total)}</span>${ICO.chev}</span></button>
         ${ab ? `<div class="det">${ventasDeRec(d, m.id).map(v => `<div><span>${diaMarca(v, vt)}${tc(d, v)}${horaTag(v)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
     }).join('') : '<p class="vacio">Todavía no hay movimientos.</p>'}${masBtn('mov', movs.length)}</div></section>`;
 }
 
 const botones = (accion, txt, color) => `<div class="dos"><button class="b l" data-a="home">Cancelar</button><button class="b ${color || 'g'}" data-a="${accion}">${txt || 'Guardar'}</button></div>`;
+function vistaDia() {
+  const f = S.f; const d = D();
+  const ya = d && (d.dias || []).some(x => x.fecha === f.fecha);
+  return `<div class="form"><div><h2>${dia(f.fecha)}</h2><p class="sub">${esc(d ? d.tienda.nombre : '')} · sin venta anotada</p></div>
+    <div class="seg"><button data-a="motivo" data-m="descanso" class="${f.motivo === 'descanso' ? 'on' : ''}">Descanso</button><button data-a="motivo" data-m="cerrado" class="${f.motivo === 'cerrado' ? 'on' : ''}">Cerrado</button></div>
+    <label class="campo">Observación<input type="text" data-f="nota" value="${esc(f.nota)}" placeholder="Opcional" maxlength="200" autocomplete="off"></label>
+    ${errHtml()}${botones('guardarDia', 'Guardar', 'n')}
+    ${ya ? '<button class="devolver" data-a="quitarDia" style="margin-top:-6px">Quitar marca</button>' : ''}</div>`;
+}
 const errHtml = () => S.err ? `<p class="err" role="alert">${esc(S.err)}</p>` : '';
 
 function vistaVenta() {
@@ -795,6 +827,24 @@ const A = {
     encolar('ce_ingreso', { p_tienda: tk(), p_id: id, p_factura: fac, p_fecha: f.fecha, p_monto: m });
     avisar(ex ? 'Factura ' + fac + ' editada · ' + fmt(m) : 'Ingreso nuevo · +' + fmt(m)); abrir('home'); sync();
   },
+  dia(el) {
+    const d = D(); if (!d) return; const fe = el.dataset.fecha; const x = (d.dias || []).find(y => y.fecha === fe);
+    abrir('dia', { fecha: fe, motivo: x ? x.motivo : 'descanso', nota: x ? x.nota : '' });
+  },
+  motivo(el) { S.f.motivo = el.dataset.m; document.querySelectorAll('[data-a="motivo"]').forEach(b => b.classList.toggle('on', b === el)); },
+  guardarDia() {
+    const d = D(); const f = S.f; if (!d) return;
+    const nota = String(f.nota || '').trim().slice(0, 200);
+    d.dias = (d.dias || []).filter(x => x.fecha !== f.fecha).concat([{ fecha: f.fecha, motivo: f.motivo, nota }]); setD(d);
+    encolar('ce_marcar_dia', { p_tienda: tk(), p_fecha: f.fecha, p_motivo: f.motivo, p_nota: nota });
+    avisar(dia(f.fecha) + ' · ' + (f.motivo === 'descanso' ? 'Descanso' : 'Cerrado')); abrir('home'); sync();
+  },
+  quitarDia() {
+    const d = D(); const f = S.f; if (!d) return;
+    d.dias = (d.dias || []).filter(x => x.fecha !== f.fecha); setD(d);
+    encolar('ce_marcar_dia', { p_tienda: tk(), p_fecha: f.fecha, p_motivo: '', p_nota: '' });
+    avisar('Marca quitada · ' + dia(f.fecha)); abrir('home'); sync();
+  },
   ajustes() { const d = D(); if (!d) return; abrir('ajustes', { saldo: fmtInput(String(d.tienda.saldo_ini)), fecha: d.tienda.fecha_ini, tope: fmtInput(String(d.tienda.tope)) }); },
   guardarAjustes() {
     const d = D(); const f = S.f; const s = num(f.saldo), t = num(f.tope);
@@ -814,9 +864,9 @@ function render() {
   if (!S.ses) { app.innerHTML = vistaLogin(); return; }
   const v = {
     home: () => esAdmin() ? (S.preview ? vistaTienda(true) : vistaAdmin()) : vistaTienda(false), venta: vistaVenta, corregir: vistaCorregir, entrega: vistaEntrega,
-    ingreso: vistaIngreso, ajustes: vistaAjustes, reporte: vistaReporte, usuarios: vistaUsuarios, usuario: vistaUsuario
+    ingreso: vistaIngreso, ajustes: vistaAjustes, dia: vistaDia, reporte: vistaReporte, usuarios: vistaUsuarios, usuario: vistaUsuario
   }[S.view] || (() => '');
-  const tema = esAdmin() && ['home', 'ingreso', 'ajustes', 'reporte'].includes(S.view) ? TEMA[S.tienda] : null;
+  const tema = esAdmin() && ['home', 'ingreso', 'ajustes', 'reporte', 'dia'].includes(S.view) ? TEMA[S.tienda] : null;
   app.className = tema ? 'marco' : ''; app.style.cssText = temaVars(tema);
   app.innerHTML = cabecera() + '<main>' + v() + '</main>';
 }

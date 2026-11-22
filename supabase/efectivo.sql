@@ -88,6 +88,16 @@ create table if not exists public.ce_ingresos (
 );
 create index if not exists ce_ingresos_tienda on public.ce_ingresos (tienda_id, fecha);
 
+-- Días sin venta que administración marca (descanso de la encargada o tienda cerrada)
+create table if not exists public.ce_dias (
+  tienda_id  text not null references public.ce_tiendas(id),
+  fecha      date not null,
+  motivo     text not null check (motivo in ('descanso','cerrado')),
+  nota       text not null default '',
+  creado_en  timestamptz not null default now(),
+  primary key (tienda_id, fecha)
+);
+
 create table if not exists public.ce_cambios (
   id         bigserial primary key,
   tienda_id  text not null references public.ce_tiendas(id),
@@ -109,8 +119,9 @@ alter table public.ce_ventas   enable row level security;
 alter table public.ce_entregas enable row level security;
 alter table public.ce_ingresos enable row level security;
 alter table public.ce_cambios  enable row level security;
+alter table public.ce_dias     enable row level security;
 revoke all on public.ce_tiendas, public.ce_usuarios, public.ce_sesiones, public.ce_ventas,
-              public.ce_entregas, public.ce_ingresos, public.ce_cambios from anon, authenticated;
+              public.ce_entregas, public.ce_ingresos, public.ce_cambios, public.ce_dias from anon, authenticated;
 revoke all on sequence public.ce_cambios_id_seq from anon, authenticated;
 
 -- ===================== FUNCIONES INTERNAS (cei_) =====================
@@ -241,7 +252,11 @@ begin
                  from public.ce_ingresos where tienda_id = t), '[]'::json),
     'cambios', coalesce((select json_agg(json_build_object('id', id, 'tipo', tipo, 'venta_id', venta_id, 'fecha', fecha, 'antes', antes, 'despues', despues,
                  'quien', quien, 'cuando', cuando) order by id)
-                 from public.ce_cambios where tienda_id = t and (u.rol = 'admin' or tipo = 'correccion')), '[]'::json)
+                 from public.ce_cambios where tienda_id = t and (u.rol = 'admin' or tipo = 'correccion')), '[]'::json),
+    'dias', case when u.rol = 'admin' then
+        coalesce((select json_agg(json_build_object('fecha', fecha, 'motivo', motivo, 'nota', nota) order by fecha)
+                 from public.ce_dias where tienda_id = t), '[]'::json)
+      else '[]'::json end
   ) into r;
   return r;
 end $$;
@@ -348,6 +363,24 @@ begin
   end if;
   update public.ce_ventas set entrega_id = null where entrega_id = p_entrega;
   delete from public.ce_entregas where id = p_entrega and estado = 'enviado';
+end $$;
+
+-- Marcar un día sin venta como descanso o cerrado (administración). Motivo vacío = quitar la marca.
+create or replace function public.ce_marcar_dia(p_token text, p_tienda text, p_fecha date, p_motivo text, p_nota text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ce_usuarios; t text;
+begin
+  u := public.cei_admin(p_token);
+  t := public.cei_tienda(u, p_tienda);
+  if p_fecha is null then raise exception 'Falta la fecha.'; end if;
+  if coalesce(p_motivo, '') = '' then
+    delete from public.ce_dias where tienda_id = t and fecha = p_fecha;
+    return;
+  end if;
+  if p_motivo not in ('descanso', 'cerrado') then raise exception 'Motivo no válido.'; end if;
+  insert into public.ce_dias (tienda_id, fecha, motivo, nota)
+  values (t, p_fecha, p_motivo, left(trim(coalesce(p_nota, '')), 200))
+  on conflict (tienda_id, fecha) do update set motivo = excluded.motivo, nota = excluded.nota;
 end $$;
 
 -- Saldo inicial y tope (administración)

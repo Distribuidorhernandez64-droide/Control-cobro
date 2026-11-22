@@ -52,8 +52,8 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .bal.chico .est{font-size:13px}
 .dot{width:8px;height:8px;border-radius:999px;display:inline-block}
 .bal.ok .dot{background:#1B6B4F}.bal.alto .dot{background:#C0352A}
-.sem7{margin-top:6px;padding-top:12px;border-top:1px solid rgba(22,33,28,.08);display:flex;flex-direction:column;gap:6px}
-.sem7 .cab{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}
+.sem7{margin-top:2px;padding-top:10px;border-top:1px solid rgba(22,33,28,.08);display:flex;flex-direction:column;gap:4px}
+.sem7 .cab{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;opacity:.85}
 .sem7 .cab span:last-child{display:flex;align-items:center;gap:6px}
 .sem7 .cab i{width:7px;height:7px;border-radius:999px;display:inline-block}
 .sem7 svg{display:block;width:100%;height:auto;overflow:visible}
@@ -157,7 +157,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-22.3';
+const VERSION = '2026-11-22.4';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -404,13 +404,13 @@ function graficaSemana(d) {
     dias.push({ f, val, hoy: f === hoy });
   }
   const con = dias.filter(x => x.val !== null);
-  const W = 300, H = 64, pad = 6, x = i => pad + i * (W - 2 * pad) / 6;
+  const W = 300, H = 34, pad = 4, x = i => pad + i * (W - 2 * pad) / 6;
   const max = Math.max(meta * 1.35, ...con.map(x => x.val), 1);
   const y = v => H - pad - (v / max) * (H - 2 * pad);
   let est = null;
   if (con.length) { const prom = con.reduce((a, x) => a + x.val, 0) / con.length; est = prom >= meta ? 'bien' : prom >= meta * .8 ? 'regular' : 'bajo'; }
-  const col = { bien: '#1B6B4F', regular: '#B7791F', bajo: '#C0352A' }[est] || '#9AA59F';
-  const txt = { bien: 'Bien', regular: 'Regular', bajo: 'Bajo' }[est] || 'Sin ventas aún';
+  const col = { bien: '#1B6B4F', regular: '#B7791F', bajo: '#7D8A84' }[est] || '#9AA59F';   // sin rojo: el rojo es solo para el tope del balance
+  const txt = { bien: 'En meta', regular: 'Cerca de la meta', bajo: 'Por debajo de la meta' }[est] || 'Sin ventas aún';
   // tramos continuos (un día de descanso corta la línea)
   const tramos = []; let t = [];
   dias.forEach((p, i) => { if (p.val === null) { if (t.length) tramos.push(t); t = []; } else t.push([x(i), y(p.val)]); });
@@ -420,12 +420,12 @@ function graficaSemana(d) {
   const gid = 'g' + Math.random().toString(36).slice(2, 7);
   const letras = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
   return `<div class="sem7"><div class="cab"><span>Esta semana</span><span><i style="background:${col}"></i>${txt}</span></div>
-    <svg viewBox="0 0 ${W} ${H + 16}" role="img" aria-label="Ventas de esta semana: ${txt}">
+    <svg viewBox="0 0 ${W} ${H + 13}" role="img" aria-label="Ventas de esta semana: ${txt}">
       <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".18"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
       <line x1="${pad}" x2="${W - pad}" y1="${y(meta).toFixed(1)}" y2="${y(meta).toFixed(1)}" stroke="currentColor" stroke-opacity=".28" stroke-width="1" stroke-dasharray="3 4"/>
-      ${tramos.map(tr => `<path d="${area(tr)}" fill="url(#${gid})"/><path d="${linea(tr)}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
-      ${dias.map((p, i) => p.val === null ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(p.val).toFixed(1)}" r="${p.hoy ? 3.6 : 2.6}" fill="${p.hoy ? col : '#FFF'}" stroke="${col}" stroke-width="1.8"/>`).join('')}
-      ${letras.map((l, i) => `<text x="${x(i).toFixed(1)}" y="${H + 13}" text-anchor="middle" font-size="9.5" font-weight="${dias[i].hoy ? 700 : 500}" fill="currentColor" fill-opacity="${dias[i].hoy ? .9 : .5}">${l}</text>`).join('')}
+      ${tramos.map(tr => `<path d="${area(tr)}" fill="url(#${gid})"/><path d="${linea(tr)}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
+      ${dias.map((p, i) => p.val === null ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(p.val).toFixed(1)}" r="${p.hoy ? 3 : 2.2}" fill="${p.hoy ? col : '#FFF'}" stroke="${col}" stroke-width="1.8"/>`).join('')}
+      ${letras.map((l, i) => `<text x="${x(i).toFixed(1)}" y="${H + 11}" text-anchor="middle" font-size="8.5" font-weight="${dias[i].hoy ? 700 : 500}" fill="currentColor" fill-opacity="${dias[i].hoy ? .9 : .5}">${l}</text>`).join('')}
     </svg></div>`;
 }
 function tarjetaBalance(d, chico) {

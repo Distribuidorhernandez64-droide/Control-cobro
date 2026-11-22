@@ -25,6 +25,8 @@ insert into public.ce_tiendas (id, nombre, orden) values
   ('canasta', 'Tienda La Canasta', 1),
   ('morelia', 'Tienda Morelia', 2)
 on conflict (id) do nothing;
+-- Meta de venta por día (para la gráfica de la semana)
+alter table public.ce_tiendas add column if not exists meta numeric(12,2) not null default 600;
 
 create table if not exists public.ce_usuarios (
   id               uuid primary key default gen_random_uuid(),
@@ -239,7 +241,7 @@ begin
     'tiendas', case when u.rol = 'admin' then
         (select json_agg(json_build_object('id', id, 'nombre', nombre) order by orden) from public.ce_tiendas)
       else null end,
-    'tienda', (select json_build_object('id', id, 'nombre', nombre, 'saldo_ini', saldo_ini, 'fecha_ini', fecha_ini, 'tope', tope)
+    'tienda', (select json_build_object('id', id, 'nombre', nombre, 'saldo_ini', saldo_ini, 'fecha_ini', fecha_ini, 'tope', tope, 'meta', meta)
                  from public.ce_tiendas where id = t),
     'ventas', coalesce((select json_agg(json_build_object('id', id, 'fecha', fecha, 'monto', monto, 'quien', quien,
                  'entrega_id', entrega_id, 'creado_en', coalesce(creado_local, creado_en)) order by fecha, coalesce(creado_local, creado_en))
@@ -253,10 +255,9 @@ begin
     'cambios', coalesce((select json_agg(json_build_object('id', id, 'tipo', tipo, 'venta_id', venta_id, 'fecha', fecha, 'antes', antes, 'despues', despues,
                  'quien', quien, 'cuando', cuando) order by id)
                  from public.ce_cambios where tienda_id = t and (u.rol = 'admin' or tipo = 'correccion')), '[]'::json),
-    'dias', case when u.rol = 'admin' then
-        coalesce((select json_agg(json_build_object('fecha', fecha, 'motivo', motivo, 'nota', nota) order by fecha)
+    'dias', coalesce((select json_agg(json_build_object('fecha', fecha, 'motivo', motivo,
+                 'nota', case when u.rol = 'admin' then nota else '' end) order by fecha)
                  from public.ce_dias where tienda_id = t), '[]'::json)
-      else '[]'::json end
   ) into r;
   return r;
 end $$;
@@ -383,8 +384,9 @@ begin
   on conflict (tienda_id, fecha) do update set motivo = excluded.motivo, nota = excluded.nota;
 end $$;
 
--- Saldo inicial y tope (administración)
-create or replace function public.ce_ajustes(p_token text, p_tienda text, p_saldo numeric, p_fecha date, p_tope numeric) returns void
+-- Saldo inicial, tope y meta diaria (administración). La meta es opcional: si no viene, no cambia.
+drop function if exists public.ce_ajustes(text, text, numeric, date, numeric);
+create or replace function public.ce_ajustes(p_token text, p_tienda text, p_saldo numeric, p_fecha date, p_tope numeric, p_meta numeric default null) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 declare u public.ce_usuarios; t text;
 begin
@@ -393,7 +395,9 @@ begin
   if p_saldo is null or p_saldo < 0 then raise exception 'Escribe el saldo inicial.'; end if;
   if p_fecha is null then raise exception 'Escoge la fecha.'; end if;
   if p_tope is null or p_tope <= 0 then raise exception 'Escribe un tope mayor a 0.'; end if;
-  update public.ce_tiendas set saldo_ini = round(p_saldo, 2), fecha_ini = p_fecha, tope = round(p_tope, 2) where id = t;
+  if p_meta is not null and p_meta <= 0 then raise exception 'Escribe una meta mayor a 0.'; end if;
+  update public.ce_tiendas set saldo_ini = round(p_saldo, 2), fecha_ini = p_fecha, tope = round(p_tope, 2),
+         meta = coalesce(round(p_meta, 2), meta) where id = t;
 end $$;
 
 -- Usuarios (administración)

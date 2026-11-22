@@ -52,6 +52,14 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .bal.chico .est{font-size:13px}
 .dot{width:8px;height:8px;border-radius:999px;display:inline-block}
 .bal.ok .dot{background:#1B6B4F}.bal.alto .dot{background:#C0352A}
+.sem7{margin-top:6px;padding-top:12px;border-top:1px solid rgba(22,33,28,.08);display:flex;flex-direction:column;gap:6px}
+.sem7 .cab{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}
+.sem7 .cab span:last-child{display:flex;align-items:center;gap:6px}
+.sem7 .cab i{width:7px;height:7px;border-radius:999px;display:inline-block}
+.sem7 svg{display:block;width:100%;height:auto;overflow:visible}
+.filtros{display:flex;gap:6px;padding:0 2px}
+.filtros button{height:30px;padding:0 12px;border-radius:999px;border:1px solid #DDE2DF;background:transparent;color:#5C6862;font-size:12px;font-weight:600}
+.filtros button.on{background:#16211C;border-color:#16211C;color:#FFF}
 .flash{font-size:12px;font-weight:600;opacity:.85}
 .ver{height:32px;padding:0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;color:inherit}
 .dos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -149,7 +157,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-22.2';
+const VERSION = '2026-11-22.3';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -211,7 +219,7 @@ const temaVars = t => t ? `--t-c:${t.c};--t-bg:${t.bg};--t-seg:${t.seg};--t-bord
 const LIM0 = { sin: 3, ent: 3, ing: 3, mov: 5, cam: 3, adm: 5 };
 const S = {
   ses: LS.get('ce_sesion', null),           // {token, usuario, nombre, rol, tienda_id}
-  view: 'home', f: {}, err: '', flash: '', aviso: '',
+  view: 'home', f: {}, err: '', flash: '', aviso: '', movF: 'todos',
   tienda: LS.get('ce_tienda_admin', 'canasta'),
   lim: Object.assign({}, LIM0), abiertos: {}, swiped: null,
   rPer: '60', rDesde: '', rHasta: '', preview: false,
@@ -381,6 +389,45 @@ function pintarCab() {
   const tmp = document.createElement('div'); tmp.innerHTML = cabecera(); h.replaceWith(tmp.firstElementChild);
 }
 
+// Gráfica de la semana (lunes a domingo): venta de cada día contra la meta diaria.
+// Sin números: la línea, una guía punteada en la meta y una palabra (Bien / Regular / Bajo).
+function graficaSemana(d) {
+  const meta = Number(d.tienda.meta || 600); const hoy = hoyGT();
+  const lunes = addDays(hoy, -((dow(hoy) + 6) % 7));
+  const porDia = {}; d.ventas.forEach(v => { porDia[v.fecha] = (porDia[v.fecha] || 0) + Number(v.monto); });
+  const marcas = new Set((d.dias || []).map(x => x.fecha));
+  const desdeUso = d.ventas.reduce((m, v) => v.fecha < m ? v.fecha : m, hoy);
+  const dias = []; for (let i = 0; i < 7; i++) {
+    const f = addDays(lunes, i); let val = null;
+    if (porDia[f] != null) val = porDia[f];
+    else if (f < hoy && f >= desdeUso && !marcas.has(f)) val = 0;   // día pasado sin venta anotada
+    dias.push({ f, val, hoy: f === hoy });
+  }
+  const con = dias.filter(x => x.val !== null);
+  const W = 300, H = 64, pad = 6, x = i => pad + i * (W - 2 * pad) / 6;
+  const max = Math.max(meta * 1.35, ...con.map(x => x.val), 1);
+  const y = v => H - pad - (v / max) * (H - 2 * pad);
+  let est = null;
+  if (con.length) { const prom = con.reduce((a, x) => a + x.val, 0) / con.length; est = prom >= meta ? 'bien' : prom >= meta * .8 ? 'regular' : 'bajo'; }
+  const col = { bien: '#1B6B4F', regular: '#B7791F', bajo: '#C0352A' }[est] || '#9AA59F';
+  const txt = { bien: 'Bien', regular: 'Regular', bajo: 'Bajo' }[est] || 'Sin ventas aún';
+  // tramos continuos (un día de descanso corta la línea)
+  const tramos = []; let t = [];
+  dias.forEach((p, i) => { if (p.val === null) { if (t.length) tramos.push(t); t = []; } else t.push([x(i), y(p.val)]); });
+  if (t.length) tramos.push(t);
+  const linea = pts => pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = pts => pts.length > 1 ? linea(pts) + ` L${pts[pts.length - 1][0].toFixed(1)} ${H - pad} L${pts[0][0].toFixed(1)} ${H - pad} Z` : '';
+  const gid = 'g' + Math.random().toString(36).slice(2, 7);
+  const letras = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  return `<div class="sem7"><div class="cab"><span>Esta semana</span><span><i style="background:${col}"></i>${txt}</span></div>
+    <svg viewBox="0 0 ${W} ${H + 16}" role="img" aria-label="Ventas de esta semana: ${txt}">
+      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".18"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+      <line x1="${pad}" x2="${W - pad}" y1="${y(meta).toFixed(1)}" y2="${y(meta).toFixed(1)}" stroke="currentColor" stroke-opacity=".28" stroke-width="1" stroke-dasharray="3 4"/>
+      ${tramos.map(tr => `<path d="${area(tr)}" fill="url(#${gid})"/><path d="${linea(tr)}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
+      ${dias.map((p, i) => p.val === null ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(p.val).toFixed(1)}" r="${p.hoy ? 3.6 : 2.6}" fill="${p.hoy ? col : '#FFF'}" stroke="${col}" stroke-width="1.8"/>`).join('')}
+      ${letras.map((l, i) => `<text x="${x(i).toFixed(1)}" y="${H + 13}" text-anchor="middle" font-size="9.5" font-weight="${dias[i].hoy ? 700 : 500}" fill="currentColor" fill-opacity="${dias[i].hoy ? .9 : .5}">${l}</text>`).join('')}
+    </svg></div>`;
+}
 function tarjetaBalance(d, chico) {
   const saldo = balanceAl(d, '9999-12-31'); const alto = saldo > Number(d.tienda.tope);
   return `<section class="bal ${alto ? 'alto' : 'ok'} ${chico ? 'chico' : ''}">
@@ -388,6 +435,7 @@ function tarjetaBalance(d, chico) {
     <span class="monto">${fmt(saldo)}</span>
     <div class="pie"><span class="est"><span class="dot"></span>${alto ? 'Sobre el tope' : 'Normal'}</span><span>Tope ${fmt(d.tienda.tope)}</span></div>
     ${S.flash ? `<span class="flash" role="status">${esc(S.flash)}</span>` : ''}
+    ${graficaSemana(d)}
   </section>`;
 }
 const avisoHtml = () => S.aviso ? `<button class="aviso" data-a="quitarAviso">${esc(S.aviso)}<br><span style="font-weight:400">Toca para cerrar.</span></button>` : '';
@@ -427,7 +475,8 @@ function vistaAdmin() {
   const movs = d.ingresos.map(i => ({ tipo: 'ing', id: i.id, fecha: i.fecha, creado_en: i.creado_en, o: i }))
     .concat(d.entregas.filter(e => e.estado === 'recibido').map(e => ({ tipo: 'rec', id: e.id, fecha: e.fecha_recibido, creado_en: e.creado_en, o: e })))
     .concat((d.dias || []).filter(x => !d.ventas.some(v => v.fecha === x.fecha)).map(x => ({ tipo: 'dia', id: 'dia-' + x.fecha, fecha: x.fecha, creado_en: '', o: x })))
-    .sort(recientePrimero('fecha'));
+    .sort(recientePrimero('fecha'))
+    .filter(m => S.movF === 'efectivo' ? m.tipo === 'rec' : S.movF === 'merc' ? m.tipo === 'ing' : true);
   const hoy = hoyGT();
   const sin = d.ventas.filter(v => !v.entrega_id).sort(recientePrimero('fecha'));
   // Días sin ninguna venta anotada (desde que empezó a usar la app): salen con la fecha y guiones
@@ -454,7 +503,8 @@ function vistaAdmin() {
         : `<div class="fila"><span class="col"><span class="t1">${diaMarca(v, true)}${tc(d, v)}</span>${lineaAdm(d, v)}</span><span class="mn" style="font-weight:600">${fmt(v.monto)}</span></div>`).join('')}
       ${!filasAdm.length ? '<p class="vacio">Todo lo anotado ya fue entregado.</p>' : ''}${masBtn('adm', filasAdm.length)}</div></section>
   <div class="dos"><button class="b n med" data-a="ingreso">Ingresar mercadería</button><button class="b l med" data-a="ajustes">Saldo y tope</button></div>
-  <section class="sec"><div class="sech"><h2>Últimos movimientos</h2>${d.ingresos.length ? '<span class="tip">Desliza una factura ← para editar</span>' : ''}</div>
+  <section class="sec"><div class="sech"><h2>Últimos movimientos</h2>${d.ingresos.length && S.movF !== 'efectivo' ? '<span class="tip">Desliza una factura ← para editar</span>' : ''}</div>
+    <div class="filtros" role="group" aria-label="Filtrar movimientos">${[['todos', 'Todos'], ['efectivo', 'Efectivo'], ['merc', 'Mercadería']].map(([k, t]) => `<button data-a="movF" data-k="${k}" class="${S.movF === k ? 'on' : ''}" aria-pressed="${S.movF === k}">${t}</button>`).join('')}</div>
     <div class="lista">${movs.length ? movs.slice(0, S.lim.mov).map(m => {
       if (m.tipo === 'dia') { const et = m.o.motivo === 'descanso' ? 'Descanso' : 'Cerrado';
         const nota = m.o.nota && m.o.nota.trim().toLowerCase() !== et.toLowerCase() ? m.o.nota : '';
@@ -518,7 +568,8 @@ function vistaAjustes() {
     <label class="campo">Saldo inicial<input class="dinero" type="text" inputmode="decimal" data-f="saldo" data-dinero value="${esc(f.saldo)}" autocomplete="off"></label>
     <label class="campo">Desde la fecha<input type="date" data-f="fecha" value="${esc(f.fecha)}"></label>
     <label class="campo">Tope<input class="dinero" type="text" inputmode="decimal" data-f="tope" data-dinero value="${esc(f.tope)}" autocomplete="off"></label>
-    <p class="nota">El balance cuenta la mercadería y el dinero recibido desde esa fecha.</p>
+    <label class="campo">Meta de venta por día<input class="dinero" type="text" inputmode="decimal" data-f="meta" data-dinero value="${esc(f.meta)}" autocomplete="off"></label>
+    <p class="nota">El balance cuenta la mercadería y el dinero recibido desde esa fecha. La meta es la línea punteada de la gráfica.</p>
     ${errHtml()}${botones('guardarAjustes', 'Guardar', 'n')}</div>`;
 }
 
@@ -721,6 +772,7 @@ const A = {
   preview() { S.preview = true; S.swiped = null; S.lim = Object.assign({}, LIM0); render(); window.scrollTo(0, 0); },
   cerrarPreview() { S.preview = false; S.lim = Object.assign({}, LIM0); render(); window.scrollTo(0, 0); },
   mas(el) { S.lim[el.dataset.k] += 5; render(); },
+  movF(el) { S.movF = el.dataset.k; S.lim.mov = LIM0.mov; S.swiped = null; render(); },
   abrir(el) { const id = el.dataset.id; S.abiertos[id] = !S.abiertos[id]; S.swiped = null; render(); },
   reporte() { if (!S.rDesde) ponerPeriodo('60'); S.flash = ''; abrir('reporte'); },
   per(el) { ponerPeriodo(el.dataset.p); render(); },
@@ -849,15 +901,16 @@ const A = {
     encolar('ce_marcar_dia', { p_tienda: tk(), p_fecha: f.fecha, p_motivo: '', p_nota: '' });
     avisar('Marca quitada · ' + dia(f.fecha)); abrir('home'); sync();
   },
-  ajustes() { const d = D(); if (!d) return; abrir('ajustes', { saldo: fmtInput(String(d.tienda.saldo_ini)), fecha: d.tienda.fecha_ini, tope: fmtInput(String(d.tienda.tope)) }); },
+  ajustes() { const d = D(); if (!d) return; abrir('ajustes', { saldo: fmtInput(String(d.tienda.saldo_ini)), fecha: d.tienda.fecha_ini, tope: fmtInput(String(d.tienda.tope)), meta: fmtInput(String(d.tienda.meta || 600)) }); },
   guardarAjustes() {
-    const d = D(); const f = S.f; const s = num(f.saldo), t = num(f.tope);
+    const d = D(); const f = S.f; const s = num(f.saldo), t = num(f.tope), me = num(f.meta);
     if (!d) return;
     if (!(s >= 0)) { S.err = 'Escribe el saldo inicial.'; return render(); }
     if (!f.fecha) { S.err = 'Escoge la fecha.'; return render(); }
     if (!(t > 0)) { S.err = 'Escribe un tope mayor a 0.'; return render(); }
-    d.tienda.saldo_ini = n2(s); d.tienda.fecha_ini = f.fecha; d.tienda.tope = n2(t); setD(d);
-    encolar('ce_ajustes', { p_tienda: tk(), p_saldo: n2(s), p_fecha: f.fecha, p_tope: n2(t) });
+    if (!(me > 0)) { S.err = 'Escribe una meta mayor a 0.'; return render(); }
+    d.tienda.saldo_ini = n2(s); d.tienda.fecha_ini = f.fecha; d.tienda.tope = n2(t); d.tienda.meta = n2(me); setD(d);
+    encolar('ce_ajustes', { p_tienda: tk(), p_saldo: n2(s), p_fecha: f.fecha, p_tope: n2(t), p_meta: n2(me) });
     avisar('Saldo y tope guardados'); abrir('home'); sync();
   }
 };

@@ -4124,6 +4124,22 @@ function kmlTexto(nombre,paradas){
 }
 function kmlSlug(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
 // Entregar el .kml: vista previa / descarga (de ahí Organic Maps o WhatsApp); "directo" = menú de compartir
+// Android (23/11): Chrome no deja compartir archivos .kml desde una página; el archivo se baja a Descargas y,
+// además, "Abrir en Organic Maps" abre la app directo con los puntos (enlace om:// de Organic Maps, varios puntos
+// con nombre: v=1&ll=…&n=…). En el iPhone sigue igual (vista previa del archivo).
+const ES_ANDROID=/Android/i.test(navigator.userAgent||'');
+function omEnlace(nombre,paradas){
+  let q='v=1';
+  paradas.forEach((x,i)=>{q+=`&ll=${x.u[0]},${x.u[1]}&n=${encodeURIComponent(String(i+1).padStart(2,'0')+'. '+x.noms.join(' / ')+' - '+rmQkml(x.tot))}`;});
+  q+='&appname='+encodeURIComponent(nombre);
+  return `intent://map?${q}#Intent;scheme=om;package=app.organicmaps;end`;
+}
+function rmOmAbrir(vid){
+  const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
+  const {paradas}=rmParadas(v);if(!paradas.length){toast('Ninguna parada tiene ubicación',true);return;}
+  const k=rmKml(v);logAudit('RUTA ORGANIC MAPS',`${v.rutero}: abrir en la app (${paradas.length} paradas)`);
+  location.href=omEnlace(k.nombre,paradas);
+}
 async function kmlEntregar(k,directo){
   const f=new File([k.txt],k.archivo,{type:'application/vnd.google-earth.kml+xml'});
   if(directo){
@@ -4132,6 +4148,7 @@ async function kmlEntregar(k,directo){
   }
   const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=k.archivo;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+  if(ES_ANDROID)setTimeout(()=>toast('Guardado en Descargas: '+k.archivo+' · desde ahí lo abres o lo mandas por WhatsApp'),300);
   return true;
 }
 function rmKml(v,fecha){
@@ -4147,7 +4164,7 @@ async function rmKmlEnviar(vid,directo){
   const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
   const k=rmKml(v);if(!k.n){toast('Ninguna parada tiene ubicación',true);return;}
   logAudit('RUTA ORGANIC MAPS',`${v.rutero}: ${k.archivo} (${k.n} paradas)${directo?' · compartir':''}`);
-  if(await kmlEntregar(k,directo)&&!directo)toast('Archivo listo: '+k.archivo);
+  if(await kmlEntregar(k,directo)&&!directo&&!ES_ANDROID)toast('Archivo listo: '+k.archivo);
 }
 function rmEnlaces(paradas){
   const out=[];
@@ -4186,6 +4203,7 @@ function rutaMaps(vid){
     </div>
     ${paradas.length?`<div class="rm-btns">
       <button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo Organic Maps</button>
+      ${ES_ANDROID?`<button class="btn sec" onclick="rmOmAbrir(${v.id})">Abrir en Organic Maps</button>`:''}
       <div class="rm-fila">${en.map(e=>`<a class="btn sec" href="${e.url}" target="_blank" rel="noopener">${en.length>1?`Maps ${e.desde}–${e.hasta}`:'Abrir Google Maps'}</a>`).join('')}<button class="btn sec" onclick="rmCopiar(${v.id})">Copiar</button></div>
     </div>
     <div class="rm-nota">En el orden de la ruta · Google Maps sale de donde esté el teléfono del rutero</div>`:''}`;
@@ -4641,7 +4659,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-21.5';
+const VERSION='2026-11-23.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

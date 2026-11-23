@@ -90,3 +90,6 @@ Nota: prueba-mapa.js y prueba-reportes.js entran con el PIN viejo; desde el camb
 ese viaje a pantalla completa: bodega + paradas numeradas en el orden de la ruta (mismo cliente = 1 parada), girar
 con dos dedos, "N sin ubicación"; tocar una parada muestra sus notas con "Ver productos" (peVerRuta); solo para ver.
 Tocar fuera cierra la tarjeta; cerrar regresa a "Ruta de…". Base falsa en la página y Leaflet local.
+
+`prueba-android-ruta.js` — "Ruta de…" en Android (23/11/2026): botón extra "Abrir en Organic Maps" (intent om://map
+v=1 con los puntos en orden y con nombre), el .kml se baja a Descargas con aviso. Base falsa en la página.

@@ -42,17 +42,20 @@ header{position:sticky;top:0;z-index:5;background:#FFFFFF;border-bottom:1px soli
 .seg.tiendas button.on svg{opacity:1}
 header.tinta{background:var(--t-bg,#FFFFFF);border-bottom-color:var(--t-borde,#E6E9E7);transition:background .25s}
 main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:24px}
-.bal{border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.bal{border-radius:18px;padding:16px 18px 12px;display:flex;flex-direction:column;gap:8px}
 .bal.ok{background:#E1F1E8;color:#0F3D2A}.bal.alto{background:#FBE4E1;color:#7A1A12}
 .bal .lab{font-size:13px;font-weight:600}
-.bal .monto{font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1}
-.bal.chico{padding:16px 18px;gap:8px}.bal.chico .lab{font-size:12px}.bal.chico .monto{font-size:28px;letter-spacing:-.6px}
+.bal .monto{font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1}
+.bal .fila2{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.bal .lado{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:11px;white-space:nowrap}
+.bal .lado .est{font-size:13px;gap:6px}
+.bal.chico{padding:14px 16px 10px;gap:6px}.bal.chico .lab{font-size:12px}.bal.chico .monto{font-size:26px;letter-spacing:-.6px}
 .bal .pie{display:flex;justify-content:space-between;align-items:center;font-size:12px}
 .est{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
 .bal.chico .est{font-size:13px}
 .dot{width:8px;height:8px;border-radius:999px;display:inline-block}
 .bal.ok .dot{background:#1B6B4F}.bal.alto .dot{background:#C0352A}
-.sem7{margin-top:2px;padding-top:10px;border-top:1px solid rgba(22,33,28,.08);display:flex;flex-direction:column;gap:4px}
+.sem7{padding-top:8px;border-top:1px solid rgba(22,33,28,.08)}
 .sem7 .cab{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;opacity:.85}
 .sem7 .cab span:last-child{display:flex;align-items:center;gap:6px}
 .sem7 .cab i{width:7px;height:7px;border-radius:999px;display:inline-block}
@@ -157,7 +160,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-22.4';
+const VERSION = '2026-11-22.5';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -392,6 +395,8 @@ function pintarCab() {
 // Gráfica de la semana (lunes a domingo): venta de cada día contra la meta diaria.
 // Sin números: la línea, una guía punteada en la meta y una palabra (Bien / Regular / Bajo).
 function graficaSemana(d) {
+  // Sin palabras: cada día es un punto de color (verde = llegó a la meta, ámbar = cerca, coral = abajo)
+  // y la línea va cambiando de color de un día al otro. La meta es la línea punteada.
   const meta = Number(d.tienda.meta || 600); const hoy = hoyGT();
   const lunes = addDays(hoy, -((dow(hoy) + 6) % 7));
   const porDia = {}; d.ventas.forEach(v => { porDia[v.fecha] = (porDia[v.fecha] || 0) + Number(v.monto); });
@@ -403,37 +408,33 @@ function graficaSemana(d) {
     else if (f < hoy && f >= desdeUso && !marcas.has(f)) val = 0;   // día pasado sin venta anotada
     dias.push({ f, val, hoy: f === hoy });
   }
-  const con = dias.filter(x => x.val !== null);
-  const W = 300, H = 34, pad = 4, x = i => pad + i * (W - 2 * pad) / 6;
-  const max = Math.max(meta * 1.35, ...con.map(x => x.val), 1);
+  const col = v => v >= meta ? '#2E8A5E' : v >= meta * .8 ? '#D69A2D' : '#E07160';
+  const W = 300, H = 30, pad = 4, x = i => pad + i * (W - 2 * pad) / 6;
+  const max = Math.max(meta * 1.35, ...dias.filter(p => p.val !== null).map(p => p.val), 1);
   const y = v => H - pad - (v / max) * (H - 2 * pad);
-  let est = null;
-  if (con.length) { const prom = con.reduce((a, x) => a + x.val, 0) / con.length; est = prom >= meta ? 'bien' : prom >= meta * .8 ? 'regular' : 'bajo'; }
-  const col = { bien: '#1B6B4F', regular: '#B7791F', bajo: '#7D8A84' }[est] || '#9AA59F';   // sin rojo: el rojo es solo para el tope del balance
-  const txt = { bien: 'En meta', regular: 'Cerca de la meta', bajo: 'Por debajo de la meta' }[est] || 'Sin ventas aún';
-  // tramos continuos (un día de descanso corta la línea)
-  const tramos = []; let t = [];
-  dias.forEach((p, i) => { if (p.val === null) { if (t.length) tramos.push(t); t = []; } else t.push([x(i), y(p.val)]); });
-  if (t.length) tramos.push(t);
-  const linea = pts => pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-  const area = pts => pts.length > 1 ? linea(pts) + ` L${pts[pts.length - 1][0].toFixed(1)} ${H - pad} L${pts[0][0].toFixed(1)} ${H - pad} Z` : '';
-  const gid = 'g' + Math.random().toString(36).slice(2, 7);
+  const uid = Math.random().toString(36).slice(2, 7);
+  const tramos = [], grads = [];
+  for (let i = 0; i < 6; i++) {
+    const a = dias[i], b = dias[i + 1]; if (a.val === null || b.val === null) continue;
+    const id = `s${uid}${i}`;
+    grads.push(`<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x(i)}" y1="0" x2="${x(i + 1)}" y2="0"><stop offset="0" stop-color="${col(a.val)}"/><stop offset="1" stop-color="${col(b.val)}"/></linearGradient>`);
+    tramos.push(`<line x1="${x(i).toFixed(1)}" y1="${y(a.val).toFixed(1)}" x2="${x(i + 1).toFixed(1)}" y2="${y(b.val).toFixed(1)}" stroke="url(#${id})" stroke-width="2" stroke-linecap="round"/>`);
+  }
   const letras = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-  return `<div class="sem7"><div class="cab"><span>Esta semana</span><span><i style="background:${col}"></i>${txt}</span></div>
-    <svg viewBox="0 0 ${W} ${H + 13}" role="img" aria-label="Ventas de esta semana: ${txt}">
-      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".18"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
-      <line x1="${pad}" x2="${W - pad}" y1="${y(meta).toFixed(1)}" y2="${y(meta).toFixed(1)}" stroke="currentColor" stroke-opacity=".28" stroke-width="1" stroke-dasharray="3 4"/>
-      ${tramos.map(tr => `<path d="${area(tr)}" fill="url(#${gid})"/><path d="${linea(tr)}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
-      ${dias.map((p, i) => p.val === null ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(p.val).toFixed(1)}" r="${p.hoy ? 3 : 2.2}" fill="${p.hoy ? col : '#FFF'}" stroke="${col}" stroke-width="1.8"/>`).join('')}
-      ${letras.map((l, i) => `<text x="${x(i).toFixed(1)}" y="${H + 11}" text-anchor="middle" font-size="8.5" font-weight="${dias[i].hoy ? 700 : 500}" fill="currentColor" fill-opacity="${dias[i].hoy ? .9 : .5}">${l}</text>`).join('')}
+  return `<div class="sem7"><svg viewBox="0 0 ${W} ${H + 12}" role="img" aria-label="Ventas de esta semana contra la meta">
+      <defs>${grads.join('')}</defs>
+      <line x1="${pad}" x2="${W - pad}" y1="${y(meta).toFixed(1)}" y2="${y(meta).toFixed(1)}" stroke="currentColor" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 4"/>
+      ${tramos.join('')}
+      ${dias.map((p, i) => p.val === null ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(p.val).toFixed(1)}" r="${p.hoy ? 3.6 : 3}" fill="${col(p.val)}" stroke="#FFF" stroke-width="1.2"/>`).join('')}
+      ${letras.map((l, i) => `<text x="${x(i).toFixed(1)}" y="${H + 10}" text-anchor="middle" font-size="8" font-weight="${dias[i].hoy ? 700 : 500}" fill="currentColor" fill-opacity="${dias[i].hoy ? .85 : .45}">${l}</text>`).join('')}
     </svg></div>`;
 }
 function tarjetaBalance(d, chico) {
   const saldo = balanceAl(d, '9999-12-31'); const alto = saldo > Number(d.tienda.tope);
   return `<section class="bal ${alto ? 'alto' : 'ok'} ${chico ? 'chico' : ''}">
     <div class="hrow"><span class="lab">Balance de la tienda</span>${chico ? '' : `<button class="ver" data-a="reporte" aria-label="Ver reporte">${ICO.ojo}Ver</button>`}</div>
-    <span class="monto">${fmt(saldo)}</span>
-    <div class="pie"><span class="est"><span class="dot"></span>${alto ? 'Sobre el tope' : 'Normal'}</span><span>Tope ${fmt(d.tienda.tope)}</span></div>
+    <div class="fila2"><span class="monto">${fmt(saldo)}</span>
+      <span class="lado"><span class="est"><span class="dot"></span>${alto ? 'Sobre el tope' : 'Normal'}</span><span>Tope ${fmt(d.tienda.tope)}</span></span></div>
     ${S.flash ? `<span class="flash" role="status">${esc(S.flash)}</span>` : ''}
     ${graficaSemana(d)}
   </section>`;

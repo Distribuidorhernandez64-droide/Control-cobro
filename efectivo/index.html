@@ -56,6 +56,9 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .dot{width:8px;height:8px;border-radius:999px;display:inline-block}
 .bal.ok .dot{background:#1B6B4F}.bal.alto .dot{background:#C0352A}
 .sem7{padding-top:8px;border-top:1px solid rgba(22,33,28,.08)}
+.ley7{display:flex;justify-content:flex-end;gap:12px;margin-top:4px;font-size:10px;font-weight:600;opacity:.7}
+.ley7 span{display:flex;align-items:center;gap:4px}
+.ley7 i{width:6px;height:6px;border-radius:999px;display:inline-block}
 .sem7 .cab{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;opacity:.85}
 .sem7 .cab span:last-child{display:flex;align-items:center;gap:6px}
 .sem7 .cab i{width:7px;height:7px;border-radius:999px;display:inline-block}
@@ -160,7 +163,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-22.5';
+const VERSION = '2026-11-22.6';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -427,7 +430,8 @@ function graficaSemana(d) {
       ${tramos.join('')}
       ${dias.map((p, i) => p.val === null ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(p.val).toFixed(1)}" r="${p.hoy ? 3.6 : 3}" fill="${col(p.val)}" stroke="#FFF" stroke-width="1.2"/>`).join('')}
       ${letras.map((l, i) => `<text x="${x(i).toFixed(1)}" y="${H + 10}" text-anchor="middle" font-size="8" font-weight="${dias[i].hoy ? 700 : 500}" fill="currentColor" fill-opacity="${dias[i].hoy ? .85 : .45}">${l}</text>`).join('')}
-    </svg></div>`;
+    </svg>
+    <div class="ley7" aria-hidden="true"><span><i style="background:#2E8A5E"></i>Bien</span><span><i style="background:#D69A2D"></i>Regular</span><span><i style="background:#E07160"></i>Bajo</span></div></div>`;
 }
 function tarjetaBalance(d, chico) {
   const saldo = balanceAl(d, '9999-12-31'); const alto = saldo > Number(d.tienda.tope);

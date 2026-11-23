@@ -1,5 +1,5 @@
-// Ruta de… en Android (23/11/2026): Chrome no comparte .kml → se baja a Descargas con aviso, y
-// "Abrir en Organic Maps" abre la app con los puntos (intent om://map v=1).
+// Ruta de… en Android (23/11/2026): Chrome no comparte .kml → se baja a Descargas con aviso, y "Enviar por
+// WhatsApp" sube el .kml a Supabase Storage (bucket 'rutas') y comparte el enlace.
 // Reportes ⚙️ › Mapeo por vendedor › "Archivo Organic Maps" (10/11/2026): con los mismos datos del PDF (la PC
 // los lee de Monica con lat/lon de cada cliente) arma el .kml igual al de la ruta: "01. CLIENTE - Q total".
 // La "PC" de esta prueba contesta sola (base falsa en la página). Ya entra con sesión de Supabase falsa.
@@ -54,20 +54,39 @@ window.supabase={createClient:()=>({
       {id:3,nombre:'CLTE GCO. lesvia santos',total:80,estado:'pagado',fac:23210}]});rutaMaps(801);});
   await p.waitForTimeout(300);
   const bot=await p.$$eval('#modalRecibeBody .rm-btns button, #modalRecibeBody .rm-btns a',xs=>xs.map(x=>x.textContent.trim()));
-  ok('Android: botones Archivo Organic Maps · Abrir en Organic Maps · Abrir Google Maps · Copiar ('+bot.join(' | ')+')',
-    bot.join('|')==='Archivo Organic Maps|Abrir en Organic Maps|Abrir Google Maps|Copiar');
-  const url=await p.evaluate(()=>{const v=viajes.find(x=>x.id===801);return omEnlace(rmKml(v,new Date(2026,10,23)).nombre,rmParadas(v).paradas);});
-  const esperado='intent://map?v=1&ll=14.500845,-90.952338&n='+encodeURIComponent('01. TIENDA NOEMI - Q314')+'&ll=14.5031,-90.9551&n='+encodeURIComponent('02. IRMA TEJAX - Q279.50')+'&appname='+encodeURIComponent('Ruta Pedro 23 noviembre')+'#Intent;scheme=om;package=app.organicmaps;end';
-  ok('Android: enlace de Organic Maps con los puntos en orden y con nombre', url===esperado);if(url!==esperado)console.log(url);
-  let fue=null;await p.evaluate(()=>{window.__ir=[];});
-  p.on('framenavigated',()=>{});
-  const nav=await p.evaluate(()=>{let destino=null;const d=Object.getOwnPropertyDescriptor(Location.prototype,'href');
-    try{rmOmAbrir.toString();}catch(e){}return typeof rmOmAbrir==='function';});
-  ok('Android: existe la acción "Abrir en Organic Maps"', nav);
+  ok('Android: Archivo Organic Maps · Enviar por WhatsApp · Abrir Google Maps · Copiar ('+bot.join(' | ')+')',
+    bot.join('|')==='Archivo Organic Maps|Enviar por WhatsApp|Abrir Google Maps|Copiar');
   const [dl]=await Promise.all([p.waitForEvent('download',{timeout:5000}).catch(()=>null),p.click('#modalRecibeBody .rm-om')]);
   await p.waitForTimeout(600);
   ok('Android: "Archivo Organic Maps" baja el .kml', dl&&/^ruta_pedro_\d+[a-z]+\.kml$/.test(dl.suggestedFilename()));
   ok('Android: avisa que quedó en Descargas', (await p.evaluate(()=>[...document.querySelectorAll('.toast')].map(t=>t.textContent).join(' '))).includes('Guardado en Descargas'));
+  // Storage falso + menú de compartir falso
+  await p.evaluate(()=>{window.__sub=[];window.__borr=[];window.__comp=null;window.__falla=null;
+    const hoy=new Date().toLocaleDateString('en-CA');
+    sb.storage={from:b=>({
+      upload:async(ruta,blob,o)=>{if(window.__falla)return {data:null,error:{message:window.__falla}};window.__sub.push({b,ruta,ct:o.contentType,txt:await blob.text()});return {data:{path:ruta},error:null};},
+      list:async(pre)=>pre===''?{data:[{name:'2026-11-01'},{name:hoy}],error:null}:{data:pre==='2026-11-01'?[{name:'a-ruta_x_1noviembre.kml'},{name:'b-ruta_y_1noviembre.kml'}]:[{name:'zz.kml'}],error:null},
+      remove:async ps=>{window.__borr.push(...ps);return {data:null,error:null};}})};
+    navigator.share=async o=>{window.__comp=o;};});
+  await p.click('#rmEnvBtn');await p.waitForTimeout(800);
+  const r=await p.evaluate(()=>({sub:window.__sub,comp:window.__comp,borr:window.__borr,kml:rmKml(viajes.find(x=>x.id===801)).txt}));
+  const s0=r.sub[0]||{};
+  ok('Enviar: sube el .kml a Supabase (bucket rutas, carpeta de hoy, mismo contenido)', r.sub.length===1&&s0.b==='rutas'&&/^\d{4}-\d{2}-\d{2}\/[0-9a-f]{12}-ruta_pedro_\d+[a-z]+\.kml$/.test(s0.ruta)&&s0.ct==='application/vnd.google-earth.kml+xml'&&s0.txt===r.kml);
+  const url='https://shlolncjhfzqmcllwjrk.supabase.co/storage/v1/object/public/rutas/'+(s0.ruta||'').split('/').map(encodeURIComponent).join('/')+'?download='+encodeURIComponent((s0.ruta||'').split('/')[1].slice(13));
+  ok('Enviar: abre compartir con "Ruta Pedro … · 2 paradas" y el enlace', r.comp&&r.comp.text.startsWith('Ruta Pedro ')&&r.comp.text.includes('· 2 paradas')&&r.comp.text.endsWith(url));
+  if(!(r.comp&&r.comp.text.endsWith(url)))console.log(r.comp,url);
+  ok('Enviar: borra solo los de más de 7 días', JSON.stringify(r.borr)==='["2026-11-01/a-ruta_x_1noviembre.kml","2026-11-01/b-ruta_y_1noviembre.kml"]');
+  ok('Enviar: el botón vuelve a "Enviar por WhatsApp"', (await p.textContent('#rmEnvBtn'))==='Enviar por WhatsApp');
+  // Si el teléfono ya no deja abrir el menú: botón "Listo · Abrir WhatsApp"
+  await p.evaluate(()=>{navigator.share=async()=>{const e=new Error('x');e.name='NotAllowedError';throw e;};});
+  await p.click('#rmEnvBtn');await p.waitForTimeout(800);
+  const a=await p.evaluate(()=>{const e=document.getElementById('rmEnvBtn');return {tag:e.tagName,t:e.textContent,h:e.getAttribute('href')};});
+  ok('Sin menú: queda "Listo · Abrir WhatsApp" con el mensaje', a.tag==='A'&&a.t==='Listo · Abrir WhatsApp'&&a.h.startsWith('https://wa.me/?text=')&&decodeURIComponent(a.h.split('text=')[1]).includes('/storage/v1/object/public/rutas/'));
+  // Falta el bucket
+  await p.evaluate(()=>{cerrarModalRecibe();rutaMaps(801);window.__falla='Bucket not found';navigator.share=async o=>{window.__comp=o;};});await p.waitForTimeout(300);
+  await p.click('#rmEnvBtn');await p.waitForTimeout(800);
+  ok('Sin preparar Supabase: avisa "Falta preparar Supabase (rutas)"', (await p.evaluate(()=>[...document.querySelectorAll('.toast')].map(t=>t.textContent).join(' '))).includes('Falta preparar Supabase'));
+  // En iPhone no sale el botón nuevo
   await p.screenshot({path:path.join(__dirname,'capturas','android-ruta.png')});
   ok('Sin errores en la página', errs.length===0);if(errs.length)console.log(errs);
   await b.close();srv.close();

@@ -4124,9 +4124,9 @@ function kmlTexto(nombre,paradas){
 }
 function kmlSlug(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
 // Entregar el .kml: vista previa / descarga (de ahí Organic Maps o WhatsApp); "directo" = menú de compartir
-// Android (23/11): Chrome no deja compartir archivos .kml desde una página; el archivo se baja a Descargas y,
-// además, "Abrir en Organic Maps" abre la app directo con los puntos (enlace om:// de Organic Maps, varios puntos
-// con nombre: v=1&ll=…&n=…). En el iPhone sigue igual (vista previa del archivo).
+// Android (23/11): Chrome no deja compartir archivos .kml desde una página; el archivo se baja a Descargas y
+// "Enviar por WhatsApp" manda un enlace al archivo (ver rmEnviarEnlace). omEnlace queda por si se ocupa abrir
+// Organic Maps directo (v=1&ll=…&n=…). En el iPhone sigue igual (vista previa del archivo).
 const ES_ANDROID=/Android/i.test(navigator.userAgent||'');
 function omEnlace(nombre,paradas){
   let q='v=1';
@@ -4134,11 +4134,37 @@ function omEnlace(nombre,paradas){
   q+='&appname='+encodeURIComponent(nombre);
   return `intent://map?${q}#Intent;scheme=om;package=app.organicmaps;end`;
 }
-function rmOmAbrir(vid){
+// Android (23/11, pedido de César): "Enviar por WhatsApp" sube el .kml a Supabase Storage (bucket público 'rutas')
+// y comparte un enlace; el encargado lo toca, se le baja el archivo y lo abre en Organic Maps (sin entrar a Cobros).
+// Al subir se borran los de más de RUTAS_DIAS días. SQL del bucket: supabase/rutas.sql.
+const RUTAS_BUCKET='rutas',RUTAS_DIAS=7;
+function rutaFechaLocal(d){return d.toLocaleDateString('en-CA');}
+async function rutasLimpiar(){
+  try{const st=sb.storage.from(RUTAS_BUCKET),lim=rutaFechaLocal(new Date(Date.now()-RUTAS_DIAS*864e5));
+    const {data}=await st.list('',{limit:100});
+    for(const c of data||[]){if(!/^\d{4}-\d{2}-\d{2}$/.test(c.name)||c.name>=lim)continue;
+      const {data:fs}=await st.list(c.name,{limit:100});const ps=(fs||[]).map(f=>c.name+'/'+f.name);if(ps.length)await st.remove(ps);}
+  }catch(e){}
+}
+async function rmEnviarEnlace(vid){
   const v=viajes.find(x=>x&&x.id===vid);if(!v)return;
-  const {paradas}=rmParadas(v);if(!paradas.length){toast('Ninguna parada tiene ubicación',true);return;}
-  const k=rmKml(v);logAudit('RUTA ORGANIC MAPS',`${v.rutero}: abrir en la app (${paradas.length} paradas)`);
-  location.href=omEnlace(k.nombre,paradas);
+  const k=rmKml(v);if(!k.n){toast('Ninguna parada tiene ubicación',true);return;}
+  const b=document.getElementById('rmEnvBtn');if(b){if(b.disabled)return;b.disabled=true;b.textContent='Preparando…';}
+  try{
+    const al=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now()).replace(/-/g,'').slice(0,12);
+    const ruta=`${rutaFechaLocal(new Date())}/${al}-${k.archivo}`;
+    const {error}=await sb.storage.from(RUTAS_BUCKET).upload(ruta,new Blob([k.txt],{type:'application/vnd.google-earth.kml+xml'}),{contentType:'application/vnd.google-earth.kml+xml',upsert:false});
+    if(error)throw new Error(/bucket|not found/i.test(error.message||'')?'Falta preparar Supabase (rutas)':(error.message||'No se pudo subir'));
+    const url=`${SB_URL}/storage/v1/object/public/${RUTAS_BUCKET}/${ruta.split('/').map(encodeURIComponent).join('/')}?download=${encodeURIComponent(k.archivo)}`;
+    const txt=`${k.nombre} · ${k.n} parada${k.n===1?'':'s'}\n${url}`;
+    logAudit('RUTA POR WHATSAPP',`${v.rutero}: ${k.archivo} (${k.n} paradas)`);
+    rutasLimpiar();
+    try{if(navigator.share){await navigator.share({title:k.nombre,text:txt});if(b){b.disabled=false;b.textContent='Enviar por WhatsApp';}return;}}
+    catch(e){if(e&&e.name==='AbortError'){if(b){b.disabled=false;b.textContent='Enviar por WhatsApp';}return;}}
+    // Si el teléfono ya no deja abrir el menú (pasó mucho rato), queda un botón para abrir WhatsApp con el mensaje
+    if(b){const a=document.createElement('a');a.className='btn ok';a.id='rmEnvBtn';a.href='https://wa.me/?text='+encodeURIComponent(txt);a.target='_blank';a.rel='noopener';
+      a.textContent='Listo · Abrir WhatsApp';b.replaceWith(a);}
+  }catch(e){toast(e.message||'No se pudo',true);if(b){b.disabled=false;b.textContent='Enviar por WhatsApp';}}
 }
 async function kmlEntregar(k,directo){
   const f=new File([k.txt],k.archivo,{type:'application/vnd.google-earth.kml+xml'});
@@ -4203,7 +4229,7 @@ function rutaMaps(vid){
     </div>
     ${paradas.length?`<div class="rm-btns">
       <button class="btn rm-om" onclick="rmKmlEnviar(${v.id})">${ICO_PIN}Archivo Organic Maps</button>
-      ${ES_ANDROID?`<button class="btn sec" onclick="rmOmAbrir(${v.id})">Abrir en Organic Maps</button>`:''}
+      ${ES_ANDROID?`<button class="btn ok" id="rmEnvBtn" onclick="rmEnviarEnlace(${v.id})">Enviar por WhatsApp</button>`:''}
       <div class="rm-fila">${en.map(e=>`<a class="btn sec" href="${e.url}" target="_blank" rel="noopener">${en.length>1?`Maps ${e.desde}–${e.hasta}`:'Abrir Google Maps'}</a>`).join('')}<button class="btn sec" onclick="rmCopiar(${v.id})">Copiar</button></div>
     </div>
     <div class="rm-nota">En el orden de la ruta · Google Maps sale de donde esté el teléfono del rutero</div>`:''}`;
@@ -4659,7 +4685,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-23.1';
+const VERSION='2026-11-23.2';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

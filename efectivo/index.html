@@ -120,6 +120,8 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .pl .i{font-weight:600;white-space:nowrap}
 .hoja .pie{display:flex;justify-content:space-between;align-items:baseline;padding:12px 20px 16px;border-top:1px solid #EEF1EF;font-size:13px;color:#5C6862}
 .hoja .pie b{font-size:20px;color:#16211C}
+.revisar{background:#FFF;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:inset 3px 0 0 #D69A2D}
+.hoja .acc{padding:0 20px 16px}
 .cambios{margin:12px 20px 4px;padding:12px 14px;border-radius:12px;background:#FDF6EA;color:#5C3A0B;font-size:13px;display:flex;flex-direction:column;gap:6px}
 .cambios .t{font-weight:700;font-size:12px;letter-spacing:.2px}
 .cambios div{display:flex;justify-content:space-between;gap:10px}
@@ -184,7 +186,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-23.1';
+const VERSION = '2026-11-23.2';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -489,6 +491,12 @@ function cambiosNota(i) {
 }
 const tagNota = i => i.anulada ? '<span class="tm anu">Anulada</span>' : i.modificada ? '<span class="tm mod">Modificada</span>' : '';
 const subNota = i => i.modificada && !i.anulada && i.total_orig != null ? ` · Antes ${fmt(i.total_orig)}` : '';
+// Notas de Monica anuladas o modificadas que administración todavía no revisa
+function porRevisar(d) { return d.ingresos.filter(i => i.monica && (i.anulada || i.modificada) && !i.revisada).sort((a, b) => a.fecha < b.fecha ? 1 : -1); }
+function revisarHtml(d) {
+  const rs = porRevisar(d); if (!rs.length) return '';
+  return `<section class="sec"><div class="sech"><h2 style="color:#8A4B0B">Revisar</h2></div><div class="revisar">${rs.map(i => `<button class="fila" data-a="verNota" data-id="${i.id}" data-lp="${i.id}"><span class="col"><span class="t1">Factura ${esc(i.factura)}${tagNota(i)}</span><span class="t2">${fdate(i.fecha)}${i.anulada ? ' · ya no suma' : ' · Antes ' + fmt(i.total_orig) + ' · Ahora ' + fmt(i.total)}</span></span>${ICO.chev.replace('class="chev"', 'class="chev" style="transform:rotate(-90deg)"')}</button>`).join('')}</div></section>`;
+}
 function verNota(id) {
   const d = D(); const i = d && d.ingresos.find(x => x.id === id); if (!i || !i.monica) return;
   const det = Array.isArray(i.detalle) ? i.detalle : [];
@@ -505,7 +513,8 @@ function verNota(id) {
       <button class="ib" data-a="cerrarNota" aria-label="Cerrar">${ICO.cerrar || '×'}</button></div>
     ${caja}
     <div class="lista2">${filas || '<p class="vacio" style="padding:16px 0">Sin productos.</p>'}</div>
-    <div class="pie"><span>${det.length} producto${det.length === 1 ? '' : 's'}</span><b class="${i.anulada ? 'tachado' : ''}">${fmt(i.total)}</b></div></div>`;
+    <div class="pie"><span>${det.length} producto${det.length === 1 ? '' : 's'}</span><b class="${i.anulada ? 'tachado' : ''}">${fmt(i.total)}</b></div>
+    ${esAdmin() && (i.anulada || i.modificada) && !i.revisada ? `<div class="acc"><button class="b n" style="width:100%" data-a="revisarNota" data-id="${i.id}">Revisado</button></div>` : ''}</div>`;
   el.addEventListener('click', e => { if (e.target === el) cerrarNota(); });
   document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('open'));
 }
@@ -574,6 +583,7 @@ function vistaAdmin() {
         ? `<button class="fila apagada" data-a="dia" data-fecha="${v.fecha}"><span class="col"><span class="t1">${dia(v.fecha)}</span>${v.marcado.nota ? `<span class="t2">${esc(v.marcado.nota)}</span>` : ''}</span><span class="marca">${v.marcado.motivo === 'descanso' ? 'Descanso' : 'Cerrado'}</span></button>`
         : `<div class="fila"><span class="col"><span class="t1">${diaMarca(v, true)}${tc(d, v)}</span>${lineaAdm(d, v)}</span><span class="mn" style="font-weight:600">${fmt(v.monto)}</span></div>`).join('')}
       ${!filasAdm.length ? '<p class="vacio">Todo lo anotado ya fue entregado.</p>' : ''}${masBtn('adm', filasAdm.length)}</div></section>
+  ${revisarHtml(d)}
   <div class="dos"><button class="b n med" data-a="ingreso">Ingresar mercadería</button><button class="b l med" data-a="ajustes">Saldo y tope</button></div>
   <section class="sec"><div class="sech"><h2>Últimos movimientos</h2>${d.ingresos.length && S.movF !== 'efectivo' ? '<span class="tip">Desliza una factura ← para editar</span>' : ''}</div>
     <div class="filtros" role="group" aria-label="Filtrar movimientos">${[['todos', 'Todos'], ['efectivo', 'Efectivo'], ['merc', 'Mercadería']].map(([k, t]) => `<button data-a="movF" data-k="${k}" class="${S.movF === k ? 'on' : ''}" aria-pressed="${S.movF === k}">${t}</button>`).join('')}</div>
@@ -843,6 +853,12 @@ const A = {
   tienda(el) { S.tienda = el.dataset.id; LS.set('ce_tienda_admin', S.tienda); S.lim = Object.assign({}, LIM0); S.swiped = null; render(); sync(); },
   verNota(el) { if (_lpHecho) { _lpHecho = false; return; } verNota(el.dataset.id); },
   cerrarNota() { cerrarNota(); },
+  revisarNota(el) {
+    const d = D(); const i = d && d.ingresos.find(x => x.id === el.dataset.id); if (!i) return;
+    i.revisada = true; setD(d);
+    encolar('ce_revisar_nota', { p_nro: Number(i.factura) });
+    cerrarNota(); avisar('Factura ' + i.factura + ' revisada'); render(); sync();
+  },
   quitarAviso() { S.aviso = ''; render(); },
   preview() { S.preview = true; S.swiped = null; S.lim = Object.assign({}, LIM0); render(); window.scrollTo(0, 0); },
   cerrarPreview() { S.preview = false; S.lim = Object.assign({}, LIM0); render(); window.scrollTo(0, 0); },

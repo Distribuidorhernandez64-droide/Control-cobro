@@ -142,13 +142,15 @@ create table if not exists public.notas_tiendas (
   creado_en          timestamptz not null default now(),
   cambiado_en        timestamptz not null default now()
 );
+-- Administración marca "Revisado" una nota modificada o anulada; si vuelve a cambiar, vuelve a avisar
+alter table public.notas_tiendas add column if not exists revisada_en timestamptz;
 create or replace function public.notas_tiendas_guardia() returns trigger
 language plpgsql as $$
 begin
   new.cambiado_en := now();
   if tg_op = 'INSERT' then
     new.creado_en := now(); new.total_orig := new.total; new.detalle_orig := new.detalle;
-    new.modificada := false; new.modificada_en := null;
+    new.modificada := false; new.modificada_en := null; new.revisada_en := null;
     return new;
   end if;
   new.nro := old.nro; new.creado_en := old.creado_en;
@@ -162,6 +164,13 @@ begin
     new.modificada_en := case when new.modificada and (not old.modificada or new.total is distinct from old.total or new.detalle is distinct from old.detalle
                                                         or new.anulada is distinct from old.anulada) then now()
                               when new.modificada then old.modificada_en else null end;
+  end if;
+  -- "Revisado" solo lo pone administración (ce_revisar_nota) y se borra si la nota vuelve a cambiar
+  if tg_op = 'UPDATE' then
+    if coalesce(current_setting('ce.revisar', true), '') <> '1' then new.revisada_en := old.revisada_en; end if;
+    if new.modificada_en is distinct from old.modificada_en or new.anulada is distinct from old.anulada then new.revisada_en := null; end if;
+  else
+    new.revisada_en := null;
   end if;
   return new;
 end $$;
@@ -323,7 +332,8 @@ begin
         select json_build_object('id', 'm' || n.nro, 'factura', n.nro::text, 'fecha', n.fecha,
                  'monto', case when n.anulada then 0 else n.total end, 'creado_en', n.creado_en, 'monica', true,
                  'hora', n.hora, 'anulada', n.anulada, 'modificada', n.modificada, 'modificada_en', n.modificada_en,
-                 'total_orig', n.total_orig, 'total', n.total, 'detalle', n.detalle, 'detalle_orig', n.detalle_orig)
+                 'total_orig', n.total_orig, 'total', n.total, 'detalle', n.detalle, 'detalle_orig', n.detalle_orig,
+                 'revisada', n.revisada_en is not null)
           from public.notas_tiendas n join public.ce_tiendas ti on ti.id = t
          where n.codigo_cliente = ti.monica_cliente and n.nro > coalesce(ti.monica_desde, 0)
            and not exists (select 1 from public.ce_ingresos i where i.tienda_id = t and i.factura = n.nro::text)
@@ -458,6 +468,16 @@ begin
   insert into public.ce_dias (tienda_id, fecha, motivo, nota)
   values (t, p_fecha, p_motivo, left(trim(coalesce(p_nota, '')), 200))
   on conflict (tienda_id, fecha) do update set motivo = excluded.motivo, nota = excluded.nota;
+end $$;
+
+-- Administración: "Revisado" a una nota de Monica modificada o anulada (deja de salir en Revisar)
+create or replace function public.ce_revisar_nota(p_token text, p_nro bigint) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.cei_admin(p_token);
+  perform set_config('ce.revisar', '1', true);
+  update public.notas_tiendas set revisada_en = now() where nro = p_nro and (modificada or anulada);
+  perform set_config('ce.revisar', '', true);
 end $$;
 
 -- Saldo inicial, tope y meta diaria (administración). La meta es opcional: si no viene, no cambia.

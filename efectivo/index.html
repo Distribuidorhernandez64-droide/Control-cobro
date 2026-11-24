@@ -102,6 +102,27 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .mas{height:44px;border:0;background:transparent;color:#1B6B4F;font-size:13px;font-weight:700}
 .vacio{padding:16px;font-size:14px;color:#5C6862;margin:0}
 .chip{height:32px;padding:0 10px;border:1px solid #D5DBD7;border-radius:8px;background:#FFF;font-size:12px;font-weight:600}
+.tm{margin-left:6px;padding:1px 6px;border-radius:5px;font-size:11px;font-weight:700;vertical-align:1px}
+.tm.mod{background:#FDF0DC;color:#8A4B0B}.tm.anu{background:#EEF0EE;color:#5C6862}
+.tachado{text-decoration:line-through;opacity:.55}
+.hoja-fondo{position:fixed;inset:0;z-index:50;background:rgba(22,33,28,.32);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}
+.hoja-fondo.open{opacity:1}
+.hoja{width:100%;max-width:520px;max-height:86vh;background:#FFF;border-radius:20px 20px 0 0;display:flex;flex-direction:column;transform:translateY(24px);transition:transform .22s ease;padding-bottom:env(safe-area-inset-bottom)}
+.hoja-fondo.open .hoja{transform:none}
+.hoja .asa{width:36px;height:4px;border-radius:2px;background:#DDE2DF;margin:8px auto 0}
+.hoja .cab{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 20px 10px;border-bottom:1px solid #EEF1EF}
+.hoja .cab b{font-size:17px}.hoja .cab .sb{display:block;font-size:12px;color:#5C6862;margin-top:3px}
+.hoja .lista2{overflow-y:auto;padding:4px 20px}
+.pl{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:10px 0;border-bottom:1px solid #F1F3F2;font-size:14px}
+.pl:last-child{border-bottom:0}
+.pl .q{font-weight:700;text-align:right;color:#16211C}
+.pl .d b{font-weight:600;display:block}.pl .d span{font-size:12px;color:#5C6862}
+.pl .i{font-weight:600;white-space:nowrap}
+.hoja .pie{display:flex;justify-content:space-between;align-items:baseline;padding:12px 20px 16px;border-top:1px solid #EEF1EF;font-size:13px;color:#5C6862}
+.hoja .pie b{font-size:20px;color:#16211C}
+.cambios{margin:12px 20px 4px;padding:12px 14px;border-radius:12px;background:#FDF6EA;color:#5C3A0B;font-size:13px;display:flex;flex-direction:column;gap:6px}
+.cambios .t{font-weight:700;font-size:12px;letter-spacing:.2px}
+.cambios div{display:flex;justify-content:space-between;gap:10px}
 .sw{position:relative;overflow:hidden;border-bottom:1px solid #EEF1EF}
 .sw:last-child{border-bottom:0}
 .sw .accion{position:absolute;top:0;right:0;bottom:0;width:92px;border:0;background:#16211C;color:#FFF;font-size:14px;font-weight:700}
@@ -163,7 +184,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-22.6';
+const VERSION = '2026-11-23.1';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -447,6 +468,50 @@ const avisoHtml = () => S.aviso ? `<button class="aviso" data-a="quitarAviso">${
 const masBtn = (k, total) => total > S.lim[k] ? `<button class="mas" data-a="mas" data-k="${k}">Ver más</button>` : '';
 const cargando = () => `<p class="vacio" style="text-align:center">${S.online ? 'Cargando…' : 'Sin internet. Conéctate una vez para cargar los datos.'}</p>`;
 
+// ---------- notas de Monica ----------
+const impLinea = l => n2((Number(l.q) || 0) * (Number(l.p) || 0) - (Number(l.x) || 0));
+const cantTxt = q => { q = Number(q) || 0; return Number.isInteger(q) ? String(q) : q.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); };
+function cambiosNota(i) {
+  const a = Array.isArray(i.detalle_orig) ? i.detalle_orig : [], b = Array.isArray(i.detalle) ? i.detalle : [];
+  const agr = ls => { const o = new Map(); ls.forEach(l => { const k = l.c ? 'c' + l.c : 'd' + (l.d || '');
+    const g = o.get(k) || { d: l.d || l.c || '', q: 0, G: 0, X: 0 }; g.q += Number(l.q) || 0; g.G += (Number(l.q) || 0) * (Number(l.p) || 0); g.X += Number(l.x) || 0; o.set(k, g); }); return o; };
+  const A = agr(a), B = agr(b), quit = [], agre = [], otros = [], E = 1e-6;
+  A.forEach((g, k) => { const h = B.get(k);
+    if (!h || h.q < g.q - E) { const q = g.q - (h ? h.q : 0), pu = g.q > E ? g.G / g.q : 0; quit.push({ d: g.d, q, m: n2(q * pu) }); }
+    else if (h.q > g.q + E) { const pu = h.G / h.q; agre.push({ d: g.d, q: h.q - g.q, m: n2((h.q - g.q) * pu) }); }
+    if (h && h.q > E && g.q > E) {
+      const pa = g.G / g.q, pb = h.G / h.q;
+      if (Math.abs(pa - pb) > 0.005) otros.push({ d: g.d, t: 'Precio ' + fmt(pa) + ' → ' + fmt(pb) });
+      if (Math.abs(h.X - g.X) > 0.005) otros.push({ d: g.d, t: (h.X > g.X ? 'Descuento ' : 'Quitaron descuento ') + fmt(g.X) + ' → ' + fmt(h.X) });
+    } });
+  B.forEach((h, k) => { if (!A.has(k) && h.q > E) agre.push({ d: h.d, q: h.q, m: n2(h.G - h.X) }); });
+  return { quit, agre, otros };
+}
+const tagNota = i => i.anulada ? '<span class="tm anu">Anulada</span>' : i.modificada ? '<span class="tm mod">Modificada</span>' : '';
+const subNota = i => i.modificada && !i.anulada && i.total_orig != null ? ` · Antes ${fmt(i.total_orig)}` : '';
+function verNota(id) {
+  const d = D(); const i = d && d.ingresos.find(x => x.id === id); if (!i || !i.monica) return;
+  const det = Array.isArray(i.detalle) ? i.detalle : [];
+  const c = i.modificada ? cambiosNota(i) : null;
+  const lin = (t, arr, signo) => arr.length ? `<span class="t">${t}</span>${arr.map(x => `<div><span>${x.q != null ? cantTxt(x.q) + ' · ' : ''}${esc(x.d)}${x.t ? ' · ' + esc(x.t) : ''}</span>${x.m != null ? `<span>${signo}${fmt(x.m)}</span>` : ''}</div>`).join('')}` : '';
+  const caja = i.anulada ? `<div class="cambios"><span class="t">ANULADA EN MONICA</span><div><span>Esta nota ya no suma al balance.</span></div></div>`
+    : c ? `<div class="cambios">${lin('QUITARON', c.quit, '−')}${lin('AGREGARON', c.agre, '+')}${lin('CAMBIOS', c.otros, '')}
+        <div style="border-top:1px solid rgba(92,58,11,.15);padding-top:6px;font-weight:700"><span>Antes ${fmt(i.total_orig)}</span><span>Ahora ${fmt(i.total)}</span></div></div>` : '';
+  const filas = det.map(l => `<div class="pl"><span class="q">${cantTxt(l.q)}</span><span class="d"><b>${esc(l.d || l.c || '')}</b><span>${l.c ? 'Cód. ' + esc(l.c) + ' · ' : ''}${fmt(l.p)} c/u${Number(l.x) > 0 ? ' · desc. −' + fmt(l.x) : ''}</span></span><span class="i">${fmt(impLinea(l))}</span></div>`).join('');
+  cerrarNota(true);
+  const el = document.createElement('div'); el.className = 'hoja-fondo'; el.id = 'hojaNota';
+  el.innerHTML = `<div class="hoja" role="dialog" aria-modal="true" aria-label="Productos de la factura ${esc(i.factura)}"><div class="asa"></div>
+    <div class="cab"><div><b>Factura ${esc(i.factura)}${tagNota(i)}</b><span class="sb">${esc(d.tienda.nombre)} · ${dia(i.fecha)}${i.hora ? ' · ' + esc(i.hora) : ''}</span></div>
+      <button class="ib" data-a="cerrarNota" aria-label="Cerrar">${ICO.cerrar || '×'}</button></div>
+    ${caja}
+    <div class="lista2">${filas || '<p class="vacio" style="padding:16px 0">Sin productos.</p>'}</div>
+    <div class="pie"><span>${det.length} producto${det.length === 1 ? '' : 's'}</span><b class="${i.anulada ? 'tachado' : ''}">${fmt(i.total)}</b></div></div>`;
+  el.addEventListener('click', e => { if (e.target === el) cerrarNota(); });
+  document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('open'));
+}
+function cerrarNota(ya) { const el = document.getElementById('hojaNota'); if (!el) return; if (ya) { el.remove(); return; }
+  el.classList.remove('open'); setTimeout(() => el.remove(), 200); }
+
 function vistaTienda(prev) {
   const d = D(); if (!d) return cargando();
   const dis = prev ? ' aria-disabled="true"' : '';
@@ -470,7 +535,9 @@ function vistaTienda(prev) {
         ${ab ? `<div class="det">${ventasDeRec(d, e.id).map(v => `<div><span>${dia(v.fecha)}</span><span>${fmt(v.monto)}</span></div>`).join('')}</div>` : ''}`;
     }).join('') : '<p class="vacio">Todavía no hay entregas.</p>'}${masBtn('ent', ents.length)}</div></section>
   <section class="sec"><div class="sech"><h2>Mercadería recibida</h2></div>
-    <div class="lista">${ings.length ? ings.slice(0, S.lim.ing).map(i => `<div class="fila"><span class="col"><span class="t1">Factura ${esc(i.factura)}</span><span class="t2">${fdate(i.fecha)}</span></span><span class="mn">${fmt(i.monto)}</span></div>`).join('')
+    <div class="lista">${ings.length ? ings.slice(0, S.lim.ing).map(i => i.monica
+        ? `<button class="fila" data-a="verNota" data-id="${i.id}" data-lp="${i.id}"><span class="col"><span class="t1">Factura ${esc(i.factura)}${tagNota(i)}</span><span class="t2">${fdate(i.fecha)}${subNota(i)}</span></span><span class="mn ${i.anulada ? 'tachado' : ''}">${fmt(i.total)}</span></button>`
+        : `<div class="fila"><span class="col"><span class="t1">Factura ${esc(i.factura)}</span><span class="t2">${fdate(i.fecha)}</span></span><span class="mn">${fmt(i.monto)}</span></div>`).join('')
       : '<p class="vacio">Todavía no hay facturas.</p>'}${masBtn('ing', ings.length)}</div></section>`;
 }
 
@@ -514,6 +581,7 @@ function vistaAdmin() {
       if (m.tipo === 'dia') { const et = m.o.motivo === 'descanso' ? 'Descanso' : 'Cerrado';
         const nota = m.o.nota && m.o.nota.trim().toLowerCase() !== et.toLowerCase() ? m.o.nota : '';
         return `<button class="fila apagada" data-a="dia" data-fecha="${m.fecha}" style="min-height:58px"><span class="col"><span class="t1">${dia(m.fecha)}</span>${nota ? `<span class="t2">${esc(nota)}</span>` : ''}</span><span class="marca">${et}</span></button>`; }
+      if (m.tipo === 'ing' && m.o.monica) return `<button class="fila" data-a="verNota" data-id="${m.id}" data-lp="${m.id}" style="min-height:58px"><span class="col"><span class="t1">Factura ${esc(m.o.factura)}${tagNota(m.o)}</span><span class="t2">Mercadería · ${fdate(m.o.fecha)}${subNota(m.o)}</span></span><span class="mn vino ${m.o.anulada ? 'tachado' : ''}" style="font-size:15px">+${fmt(m.o.total)}</span></button>`;
       if (m.tipo === 'ing') return `<div class="sw ${S.swiped === m.id ? 'abierta' : ''}"><button class="accion" data-a="editarIng" data-id="${m.id}" tabindex="${S.swiped === m.id ? 0 : -1}">Editar</button>
         <div class="fila" data-swipe="${m.id}"><span class="col"><span class="t1">Factura ${esc(m.o.factura)}</span><span class="t2">Mercadería · ${fdate(m.o.fecha)}</span></span><span class="mn vino" style="font-size:15px">+${fmt(m.o.monto)}</span></div></div>`;
       const ab = !!S.abiertos[m.id], vt = tardeVigente(m.o);
@@ -773,6 +841,8 @@ const A = {
     S.ses = null; LS.del('ce_sesion'); S.view = 'login'; S.f = { usuario: S.ultUsuario }; S.err = ''; render(); revisarAdmin();
   },
   tienda(el) { S.tienda = el.dataset.id; LS.set('ce_tienda_admin', S.tienda); S.lim = Object.assign({}, LIM0); S.swiped = null; render(); sync(); },
+  verNota(el) { if (_lpHecho) { _lpHecho = false; return; } verNota(el.dataset.id); },
+  cerrarNota() { cerrarNota(); },
   quitarAviso() { S.aviso = ''; render(); },
   preview() { S.preview = true; S.swiped = null; S.lim = Object.assign({}, LIM0); render(); window.scrollTo(0, 0); },
   cerrarPreview() { S.preview = false; S.lim = Object.assign({}, LIM0); render(); window.scrollTo(0, 0); },
@@ -874,7 +944,7 @@ const A = {
     avisar('Entrega devuelta a la tienda'); render(); sync();
   },
   ingreso() { abrir('ingreso', { id: null, factura: '', fecha: hoyGT(), monto: '' }); },
-  editarIng(el) { const d = D(); const i = d && d.ingresos.find(x => x.id === el.dataset.id); if (!i) return; abrir('ingreso', { id: i.id, factura: i.factura, fecha: i.fecha, monto: fmtInput(String(i.monto)) }); },
+  editarIng(el) { const d = D(); const i = d && d.ingresos.find(x => x.id === el.dataset.id); if (!i || i.monica) return; abrir('ingreso', { id: i.id, factura: i.factura, fecha: i.fecha, monto: fmtInput(String(i.monto)) }); },
   guardarIngreso() {
     const d = D(); const f = S.f; const m = n2(num(f.monto)); const fac = String(f.factura || '').trim();
     if (!d) return;
@@ -974,6 +1044,15 @@ document.addEventListener('pointerup', e => {
     x.classList.toggle('abierta', on); const b = x.querySelector('.accion'); if (b) b.tabIndex = on ? 0 : -1; });
 });
 document.addEventListener('pointercancel', () => { _sid = null; });
+// Mantener presionada una factura de Monica: se abre la lista de productos (también con un toque)
+let _lpT = null, _lpX = 0, _lpY = 0, _lpHecho = false;
+document.addEventListener('pointerdown', e => { const r = e.target.closest('[data-lp]'); clearTimeout(_lpT); if (!r) return;
+  _lpX = e.clientX; _lpY = e.clientY; _lpHecho = false;
+  _lpT = setTimeout(() => { _lpHecho = true; try { navigator.vibrate && navigator.vibrate(20); } catch (x) {} verNota(r.dataset.lp); }, 450); });
+document.addEventListener('pointermove', e => { if (_lpT && (Math.abs(e.clientX - _lpX) > 8 || Math.abs(e.clientY - _lpY) > 8)) { clearTimeout(_lpT); _lpT = null; } });
+document.addEventListener('pointerup', () => { clearTimeout(_lpT); _lpT = null; });
+document.addEventListener('contextmenu', e => { if (e.target.closest('[data-lp]')) e.preventDefault(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarNota(); });
 
 window.addEventListener('online', () => { S.online = true; sync(); });
 window.addEventListener('offline', () => { S.online = false; pintarCab(); });

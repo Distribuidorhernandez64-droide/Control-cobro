@@ -25,6 +25,13 @@ insert into public.ce_tiendas (id, nombre, orden) values
   ('canasta', 'Tienda La Canasta', 1),
   ('morelia', 'Tienda Morelia', 2)
 on conflict (id) do nothing;
+-- Monica: código de cliente de cada tienda y desde qué nota de entrega se toma sola (las anteriores se metieron a mano)
+alter table public.ce_tiendas add column if not exists monica_cliente text;
+alter table public.ce_tiendas add column if not exists monica_desde bigint;
+update public.ce_tiendas set monica_cliente = '1204' where id = 'canasta' and monica_cliente is null;
+update public.ce_tiendas set monica_cliente = '1205' where id = 'morelia' and monica_cliente is null;
+update public.ce_tiendas set monica_desde = 22944 where id = 'canasta' and monica_desde is null;
+update public.ce_tiendas set monica_desde = 22629 where id = 'morelia' and monica_desde is null;
 -- Meta de venta por día (para la gráfica de la semana)
 alter table public.ce_tiendas add column if not exists meta numeric(12,2) not null default 600;
 
@@ -112,6 +119,64 @@ create table if not exists public.ce_cambios (
   cuando     timestamptz not null,   -- hora del celular
   creado_en  timestamptz not null default now()
 );
+
+-- Notas de entrega de Monica a nombre de las tiendas (clientes 1204 La Canasta, 1205 Morelia).
+-- Las sube Facturación rápida (PC) con su sesión de siempre, igual que 'pendientes_entrega'.
+-- 'detalle' = productos como están AHORA en Monica: [{c: código, d: descripción, q: cantidad, p: precio, x: descuento}].
+-- 'detalle_orig' / 'total_orig' = como quedó la nota al hacerse (se congela 30 min después de llegar):
+-- si después cambian productos, precio o descuento en Monica, la app lo marca como Modificada y dice qué cambió.
+create table if not exists public.notas_tiendas (
+  nro                bigint primary key,           -- número de nota de entrega en Monica
+  codigo_cliente     text not null,                -- 1204 / 1205
+  cliente            text not null default '',
+  fecha              date not null,
+  hora               text,
+  total              numeric(12,2) not null default 0,
+  detalle            jsonb,
+  anulada            boolean not null default false,
+  monica_actualizado text,
+  total_orig         numeric(12,2),
+  detalle_orig       jsonb,
+  modificada         boolean not null default false,
+  modificada_en      timestamptz,
+  creado_en          timestamptz not null default now(),
+  cambiado_en        timestamptz not null default now()
+);
+create or replace function public.notas_tiendas_guardia() returns trigger
+language plpgsql as $$
+begin
+  new.cambiado_en := now();
+  if tg_op = 'INSERT' then
+    new.creado_en := now(); new.total_orig := new.total; new.detalle_orig := new.detalle;
+    new.modificada := false; new.modificada_en := null;
+    return new;
+  end if;
+  new.nro := old.nro; new.creado_en := old.creado_en;
+  if now() - old.creado_en < interval '30 minutes' then
+    -- todavía la están armando en Monica: lo nuevo pasa a ser lo original
+    new.total_orig := new.total; new.detalle_orig := new.detalle; new.modificada := false; new.modificada_en := null;
+  else
+    new.total_orig := old.total_orig; new.detalle_orig := old.detalle_orig;
+    new.modificada := new.anulada or new.total is distinct from old.total_orig
+                      or coalesce(new.detalle, '[]'::jsonb) is distinct from coalesce(old.detalle_orig, '[]'::jsonb);
+    new.modificada_en := case when new.modificada and (not old.modificada or new.total is distinct from old.total or new.detalle is distinct from old.detalle
+                                                        or new.anulada is distinct from old.anulada) then now()
+                              when new.modificada then old.modificada_en else null end;
+  end if;
+  return new;
+end $$;
+drop trigger if exists notas_tiendas_guardia on public.notas_tiendas;
+create trigger notas_tiendas_guardia before insert or update on public.notas_tiendas
+  for each row execute function public.notas_tiendas_guardia();
+alter table public.notas_tiendas enable row level security;
+drop policy if exists nt_leer on public.notas_tiendas;
+drop policy if exists nt_agregar on public.notas_tiendas;
+drop policy if exists nt_cambiar on public.notas_tiendas;
+create policy nt_leer    on public.notas_tiendas for select to authenticated using (true);
+create policy nt_agregar on public.notas_tiendas for insert to authenticated with check (codigo_cliente in ('1204', '1205'));
+create policy nt_cambiar on public.notas_tiendas for update to authenticated using (true) with check (codigo_cliente in ('1204', '1205'));
+revoke all on public.notas_tiendas from anon;
+grant select, insert, update on public.notas_tiendas to authenticated;   -- nadie puede borrar
 
 -- Nadie entra directo a las tablas: solo por las funciones de abajo
 alter table public.ce_tiendas  enable row level security;
@@ -249,9 +314,19 @@ begin
     'entregas', coalesce((select json_agg(json_build_object('id', id, 'fecha_envio', fecha_envio, 'total', total, 'quien', quien,
                  'estado', estado, 'fecha_recibido', fecha_recibido, 'creado_en', coalesce(creado_local, creado_en)) order by fecha_envio, creado_en)
                  from public.ce_entregas where tienda_id = t), '[]'::json),
-    'ingresos', coalesce((select json_agg(json_build_object('id', id, 'factura', factura, 'fecha', fecha, 'monto', monto,
-                 'creado_en', creado_en) order by fecha, creado_en)
-                 from public.ce_ingresos where tienda_id = t), '[]'::json),
+    'ingresos', coalesce((select json_agg(x order by x->>'fecha', x->>'creado_en') from (
+        select json_build_object('id', id, 'factura', factura, 'fecha', fecha, 'monto', monto, 'creado_en', creado_en) x
+          from public.ce_ingresos where tienda_id = t
+        union all
+        -- Notas de entrega de Monica (Facturación rápida). Una anulada no suma. Si ya se metió a mano con el mismo número, cuenta la de mano.
+        select json_build_object('id', 'm' || n.nro, 'factura', n.nro::text, 'fecha', n.fecha,
+                 'monto', case when n.anulada then 0 else n.total end, 'creado_en', n.creado_en, 'monica', true,
+                 'hora', n.hora, 'anulada', n.anulada, 'modificada', n.modificada, 'modificada_en', n.modificada_en,
+                 'total_orig', n.total_orig, 'total', n.total, 'detalle', n.detalle, 'detalle_orig', n.detalle_orig)
+          from public.notas_tiendas n join public.ce_tiendas ti on ti.id = t
+         where n.codigo_cliente = ti.monica_cliente and n.nro > coalesce(ti.monica_desde, 0)
+           and not exists (select 1 from public.ce_ingresos i where i.tienda_id = t and i.factura = n.nro::text)
+      ) q), '[]'::json),
     'cambios', coalesce((select json_agg(json_build_object('id', id, 'tipo', tipo, 'venta_id', venta_id, 'fecha', fecha, 'antes', antes, 'despues', despues,
                  'quien', quien, 'cuando', cuando) order by id)
                  from public.ce_cambios where tienda_id = t and (u.rol = 'admin' or tipo = 'correccion')), '[]'::json),

@@ -93,3 +93,5 @@ Tocar fuera cierra la tarjeta; cerrar regresa a "Ruta de…". Base falsa en la p
 
 `prueba-android-ruta.js` — "Ruta de…" en Android (23/11/2026): botón extra "Abrir en Organic Maps" (intent om://map
 v=1 con los puntos en orden y con nombre), el .kml se baja a Descargas con aviso. Base falsa en la página.
+  (23/11, v2026-11-23.2) Ahora el botón extra en Android es "Enviar por WhatsApp": sube el .kml a Supabase Storage
+  (bucket público 'rutas', supabase/rutas.sql, corrido por César 23/11 19:27) y comparte el enlace.

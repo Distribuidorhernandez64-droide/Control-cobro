@@ -176,6 +176,7 @@ create policy nt_leer    on public.notas_tiendas for select to authenticated usi
 create policy nt_agregar on public.notas_tiendas for insert to authenticated with check (codigo_cliente in ('1204', '1205'));
 create policy nt_cambiar on public.notas_tiendas for update to authenticated using (true) with check (codigo_cliente in ('1204', '1205'));
 revoke all on public.notas_tiendas from anon;
+revoke delete, truncate on public.notas_tiendas from authenticated;
 grant select, insert, update on public.notas_tiendas to authenticated;   -- nadie puede borrar
 
 -- Nadie entra directo a las tablas: solo por las funciones de abajo

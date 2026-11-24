@@ -193,7 +193,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-23.3';
+const VERSION = '2026-11-23.4';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -451,7 +451,7 @@ function graficaSemana(d) {
     const f = addDays(lunes, i); let val = null;
     if (porDia[f] != null) val = porDia[f];
     else if (f < hoy && f >= desdeUso && !marcas.has(f)) val = 0;   // día pasado sin venta anotada
-    dias.push({ f, val, hoy: f === hoy });
+    dias.push({ f, val, hoy: f === hoy, hay: porDia[f] != null });
   }
   const col = v => v >= meta ? '#2E8A5E' : v >= meta * .8 ? '#D69A2D' : '#E07160';
   const W = 300, H = 30, pad = 4, x = i => pad + i * (W - 2 * pad) / 6;
@@ -470,12 +470,13 @@ function graficaSemana(d) {
   return `<div class="sem7" data-sem>
     <div class="semc"><span class="tt">Semana ${semanaISO(lunes)} · ${rangoSem(lunes, addDays(lunes, 6))}</span>
       <span class="fl"><button data-a="semMov" data-d="-1" aria-label="Semana anterior" ${S.semOff <= minOff ? 'disabled' : ''}>${izq}</button><button data-a="semMov" data-d="1" aria-label="Semana siguiente" ${S.semOff >= 0 ? 'disabled' : ''}>${der}</button></span></div>
-    <svg viewBox="0 0 ${W} ${H + 12}" role="img" aria-label="Ventas de la semana contra la meta">
+    <svg viewBox="0 0 ${W} ${H + 23}" role="img" aria-label="Ventas de la semana contra la meta">
       <defs>${grads.join('')}</defs>
       <line x1="${pad}" x2="${W - pad}" y1="${y(meta).toFixed(1)}" y2="${y(meta).toFixed(1)}" stroke="currentColor" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 4"/>
       ${tramos.join('')}
       ${dias.map((p, i) => p.val === null ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(p.val).toFixed(1)}" r="${p.hoy ? 3.6 : 3}" fill="${col(p.val)}" stroke="#FFF" stroke-width="1.2"/>`).join('')}
       ${letras.map((l, i) => `<text x="${x(i).toFixed(1)}" y="${H + 10}" text-anchor="middle" font-size="8" font-weight="${dias[i].hoy ? 700 : 500}" fill="currentColor" fill-opacity="${dias[i].hoy ? .85 : .45}">${l}</text>`).join('')}
+      ${dias.map((p, i) => p.val === null ? '' : `<text x="${x(i).toFixed(1)}" y="${H + 21}" text-anchor="middle" font-size="8.5" font-weight="${p.hoy ? 700 : 600}" fill="currentColor" fill-opacity="${p.hay ? .8 : .35}" style="font-variant-numeric:tabular-nums">${p.hay ? Math.round(p.val).toLocaleString('en-US') : '—'}</text>`).join('')}
     </svg>
     <div class="ley7" aria-hidden="true"><span><i style="background:#2E8A5E"></i>Bien</span><span><i style="background:#D69A2D"></i>Regular</span><span><i style="background:#E07160"></i>Bajo</span></div></div>`;
 }

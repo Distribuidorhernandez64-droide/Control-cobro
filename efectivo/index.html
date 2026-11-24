@@ -62,6 +62,13 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 .sem7 .cab{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;opacity:.85}
 .sem7 .cab span:last-child{display:flex;align-items:center;gap:6px}
 .sem7 .cab i{width:7px;height:7px;border-radius:999px;display:inline-block}
+.sem7{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.semc{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.semc .tt{font-size:11px;font-weight:600;opacity:.75}
+.semc .fl{display:flex;gap:2px}
+.semc .fl button{width:28px;height:24px;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center;border-radius:8px;color:inherit;opacity:.6}
+.semc .fl button:disabled{opacity:.18}
+.semc .fl svg{width:14px;height:14px}
 .sem7 svg{display:block;width:100%;height:auto;overflow:visible}
 .filtros{display:flex;gap:6px;padding:0 2px}
 .filtros button{height:30px;padding:0 12px;border-radius:999px;border:1px solid #DDE2DF;background:transparent;color:#5C6862;font-size:12px;font-weight:600}
@@ -186,7 +193,7 @@ main{flex:1;padding:20px 20px calc(28px + env(safe-area-inset-bottom));display:f
 // ===== Control de Efectivo · Distribuidora Hernández =====
 // Datos en la misma base de Cobros (Supabase), en tablas propias (ce_...), solo por funciones (supabase/efectivo.sql).
 // Funciona sin internet: lo que se anota se guarda en el celular y se envía solo cuando vuelve la señal.
-const VERSION = '2026-11-23.2';
+const VERSION = '2026-11-23.3';
 const SB_URL = 'https://shlolncjhfzqmcllwjrk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobG9sbmNqaGZ6cW1jbGx3anJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzU5NjQsImV4cCI6MjA5NzYxMTk2NH0.CnXj2cX5V_XDy902rFN88PU_rMPEb5qdqHmAiyFXpvk';
 const TZ = 'America/Guatemala';
@@ -420,11 +427,23 @@ function pintarCab() {
 
 // Gráfica de la semana (lunes a domingo): venta de cada día contra la meta diaria.
 // Sin números: la línea, una guía punteada en la meta y una palabra (Bien / Regular / Bajo).
+// Número de semana como en los calendarios (ISO: la semana empieza el lunes)
+function semanaISO(f) { const t = new Date(f + 'T12:00:00Z'); const j = addDays(f, 3 - ((dow(f) + 6) % 7)); const a = j.slice(0, 4);
+  const p = new Date(a + '-01-04T12:00:00Z'); const l1 = addDays(a + '-01-04', -((p.getUTCDay() + 6) % 7));
+  return Math.round((new Date(j + 'T12:00:00Z') - new Date(l1 + 'T12:00:00Z')) / 6048e5) + 1; }
+const MESC = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+function rangoSem(a, b) { const da = +a.slice(8), db = +b.slice(8), ma = +a.slice(5, 7) - 1, mb = +b.slice(5, 7) - 1;
+  return ma === mb ? `${da} – ${db} ${MESC[mb]}` : `${da} ${MESC[ma]} – ${db} ${MESC[mb]}`; }
+function semMin(d) { const hoy = hoyGT(); let m = d.ventas.reduce((x, v) => v.fecha < x ? v.fecha : x, hoy);
+  if (d.tienda.fecha_ini && d.tienda.fecha_ini < m) m = d.tienda.fecha_ini;
+  const l0 = addDays(hoy, -((dow(hoy) + 6) % 7)), lm = addDays(m, -((dow(m) + 6) % 7));
+  return -Math.round((new Date(l0 + 'T12:00:00Z') - new Date(lm + 'T12:00:00Z')) / 6048e5); }
 function graficaSemana(d) {
   // Sin palabras: cada día es un punto de color (verde = llegó a la meta, ámbar = cerca, coral = abajo)
   // y la línea va cambiando de color de un día al otro. La meta es la línea punteada.
   const meta = Number(d.tienda.meta || 600); const hoy = hoyGT();
-  const lunes = addDays(hoy, -((dow(hoy) + 6) % 7));
+  const minOff = semMin(d); S.semOff = Math.max(minOff, Math.min(0, S.semOff || 0));
+  const lunes = addDays(addDays(hoy, -((dow(hoy) + 6) % 7)), 7 * S.semOff);
   const porDia = {}; d.ventas.forEach(v => { porDia[v.fecha] = (porDia[v.fecha] || 0) + Number(v.monto); });
   const marcas = new Set((d.dias || []).map(x => x.fecha));
   const desdeUso = d.ventas.reduce((m, v) => v.fecha < m ? v.fecha : m, hoy);
@@ -447,7 +466,11 @@ function graficaSemana(d) {
     tramos.push(`<line x1="${x(i).toFixed(1)}" y1="${y(a.val).toFixed(1)}" x2="${x(i + 1).toFixed(1)}" y2="${y(b.val).toFixed(1)}" stroke="url(#${id})" stroke-width="2" stroke-linecap="round"/>`);
   }
   const letras = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-  return `<div class="sem7"><svg viewBox="0 0 ${W} ${H + 12}" role="img" aria-label="Ventas de esta semana contra la meta">
+  const fle = r => ICO.chev.replace('class="chev"', `style="transform:rotate(${r}deg)"`).replace('#9AA59F', 'currentColor'), izq = fle(90), der = fle(-90);
+  return `<div class="sem7" data-sem>
+    <div class="semc"><span class="tt">Semana ${semanaISO(lunes)} · ${rangoSem(lunes, addDays(lunes, 6))}</span>
+      <span class="fl"><button data-a="semMov" data-d="-1" aria-label="Semana anterior" ${S.semOff <= minOff ? 'disabled' : ''}>${izq}</button><button data-a="semMov" data-d="1" aria-label="Semana siguiente" ${S.semOff >= 0 ? 'disabled' : ''}>${der}</button></span></div>
+    <svg viewBox="0 0 ${W} ${H + 12}" role="img" aria-label="Ventas de la semana contra la meta">
       <defs>${grads.join('')}</defs>
       <line x1="${pad}" x2="${W - pad}" y1="${y(meta).toFixed(1)}" y2="${y(meta).toFixed(1)}" stroke="currentColor" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 4"/>
       ${tramos.join('')}
@@ -850,9 +873,10 @@ const A = {
     if (S.ses) { LS.del(keyCola()); Object.keys(localStorage).filter(k => k.startsWith('ce_datos_' + S.ses.usuario + '_')).forEach(k => LS.del(k)); }
     S.ses = null; LS.del('ce_sesion'); S.view = 'login'; S.f = { usuario: S.ultUsuario }; S.err = ''; render(); revisarAdmin();
   },
-  tienda(el) { S.tienda = el.dataset.id; LS.set('ce_tienda_admin', S.tienda); S.lim = Object.assign({}, LIM0); S.swiped = null; render(); sync(); },
+  tienda(el) { S.semOff = 0; S.tienda = el.dataset.id; LS.set('ce_tienda_admin', S.tienda); S.lim = Object.assign({}, LIM0); S.swiped = null; render(); sync(); },
   verNota(el) { if (_lpHecho) { _lpHecho = false; return; } verNota(el.dataset.id); },
   cerrarNota() { cerrarNota(); },
+  semMov(el) { S.semOff = (S.semOff || 0) + Number(el.dataset.d); render(); },
   revisarNota(el) {
     const d = D(); const i = d && d.ingresos.find(x => x.id === el.dataset.id); if (!i) return;
     i.revisada = true; setD(d);
@@ -1060,6 +1084,12 @@ document.addEventListener('pointerup', e => {
     x.classList.toggle('abierta', on); const b = x.querySelector('.accion'); if (b) b.tabIndex = on ? 0 : -1; });
 });
 document.addEventListener('pointercancel', () => { _sid = null; });
+// Deslizar la gráfica: a la derecha = semana anterior, a la izquierda = la siguiente
+let _gx = null, _gy = 0;
+document.addEventListener('pointerdown', e => { _gx = e.target.closest('[data-sem]') && !e.target.closest('button') ? e.clientX : null; _gy = e.clientY; });
+document.addEventListener('pointerup', e => { if (_gx === null) return; const dx = e.clientX - _gx, dy = Math.abs(e.clientY - _gy); _gx = null;
+  if (Math.abs(dx) < 40 || dy > Math.abs(dx)) return;
+  const b = document.querySelector(`[data-a="semMov"][data-d="${dx > 0 ? -1 : 1}"]`); if (b && !b.disabled) b.click(); });
 // Mantener presionada una factura de Monica: se abre la lista de productos (también con un toque)
 let _lpT = null, _lpX = 0, _lpY = 0, _lpHecho = false;
 document.addEventListener('pointerdown', e => { const r = e.target.closest('[data-lp]'); clearTimeout(_lpT); if (!r) return;

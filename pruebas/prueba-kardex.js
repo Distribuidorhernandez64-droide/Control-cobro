@@ -177,6 +177,15 @@ window.supabase={createClient:()=>({
   await p.click('#kxOk');await p.waitForTimeout(300);
   ok('El pedido lleva los sabores a mano',(await p.textContent('.kx-txt')).includes('2 cja - Super naranjada 360ml\n3 cja - Super uva 360ml'));
   await p.evaluate(()=>kxCerrarHoja());await p.waitForTimeout(300);
+  ok('Surtido y sabores van juntos hasta abajo ("SUPER 360ML · SABORES")',await p.evaluate(()=>{const f=[...document.querySelectorAll('#kxLista .kx-fam span:first-child')].map(e=>e.textContent);return f[f.length-1]==='SUPER 360ML · sabores';}));
+  await p.click('.kx-sw[data-c="m-nar"] .kx-ex');await p.waitForTimeout(350);
+  ok('Tocar el lápiz abre "Quitar del Kardex"',(await p.textContent('#kxOv')).includes('Quitar del Kardex'));
+  await p.click('#kxOv .kx-b.roja');await p.waitForTimeout(700);
+  ok('Quitar desde el lápiz lo saca',await p.evaluate(()=>!window.__DB.kardex_proveedores.find(a=>a.id==='gallo').productos.some(y=>y.c==='m-nar')));
+  await p.click('#kxToast button');await p.waitForTimeout(400);
+  await p.click('.kx-sw[data-c="346"] .kx-ex');await p.waitForTimeout(350);
+  ok('En cuadrar también está "Quitar"',await p.isVisible('#kxOv .kx-b.roja'));
+  await p.evaluate(()=>kxCerrarHoja());await p.waitForTimeout(300);
   // agregar a mano desde el buscador
   await p.click('.kx-fab');await p.waitForTimeout(1200);await p.fill('#kxQ','Super roja lata');await p.click('.kx-hpie .kx-b.cla');await p.waitForTimeout(350);
   ok('Agregar a mano lleva el nombre escrito',await p.inputValue('#kxManN')==='Super roja lata');

@@ -725,7 +725,7 @@
   .kx-sug.puesto{background:var(--green2);color:var(--green)}
   .kx-sug.cero{background:#f2f1ed;color:var(--mut);cursor:default}
   .kx-sug.info{background:transparent;border:1px dashed #e2c458;color:#8a6d12;cursor:default}
-  .kx-ex.mano{display:flex;justify-content:flex-end;align-items:center;color:#c3c7ce;cursor:default}
+  .kx-ex.mano{display:flex;justify-content:flex-end;align-items:center;color:#c3c7ce;cursor:pointer}
   .kx-ex.mano svg{width:20px;height:20px}
   .kx-q.vacio{display:block;border:none;background:none}
   .kx-sug.rev{background:#fbe9e4;color:var(--bad);cursor:default}
@@ -3622,7 +3622,10 @@ function kxCuerpo(p){
   if(!(cada>0))h+=`<div class="kx-falta"><div><b>¿Cada cuántos días te visita ${esc(p.nombre)}?</b>Con eso te digo cuánto pedir.</div><button onclick="kxAjustes()">Poner días</button></div>`;
   else h+=`<button class="kx-plan" onclick="kxAjustes()">${ICO_KX_CAL}<span>Visita cada <b>${kxF(cada)} ${cada===1?'día':'días'}</b> · llega en <b>${ent>0?kxF(ent)+(ent===1?' día':' días'):'el mismo día'}</b> · reserva <b>${kxF(res>=0?res:25)} %</b></span></button>`;
   if(!prods.length)return h+`<div class="kx-vacio"><b>Sin productos</b>Toca + para buscar en Monica y agregarlos.</div>`;
-  const fams=[];prods.forEach(x=>{const f=x.fam||'OTROS';let g=fams.find(a=>a[0]===f);if(!g)fams.push(g=[f,[]]);g[1].push(x);});
+  // Los surtidos y sus sabores (a mano) van juntos y hasta abajo, para no confundirlos con lo que sí lleva Monica
+  const esSabor=x=>x.surtido||(x.manual&&x.de&&prods.some(y=>y.c===x.de&&y.surtido));
+  const fams=[];prods.filter(x=>!esSabor(x)).forEach(x=>{const f=x.fam||'OTROS';let g=fams.find(a=>a[0]===f);if(!g)fams.push(g=[f,[]]);g[1].push(x);});
+  prods.filter(x=>x.surtido).forEach(t=>fams.push([`${t.fam||'OTROS'} · sabores`,[t,...prods.filter(y=>y.manual&&y.de===t.c)]]));
   const d=KX.draft[p.id]||{};
   h+=fams.map(([f,xs],i)=>`<div class="kx-fam"><span>${esc(f)}</span>${i===0?'<span class="kx-col"><em>Existencia</em><em>Pedido</em></span>':''}</div><div class="kx-grupo">`+xs.map(x=>{
     if(x.manual){const v=d[x.c]||'',jun=x.de&&prods.find(y=>y.c===x.de);
@@ -3630,7 +3633,7 @@ function kxCuerpo(p){
       if(ul)det.push(`pediste ${kxF(ul.q)} el ${new Date(ul.at).toLocaleDateString('es-GT',{weekday:'short',day:'numeric'})}`);
       return `<div class="kx-sw" data-c="${esc(x.c)}"><button class="kx-quitar" onclick="kxQuitar('${esc(x.c)}')">${ICO_KX_BASURA}Quitar</button>
       <div class="kx-fila mano"><div><div class="kx-n">${esc(kxNom(x.n))}</div><div class="kx-d">${esc(det.join(' · '))}</div></div>
-      <span class="kx-ex nada mano" aria-hidden="true">${ICO_KX_MANO}</span>
+      <button class="kx-ex nada mano" onclick="kxOpciones('${esc(x.c)}')" aria-label="Opciones de ${esc(kxNom(x.n))}">${ICO_KX_MANO}</button>
       <input class="kx-q${kxN(v)>0?' lleno':''}" data-c="${esc(x.c)}" inputmode="decimal" enterkeyhint="next" value="${esc(v)}" aria-label="Pedido ${esc(kxNom(x.n))}" oninput="kxEscribe(this)"></div></div>`;}
     const it=kxDato(p,x),k=x.k||1,s=kxSug(p,x),u=kxU(x),v=d[x.c]||'';
     let ex,cls='';
@@ -3649,7 +3652,7 @@ function kxCuerpo(p){
       <button class="kx-ex ${cls}" onclick="kxCuadrar('${esc(x.c)}')" aria-label="Contar ${esc(kxNom(x.n))}">${ex}<small>${it&&it.ex!=null?u:'&nbsp;'}</small></button>
       ${x.surtido?'<span class="kx-q vacio" aria-hidden="true"></span>':`<input class="kx-q${kxN(v)>0?' lleno':''}" data-c="${esc(x.c)}" inputmode="decimal" enterkeyhint="next" value="${esc(v)}" aria-label="Pedido ${esc(kxNom(x.n))}" oninput="kxEscribe(this)">`}</div></div>`;
   }).join('')+`</div>`).join('');
-  h+=`<div class="kx-ayuda">Toca la existencia para cuadrar · desliza a la izquierda para quitar</div>`;
+  h+=`<div class="kx-ayuda">Toca la existencia o el lápiz para cuadrar o quitar · también puedes deslizar a la izquierda</div>`;
   return h;
 }
 function kxTab(id){KX.cur=id;try{localStorage.setItem('kxCur',id);}catch(e){}kxRender();kxSiViejo();}
@@ -3880,6 +3883,11 @@ async function kxPedirCuadre(datos){
   if(u&&!u.error&&u.data&&u.data.length)throw Object.assign(new Error('La PC no respondió. No se cambió nada en Monica'),{seguro:true});
   throw new Error('La PC tardó en responder');
 }
+// Opciones de un producto a mano (tocar el lápiz): quitarlo del Kardex
+function kxOpciones(c){const p=kxP(),x=(p.productos||[]).find(y=>y.c===c);if(!x)return;
+  kxHoja(kxCab(esc(kxNom(x.n)),'Producto a mano · sin existencia ni sugerido')+`<div class="kx-hcuerpo"><div class="kx-nota">Se quita solo del Kardex de ${esc(p.nombre)}. Monica no cambia.</div></div>
+    <div class="kx-hpie"><button class="kx-b roja anch" onclick="kxQuitarDesde('${esc(c)}')">Quitar del Kardex</button></div>`);}
+function kxQuitarDesde(c){kxCerrarHoja();setTimeout(()=>kxQuitar(c),230);}
 function kxCuadrar(c){
   const p=kxP(),x=(p.productos||[]).find(y=>y.c===c);if(!x||x.manual)return;
   const it=kxDato(p,x),k=x.k||1,u=kxU(x);
@@ -3890,7 +3898,7 @@ function kxCuadrar(c){
     <label class="kx-lbl" for="kxCont">${k>1?'¿Cuántos paquetes hay?':'¿Cuántas cajas hay?'}</label><input class="kx-in grande" id="kxCont" inputmode="decimal" placeholder="0">
     <div class="kx-nota" id="kxCuDif">Monica ${kxHace(p.existencia.at)}. Si hubo ventas después, toca Actualizar antes de contar.</div>
     <div class="kx-msg" id="kxCuMsg"></div></div>
-    <div class="kx-hpie"><button class="kx-b verde" id="kxCuBtn" onclick="kxCuadrarSi('${esc(c)}',${ant})" disabled>Cuadrar en Monica</button></div>`);
+    <div class="kx-hpie"><button class="kx-b roja" onclick="kxQuitarDesde('${esc(c)}')">Quitar</button><button class="kx-b verde" id="kxCuBtn" onclick="kxCuadrarSi('${esc(c)}',${ant})" disabled>Cuadrar en Monica</button></div>`);
   const inp=document.getElementById('kxCont');
   inp.addEventListener('input',()=>{const v=kxN(inp.value),ok=v>=0;document.getElementById('kxCuN').textContent=ok?kxF(v):'?';
     const b=document.getElementById('kxCuBtn');b.disabled=!ok||kxR(v)===ant;b.dataset.listo='';b.textContent='Cuadrar en Monica';
@@ -5234,7 +5242,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-25.3';
+const VERSION='2026-11-25.4';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

@@ -683,6 +683,120 @@
   .ubi-pt{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#2f7cf6;border:3px solid #fff;box-shadow:0 1px 6px rgba(28,36,51,.4)}
   .ubi-pt::after{content:'';position:absolute;inset:-9px;border-radius:50%;background:rgba(47,124,246,.25);animation:ubiLat 2s ease-out infinite}
   @keyframes ubiLat{0%{transform:scale(.4);opacity:.9}100%{transform:scale(1.4);opacity:0}}
+  /* ===== Kardex (25/11/2026) ===== */
+  .kx-cab{flex-shrink:0;background:var(--card);border-bottom:1px solid var(--line);padding:max(14px,env(safe-area-inset-top)) 16px 0}
+  .kx-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .kx-top h2{margin:0;font-size:21px;font-weight:900;letter-spacing:-.3px}
+  .kx-sub{font-size:12.5px;font-weight:700;color:var(--mut);margin-top:1px;display:flex;align-items:center;gap:6px}
+  .kx-sub.viejo{color:var(--warn)}
+  .kx-sub i{width:7px;height:7px;border-radius:50%;background:var(--mint);display:inline-block}
+  .kx-sub.viejo i{background:var(--amber)}
+  .kx-sub.leyendo i{background:var(--blue);animation:kxlat 1s infinite alternate}
+  @keyframes kxlat{to{opacity:.25}}
+  .kx-ib{width:34px;height:34px;border-radius:50%;border:none;background:#f1f0ec;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;color:var(--ink)}
+  .kx-ib:active{transform:scale(.92)}.kx-ib:disabled{opacity:.45}
+  .kx-ib svg{width:17px;height:17px}
+  .kx-ib.gira svg{animation:kxgira .9s linear infinite}
+  @keyframes kxgira{to{transform:rotate(360deg)}}
+  .kx-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 0 12px;margin:0 -16px;padding-left:16px;padding-right:16px}
+  .kx-tabs::-webkit-scrollbar{display:none}
+  .kx-tab{flex-shrink:0;height:34px;padding:0 15px;border-radius:17px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .kx-tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .kx-tab b{font-size:11px;font-weight:900;min-width:18px;height:18px;border-radius:9px;background:var(--yellow);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+  .kx-tab.mas{width:34px;padding:0;justify-content:center;color:var(--mut);font-size:19px;font-weight:700}
+  .kx-lista{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 14px calc(150px + env(safe-area-inset-bottom))}
+  .kx-plan{display:flex;align-items:center;gap:10px;margin:12px 2px 2px;padding:0;background:none;border:none;font-family:inherit;color:var(--mut);font-size:12.5px;font-weight:700;cursor:pointer;text-align:left}
+  .kx-plan b{color:var(--ink);font-weight:800}
+  .kx-plan svg{flex-shrink:0;opacity:.6}
+  .kx-falta{margin:12px 0 4px;background:var(--yellow2);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px}
+  .kx-falta div{flex:1;font-size:13px;font-weight:700;color:#6f5a14;line-height:1.35}
+  .kx-falta div b{display:block;color:var(--ink);font-size:14px;font-weight:900}
+  .kx-falta button{height:36px;padding:0 14px;border-radius:11px;border:none;background:var(--ink);color:#fff;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;flex-shrink:0}
+  .kx-fam{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 7px;font-size:11.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+  .kx-grupo{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+  .kx-sw{position:relative;overflow:hidden;border-bottom:1px solid #f1efea}
+  .kx-sw:last-child{border-bottom:none}
+  .kx-quitar{position:absolute;top:0;right:0;bottom:0;width:88px;border:none;background:var(--bad);color:#fff;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  .kx-fila{position:relative;background:var(--card);display:grid;grid-template-columns:minmax(0,1fr) 62px 66px;gap:10px;align-items:center;padding:11px 12px 11px 14px;transition:transform .2s cubic-bezier(.2,.8,.2,1);touch-action:pan-y}
+  .kx-fila.arrastra{transition:none}
+  .kx-n{font-size:14px;font-weight:800;line-height:1.25;word-break:break-word}
+  .kx-d{font-size:11.5px;font-weight:700;color:var(--mut);margin-top:2px;line-height:1.3}
+  .kx-sug{display:inline-flex;align-items:center;gap:4px;margin-top:6px;height:24px;padding:0 9px;border-radius:8px;border:none;background:var(--yellow);color:var(--ink);font-family:inherit;font-size:12px;font-weight:900;cursor:pointer}
+  .kx-sug.puesto{background:var(--green2);color:var(--green)}
+  .kx-sug.cero{background:#f2f1ed;color:var(--mut);cursor:default}
+  .kx-sug.rev{background:#fbe9e4;color:var(--bad);cursor:default}
+  .kx-ex{all:unset;cursor:pointer;text-align:right;font-variant-numeric:tabular-nums;font-size:19px;font-weight:900;letter-spacing:-.3px;line-height:1.1;-webkit-tap-highlight-color:transparent}
+  .kx-ex small{display:block;font-size:10.5px;font-weight:800;color:var(--mut);letter-spacing:0}
+  .kx-ex.bajo{color:var(--bad)}.kx-ex.nada{color:#c3c7ce}
+  .kx-ex:active{opacity:.6}
+  .kx-q{width:100%;height:42px;border:1px solid var(--line);border-radius:12px;background:#f8f7f4;text-align:center;font-family:inherit;font-size:17px;font-weight:900;color:var(--ink);padding:0;-webkit-appearance:none;appearance:none}
+  .kx-q:focus{outline:none;border-color:#e2bd38;box-shadow:0 0 0 3px rgba(248,217,103,.45)}
+  .kx-q.lleno{background:var(--yellow);border-color:#e9c446}
+  .kx-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:60px 24px;text-align:center;color:var(--mut);font-size:13.5px;font-weight:600}
+  .kx-vacio b{font-size:17px;font-weight:900;color:var(--ink)}
+  .kx-ayuda{margin:20px 6px 0;text-align:center;font-size:11.5px;font-weight:700;color:#b3b8c0}
+  .kx-fab{position:absolute;right:16px;bottom:calc(86px + env(safe-area-inset-bottom));width:52px;height:52px;border-radius:50%;border:none;background:var(--ink);color:#fff;box-shadow:0 8px 22px rgba(28,36,51,.28);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+  .kx-fab:active{transform:scale(.94)}
+  .kx-bar{position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;z-index:3}
+  .kx-cnt{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--mut);line-height:1.25}
+  .kx-cnt b{display:block;font-size:15px;font-weight:900;color:var(--ink)}
+  .kx-b{height:46px;padding:0 16px;border-radius:14px;border:none;font-family:inherit;font-size:14.5px;font-weight:900;cursor:pointer;white-space:nowrap}
+  .kx-b.osc{background:var(--ink);color:#fff}.kx-b.cla{background:#f1f0ec;color:var(--ink)}.kx-b.ama{background:var(--yellow);color:var(--ink)}
+  .kx-b.roja{background:#fbe9e4;color:var(--bad)}.kx-b.verde{background:var(--green);color:#fff}
+  .kx-b:disabled{opacity:.45;cursor:default}.kx-b.anch{width:100%}
+  /* hojas que suben desde abajo */
+  .kx-ov{position:fixed;inset:0;z-index:460;background:rgba(20,25,35,0);display:flex;align-items:flex-end;justify-content:center;transition:background .2s}
+  .kx-ov.open{background:rgba(20,25,35,.45)}
+  .kx-hoja{width:100%;max-width:560px;max-height:90%;display:flex;flex-direction:column;background:var(--card);border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.18);transform:translateY(100%);transition:transform .22s cubic-bezier(.2,.8,.2,1);padding-bottom:env(safe-area-inset-bottom)}
+  .kx-ov.open .kx-hoja{transform:none}
+  .kx-hcab{display:flex;align-items:flex-start;gap:10px;padding:16px 16px 10px}
+  .kx-hcab div{flex:1;min-width:0}
+  .kx-hcab b{display:block;font-size:18px;font-weight:900;letter-spacing:-.2px;line-height:1.25}
+  .kx-hcab span{display:block;font-size:12.5px;font-weight:700;color:var(--mut);margin-top:2px}
+  .kx-hcuerpo{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 16px 16px}
+  .kx-hpie{display:flex;gap:8px;padding:12px 16px 14px;border-top:1px solid #f0eee9}
+  .kx-hpie .kx-b{flex:1}
+  .kx-lbl{display:block;font-size:11.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 6px}
+  .kx-in{width:100%;height:48px;border:1px solid var(--line);border-radius:13px;background:#f8f7f4;padding:0 14px;font-family:inherit;font-size:16px;font-weight:800;color:var(--ink);-webkit-appearance:none;appearance:none;box-sizing:border-box}
+  .kx-in:focus{outline:none;border-color:#e2bd38;box-shadow:0 0 0 3px rgba(248,217,103,.45)}
+  .kx-in.grande{height:60px;font-size:28px;text-align:center;font-weight:900}
+  .kx-dias{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kx-nota{font-size:12.5px;font-weight:700;color:var(--mut);line-height:1.45;margin-top:10px}
+  .kx-nota b{color:var(--ink)}
+  .kx-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .kx-chip{height:34px;padding:0 13px;border-radius:11px;border:1px solid var(--line);background:var(--card);font-family:inherit;font-size:13px;font-weight:800;color:var(--ink);cursor:pointer}
+  .kx-chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .kx-seg{display:flex;gap:4px;padding:3px;border-radius:12px;background:rgba(28,36,51,.06)}
+  .kx-seg button{flex:1;height:36px;border:none;border-radius:9px;background:transparent;font-family:inherit;font-size:13.5px;font-weight:800;color:var(--mut);cursor:pointer}
+  .kx-seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(28,36,51,.12)}
+  .kx-res{margin-top:6px}
+  .kx-ri{display:flex;align-items:center;gap:10px;width:100%;padding:11px 2px;border:none;border-bottom:1px solid #f3f1ec;background:none;font-family:inherit;text-align:left;cursor:pointer;color:var(--ink)}
+  .kx-ri:disabled{opacity:.45;cursor:default}
+  .kx-ri code{font-family:inherit;font-size:11.5px;font-weight:900;color:var(--mut);background:#f4f3ef;border-radius:7px;padding:3px 7px;flex-shrink:0}
+  .kx-ri span{flex:1;min-width:0;font-size:14px;font-weight:700;line-height:1.3}
+  .kx-ri em{font-style:normal;font-size:11.5px;font-weight:800;color:var(--mut)}
+  .kx-cmp{display:flex;align-items:center;justify-content:center;gap:14px;margin:16px 0 4px;font-variant-numeric:tabular-nums}
+  .kx-cmp div{text-align:center}
+  .kx-cmp b{display:block;font-size:30px;font-weight:900;letter-spacing:-.5px;line-height:1.1}
+  .kx-cmp span{font-size:11.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
+  .kx-cmp .fl{font-size:22px;color:var(--mut)}
+  .kx-msg{margin-top:12px;font-size:13px;font-weight:800;text-align:center;min-height:18px;color:var(--mut)}
+  .kx-msg.bien{color:var(--green)}.kx-msg.mal{color:var(--bad)}
+  .kx-col{display:flex;gap:10px;margin-right:12px}.kx-col em{font-style:normal;text-align:center;width:62px}.kx-col em:last-child{width:66px}
+  .kx-col em:first-child{text-align:right}
+  .kx-txt{font-family:inherit;white-space:pre-wrap;background:#f8f7f4;border-radius:14px;padding:14px;font-size:13.5px;font-weight:700;line-height:1.5;margin:0}
+  .kx-h{border-bottom:1px solid #f3f1ec;padding:12px 2px}
+  .kx-h summary{list-style:none;display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;font-size:14px;font-weight:800}
+  .kx-h summary::-webkit-details-marker{display:none}
+  .kx-h summary span{font-size:12px;font-weight:700;color:var(--mut)}
+  .kx-h pre{white-space:pre-wrap;font-family:inherit;font-size:13px;font-weight:700;color:#5b6472;margin:8px 0 0;line-height:1.5}
+  .kx-toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-10px);z-index:470;background:var(--ink);color:#fff;border-radius:14px;padding:11px 16px;font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:all .2s;max-width:calc(100% - 32px)}
+  .kx-toast.ver{opacity:1;transform:translateX(-50%);pointer-events:auto}
+  .kx-toast button{background:none;border:none;color:var(--yellow);font-family:inherit;font-size:13.5px;font-weight:900;cursor:pointer;padding:0}
+  .rp-card.rp-kx{display:flex;align-items:center;gap:14px;cursor:pointer;border:none;width:100%;text-align:left;font-family:inherit;color:var(--ink)}
+  .rp-card.rp-kx:active{transform:scale(.99)}
+  .rp-kx .ki{width:44px;height:44px;border-radius:14px;background:var(--yellow);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rp-kx .kt{flex:1;min-width:0}.rp-kx .kt .rp-s{margin:2px 0 0}
 </style>
 </head>
 <body>
@@ -3405,6 +3519,394 @@ async function alPdf(){
   doc.save(nombre);
 }
 
+// ===== Kardex ⚙️ (25/11/2026) — solo el maestro =====
+// Existencias de Monica por proveedor, pedido sugerido y cuadre. La PC solo lee Monica cuando se abre el Kardex
+// (si la última lectura tiene más de 15 min) o se toca Actualizar: pide por reportes_pedidos (kx_existencia,
+// kx_catalogo, kx_ajuste) igual que los Reportes. Los proveedores, productos y días viven en kardex_proveedores.
+// Sugerido = venta diaria (últimos 28 días) × (días de visita + días de entrega) × (1 + reserva %) − existencia,
+// redondeado hacia arriba a cajas/paquetes completos. Sin días puestos o con existencia negativa no se sugiere.
+const KX={provs:[],cur:null,ped:{},draft:{},cat:null,leyendo:false,abierto:false,quitado:null};
+const KX_FRESCO=15*60*1000;
+const kxN=v=>{const x=parseFloat(String(v==null?'':v).replace(',','.'));return isFinite(x)?x:NaN;};
+const kxR=n=>Math.round(n*100)/100;
+const kxF=n=>{if(n==null||!isFinite(n))return '—';const r=kxR(n);return String(r).replace('.',',');};
+const kxNom=n=>String(n||'').replace(/^-+/,'').trim();
+const kxU=x=>(x.k||1)>1?'paq':'cja';
+const kxUL=(x,q)=>(x.k||1)>1?(q===1?'paquete':'paquetes'):(q===1?'caja':'cajas');
+const kxP=()=>KX.provs.find(p=>p.id===KX.cur);
+const ICO_KX_REF=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4"/></svg>`;
+const ICO_KX_HIS=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>`;
+const ICO_KX_X=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`;
+const ICO_KX_MAS=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
+const ICO_KX_CAL=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>`;
+const ICO_KX_BASURA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/></svg>`;
+const ICO_KX_CAJAS=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg>`;
+
+function kxGuardarDraft(){try{localStorage.setItem('kxDraft',JSON.stringify(KX.draft));}catch(e){}}
+async function kxAbrir(){
+  if(!esMaestro())return;
+  try{KX.draft=JSON.parse(localStorage.getItem('kxDraft')||'{}')||{};}catch(e){KX.draft={};}
+  let p=document.getElementById('kxPanel');if(!p){p=document.createElement('div');p.id='kxPanel';document.body.appendChild(p);}
+  p.className='al-ov open';document.body.classList.add('pe-bloqueo');KX.abierto=true;
+  p.innerHTML=`<div class="kx-cab"><div class="kx-top"><div><h2>Kardex</h2><div class="kx-sub">Cargando…</div></div>
+    <button class="kx-ib" onclick="kxCerrar()" aria-label="Cerrar">${ICO_KX_X}</button></div></div><div class="kx-lista"></div>`;
+  const r=await sb.from('kardex_proveedores').select('*').order('orden',{ascending:true});
+  if(!KX.abierto)return;
+  if(r.error){p.querySelector('.kx-lista').innerHTML=`<div class="kx-vacio"><b>Falta preparar Supabase</b>Hay que correr kardex.sql una vez.</div>`;
+    p.querySelector('.kx-sub').textContent='';return;}
+  KX.provs=r.data||[];
+  let c=null;try{c=localStorage.getItem('kxCur');}catch(e){}
+  KX.cur=KX.provs.some(x=>x.id===c)?c:(KX.provs[0]&&KX.provs[0].id);
+  await kxCargarPedidos();
+  kxRender();kxSiViejo();
+}
+function kxCerrar(){KX.abierto=false;kxCerrarHoja();const p=document.getElementById('kxPanel');if(p){p.className='al-ov';p.innerHTML='';}
+  const rp=document.getElementById('rpPanel');if(!(rp&&rp.classList.contains('open'))&&!(PE&&PE.abierto))document.body.classList.remove('pe-bloqueo');}
+async function kxCargarPedidos(){
+  const r=await sb.from('kardex_pedidos').select('*').order('at',{ascending:false}).limit(300);
+  KX.ped={};(r.data||[]).forEach(o=>{(KX.ped[o.prov]=KX.ped[o.prov]||[]).push(o);});
+}
+function kxSiViejo(){const p=kxP();if(!p||!(p.productos||[]).length)return;
+  const at=p.existencia&&p.existencia.at?Date.parse(p.existencia.at):0;
+  if(Date.now()-at>KX_FRESCO)kxActualizar(true);}
+function kxHace(iso){const m=Math.round((Date.now()-Date.parse(iso))/60000);
+  if(!isFinite(m))return '';if(m<1)return 'recién';if(m<60)return `hace ${m} min`;const h=Math.round(m/60);
+  if(h<24)return `hace ${h} h`;return new Date(iso).toLocaleDateString('es-GT',{day:'numeric',month:'short'});}
+
+// ---------- cálculo ----------
+function kxDato(p,x){const e=p.existencia;return e&&e.items?e.items[x.c]:undefined;}
+function kxSug(p,x){
+  const it=kxDato(p,x),k=x.k||1;
+  if(!it||it.ex==null)return {t:'sin'};
+  if(it.ex<0)return {t:'rev'};
+  const cada=kxN(p.cada_dias),ent=kxN(p.entrega_dias);
+  if(!(cada>0))return {t:'dias'};
+  const dias=(p.existencia&&p.existencia.dias)||28,diario=(kxN(it.vend)||0)/dias;
+  const cubrir=cada+(ent>0?ent:0),res=kxN(p.reserva);
+  const necesita=diario*cubrir*(1+(res>=0?res:25)/100);
+  const falta=(necesita-it.ex)*k;
+  return {t:'ok',q:falta>0.001?Math.ceil(falta-1e-9):0,diario:diario*k,necesita:necesita*k};
+}
+function kxUlt(c){for(const o of (KX.ped[KX.cur]||[])){const it=(o.items||[]).find(i=>i.c===c);if(it)return {q:it.q,u:it.u,at:o.at};}return null;}
+
+// ---------- pantalla ----------
+function kxRender(){
+  const pan=document.getElementById('kxPanel');if(!pan||!KX.abierto)return;
+  const p=kxP(),e=p&&p.existencia;
+  const viejo=e&&e.at&&Date.now()-Date.parse(e.at)>KX_FRESCO;
+  const sub=KX.leyendo?'<i></i>Leyendo Monica…':e&&e.at?`<i></i>Monica · ${kxHace(e.at)}`:'Sin leer Monica';
+  const tabs=KX.provs.map(x=>{const n=Object.values(KX.draft[x.id]||{}).filter(v=>kxN(v)>0).length;
+    return `<button class="kx-tab${x.id===KX.cur?' on':''}" onclick="kxTab('${esc(x.id)}')">${esc(x.nombre)}${n?`<b>${n}</b>`:''}</button>`;}).join('');
+  pan.innerHTML=`<div class="kx-cab"><div class="kx-top"><div><h2>Kardex</h2><div class="kx-sub${KX.leyendo?' leyendo':viejo?' viejo':''}">${sub}</div></div>
+      <div class="pe-tbtns"><button class="kx-ib${KX.leyendo?' gira':''}" onclick="kxActualizar()" ${KX.leyendo||!p?'disabled':''} aria-label="Actualizar existencia">${ICO_KX_REF}</button>
+      <button class="kx-ib" onclick="kxHistorial()" ${p?'':'disabled'} aria-label="Pedidos anteriores">${ICO_KX_HIS}</button>
+      <button class="kx-ib" onclick="kxCerrar()" aria-label="Cerrar">${ICO_KX_X}</button></div></div>
+    <div class="kx-tabs">${tabs}<button class="kx-tab mas" onclick="kxNuevoProv()" aria-label="Agregar proveedor">+</button></div></div>
+    <div class="kx-lista" id="kxLista">${p?kxCuerpo(p):`<div class="kx-vacio"><b>Sin proveedores</b>Toca + para agregar uno.</div>`}</div>
+    ${p?`<button class="kx-fab" onclick="kxBuscar()" aria-label="Agregar producto">${ICO_KX_MAS}</button>
+    <div class="kx-bar"><div class="kx-cnt" id="kxCnt"></div><button class="kx-b cla" id="kxUsar" onclick="kxUsarSug()">Sugeridos</button><button class="kx-b osc" id="kxOk" onclick="kxPedido()">Pedido</button></div>`:''}`;
+  kxBarra();kxSwipe();
+}
+function kxCuerpo(p){
+  const prods=p.productos||[],cada=kxN(p.cada_dias),ent=kxN(p.entrega_dias),res=kxN(p.reserva);
+  let h='';
+  if(!(cada>0))h+=`<div class="kx-falta"><div><b>¿Cada cuántos días te visita ${esc(p.nombre)}?</b>Con eso te digo cuánto pedir.</div><button onclick="kxAjustes()">Poner días</button></div>`;
+  else h+=`<button class="kx-plan" onclick="kxAjustes()">${ICO_KX_CAL}<span>Visita cada <b>${kxF(cada)} ${cada===1?'día':'días'}</b> · llega en <b>${ent>0?kxF(ent)+(ent===1?' día':' días'):'el mismo día'}</b> · reserva <b>${kxF(res>=0?res:25)} %</b></span></button>`;
+  if(!prods.length)return h+`<div class="kx-vacio"><b>Sin productos</b>Toca + para buscar en Monica y agregarlos.</div>`;
+  const fams=[];prods.forEach(x=>{const f=x.fam||'OTROS';let g=fams.find(a=>a[0]===f);if(!g)fams.push(g=[f,[]]);g[1].push(x);});
+  const d=KX.draft[p.id]||{};
+  h+=fams.map(([f,xs],i)=>`<div class="kx-fam"><span>${esc(f)}</span>${i===0?'<span class="kx-col"><em>Hay</em><em>Pedir</em></span>':''}</div><div class="kx-grupo">`+xs.map(x=>{
+    const it=kxDato(p,x),k=x.k||1,s=kxSug(p,x),u=kxU(x),v=d[x.c]||'';
+    let ex,cls='';
+    if(!it||it.ex==null){ex='—';cls='nada';}else{const n=it.ex*k;ex=kxF(n);if(n<=0)cls='bajo';}
+    const det=[k>1?`Paquete · ${k} por caja`:'Caja'];
+    if(s.t==='ok'&&s.diario>0)det.push(`vende ${kxF(Math.round(s.diario*10)/10)} al día`);
+    else if(s.t==='ok')det.push('sin ventas en 4 semanas');
+    if(it&&it.falta)det.push('no está en Monica');
+    const ul=kxUlt(x.c);if(ul)det.push(`pediste ${kxF(ul.q)} el ${new Date(ul.at).toLocaleDateString('es-GT',{weekday:'short',day:'numeric'})}`);
+    let sug='';
+    if(s.t==='ok'&&s.q>0){const puesto=kxN(v)===s.q;sug=`<button class="kx-sug${puesto?' puesto':''}" data-q="${s.q}" data-u="${u}" onclick="kxPoner('${esc(x.c)}',${s.q})">${puesto?'✓ ':''}Pedir ${s.q} ${u}</button>`;}
+    else if(s.t==='rev')sug=`<span class="kx-sug rev">Existencia negativa · revisar</span>`;
+    return `<div class="kx-sw" data-c="${esc(x.c)}"><button class="kx-quitar" onclick="kxQuitar('${esc(x.c)}')">${ICO_KX_BASURA}Quitar</button>
+      <div class="kx-fila"><div><div class="kx-n">${esc(kxNom(x.n))}</div><div class="kx-d">${esc(det.join(' · '))}</div>${sug}</div>
+      <button class="kx-ex ${cls}" onclick="kxCuadrar('${esc(x.c)}')" aria-label="Contar ${esc(kxNom(x.n))}">${ex}<small>${it&&it.ex!=null?u:'&nbsp;'}</small></button>
+      <input class="kx-q${kxN(v)>0?' lleno':''}" data-c="${esc(x.c)}" inputmode="decimal" enterkeyhint="next" value="${esc(v)}" aria-label="Pedido ${esc(kxNom(x.n))}" oninput="kxEscribe(this)"></div></div>`;
+  }).join('')+`</div>`).join('');
+  h+=`<div class="kx-ayuda">Toca la existencia para cuadrar · desliza a la izquierda para quitar</div>`;
+  return h;
+}
+function kxTab(id){KX.cur=id;try{localStorage.setItem('kxCur',id);}catch(e){}kxRender();kxSiViejo();}
+function kxEscribe(inp){const c=inp.dataset.c,v=inp.value.replace(/[^0-9.,]/g,'');if(v!==inp.value)inp.value=v;
+  (KX.draft[KX.cur]=KX.draft[KX.cur]||{})[c]=v;if(!v)delete KX.draft[KX.cur][c];
+  inp.classList.toggle('lleno',kxN(v)>0);kxGuardarDraft();kxBarra();kxTabsCuenta();
+  const sw=inp.closest('.kx-sw'),b=sw&&sw.querySelector('.kx-sug');
+  if(b&&b.dataset.q){const q=+b.dataset.q,ok=kxN(v)===q;b.classList.toggle('puesto',ok);b.textContent=(ok?'✓ ':'')+`Pedir ${q} ${b.dataset.u}`;}
+}
+function kxTabsCuenta(){const t=document.querySelector('#kxPanel .kx-tab.on');if(!t)return;const n=Object.values(KX.draft[KX.cur]||{}).filter(v=>kxN(v)>0).length;
+  let b=t.querySelector('b');if(n){if(!b){b=document.createElement('b');t.appendChild(b);}b.textContent=n;}else if(b)b.remove();}
+function kxPoner(c,q){const inp=document.querySelector(`#kxPanel .kx-q[data-c="${CSS.escape(c)}"]`);if(!inp)return;
+  inp.value=kxN(inp.value)===q?'':String(q);kxEscribe(inp);}
+function kxBarra(){
+  const p=kxP(),el=document.getElementById('kxCnt');if(!p||!el)return;
+  const d=KX.draft[p.id]||{};let n=0,cj=0,pq=0;
+  (p.productos||[]).forEach(x=>{const q=kxN(d[x.c]);if(q>0){n++;kxU(x)==='paq'?pq+=q:cj+=q;}});
+  const tot=[cj?kxF(cj)+' cja':'',pq?kxF(pq)+' paq':''].filter(Boolean).join(' + ');
+  el.innerHTML=n?`<b>${tot}</b>${n} ${n===1?'producto':'productos'}`:`<b>Sin pedido</b>Escribe o usa sugeridos`;
+  const sugs=(p.productos||[]).filter(x=>{const s=kxSug(p,x);return s.t==='ok'&&s.q>0;});
+  const u=document.getElementById('kxUsar');if(u)u.disabled=!sugs.length;
+  const o=document.getElementById('kxOk');if(o)o.disabled=!n;
+}
+function kxUsarSug(){const p=kxP();if(!p)return;const d=KX.draft[p.id]=KX.draft[p.id]||{};let n=0;
+  (p.productos||[]).forEach(x=>{const s=kxSug(p,x);if(s.t==='ok'&&s.q>0&&!(kxN(d[x.c])>0)){d[x.c]=String(s.q);n++;}});
+  kxGuardarDraft();kxRender();kxToast(n?(n===1?'1 sugerido puesto':`${n} sugeridos puestos`):'Ya estaban puestos');}
+
+// deslizar a la izquierda para quitar
+function kxSwipe(){
+  document.querySelectorAll('#kxPanel .kx-sw').forEach(sw=>{
+    const f=sw.querySelector('.kx-fila');let x0=0,y0=0,dx=0,modo=null,base=0;
+    f.addEventListener('touchstart',ev=>{if(ev.target.closest('input'))return;const t=ev.touches[0];x0=t.clientX;y0=t.clientY;dx=0;modo=null;
+      base=sw.classList.contains('abierto')?-88:0;
+      document.querySelectorAll('#kxPanel .kx-sw.abierto').forEach(o=>{if(o!==sw)kxSwCerrar(o);});},{passive:true});
+    f.addEventListener('touchmove',ev=>{if(x0===0&&y0===0)return;const t=ev.touches[0],mx=t.clientX-x0,my=t.clientY-y0;
+      if(!modo){if(Math.abs(mx)<8&&Math.abs(my)<8)return;modo=Math.abs(mx)>Math.abs(my)?'h':'v';}
+      if(modo!=='h')return;dx=Math.max(-120,Math.min(0,base+mx));f.classList.add('arrastra');f.style.transform=`translateX(${dx}px)`;},{passive:true});
+    f.addEventListener('touchend',()=>{f.classList.remove('arrastra');if(modo==='h'){if(dx<-44){sw.classList.add('abierto');f.style.transform='translateX(-88px)';}else kxSwCerrar(sw);}
+      x0=y0=0;modo=null;});
+    f.addEventListener('click',ev=>{if(sw.classList.contains('abierto')&&!ev.target.closest('.kx-quitar')){ev.preventDefault();ev.stopPropagation();kxSwCerrar(sw);}},true);
+  });
+}
+function kxSwCerrar(sw){sw.classList.remove('abierto');const f=sw.querySelector('.kx-fila');if(f)f.style.transform='';}
+async function kxGuardarProv(p,campos){
+  const r=await sb.from('kardex_proveedores').update(Object.assign({actualizado:new Date().toISOString()},campos)).eq('id',p.id);
+  if(r.error)throw new Error('No se pudo guardar. Revisa internet');Object.assign(p,campos);
+}
+async function kxQuitar(c){
+  const p=kxP();if(!p)return;const i=(p.productos||[]).findIndex(x=>x.c===c);if(i<0)return;
+  const x=p.productos[i],nuevos=p.productos.filter(y=>y.c!==c);
+  try{await kxGuardarProv(p,{productos:nuevos});}catch(e){kxToast(e.message);return;}
+  if(KX.draft[p.id])delete KX.draft[p.id][c];kxGuardarDraft();
+  KX.quitado={prov:p.id,x,i};kxRender();kxToast(`Quitaste ${kxNom(x.n)}`,'Deshacer',kxDeshacer);
+}
+async function kxDeshacer(){const q=KX.quitado;KX.quitado=null;if(!q)return;const p=KX.provs.find(y=>y.id===q.prov);if(!p)return;
+  const lista=(p.productos||[]).slice();if(lista.some(y=>y.c===q.x.c))return;lista.splice(Math.min(q.i,lista.length),0,q.x);
+  try{await kxGuardarProv(p,{productos:lista});}catch(e){kxToast(e.message);return;}kxRender();}
+function kxToast(t,acc,fn){let el=document.getElementById('kxToast');if(!el){el=document.createElement('div');el.id='kxToast';el.className='kx-toast';document.body.appendChild(el);}
+  el.innerHTML=`<span>${esc(t)}</span>${acc?`<button>${esc(acc)}</button>`:''}`;if(acc)el.querySelector('button').onclick=()=>{el.classList.remove('ver');fn&&fn();};
+  el.classList.add('ver');clearTimeout(KX._tt);KX._tt=setTimeout(()=>el.classList.remove('ver'),acc?5000:2400);}
+
+// ---------- leer Monica ----------
+async function kxActualizar(auto){
+  const p=kxP();if(!p||KX.leyendo)return;
+  const codigos=(p.productos||[]).map(x=>x.c);if(!codigos.length){if(!auto)kxToast('Agrega productos primero');return;}
+  KX.leyendo=true;kxRender();
+  try{
+    const r=await rpPedir({tipo:'kx_existencia',datos:{codigos,dias:28}});
+    if(!r||!r.items)throw new Error('La PC no mandó la existencia');
+    const items={};codigos.forEach(c=>{const it=r.items[c];items[c]=it?{ex:it.ex==null?null:+it.ex,vend:+(it.vend||0)}:{ex:null,vend:0,falta:true};});
+    const ex={at:r.at||new Date().toISOString(),dias:r.dias||28,items};
+    await kxGuardarProv(p,{existencia:ex});
+  }catch(e){kxToast(e.message||'No se pudo leer Monica');}
+  finally{KX.leyendo=false;kxRender();}
+}
+
+// ---------- hojas ----------
+function kxHoja(html){const t=document.getElementById('kxToast');if(t)t.classList.remove('ver');let o=document.getElementById('kxOv');if(!o){o=document.createElement('div');o.id='kxOv';document.body.appendChild(o);
+    o.addEventListener('click',ev=>{if(ev.target===o)kxCerrarHoja();});}
+  o.className='kx-ov';o.innerHTML=`<div class="kx-hoja">${html}</div>`;requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add('open')));return o;}
+function kxCerrarHoja(){const o=document.getElementById('kxOv');if(!o||!o.classList.contains('open'))return;o.classList.remove('open');setTimeout(()=>{if(!o.classList.contains('open'))o.innerHTML='';o.className='';},230);}
+const kxCab=(t,s)=>`<div class="kx-hcab"><div><b>${t}</b>${s?`<span>${s}</span>`:''}</div><button class="kx-ib" onclick="kxCerrarHoja()" aria-label="Cerrar">${ICO_KX_X}</button></div>`;
+
+// Días del proveedor
+function kxAjustes(){
+  const p=kxP();if(!p)return;const res=kxN(p.reserva);
+  kxHoja(kxCab(esc(p.nombre),'Para calcular cuánto pedir')+`<div class="kx-hcuerpo">
+    <label class="kx-lbl" for="kxNom">Nombre</label><input class="kx-in" id="kxNom" value="${esc(p.nombre)}" maxlength="40">
+    <div class="kx-dias"><div><label class="kx-lbl" for="kxCada">Visita cada (días)</label><input class="kx-in" id="kxCada" inputmode="decimal" value="${esc(p.cada_dias==null?'':p.cada_dias)}" placeholder="Ej. 4"></div>
+    <div><label class="kx-lbl" for="kxEnt">Llega en (días)</label><input class="kx-in" id="kxEnt" inputmode="decimal" value="${esc(p.entrega_dias==null?'':p.entrega_dias)}" placeholder="0 = mismo día"></div></div>
+    <label class="kx-lbl" for="kxRes">Reserva extra (%)</label><input class="kx-in" id="kxRes" inputmode="decimal" value="${esc(res>=0?res:25)}">
+    <div class="kx-nota" id="kxEj"></div>
+    <div class="kx-msg" id="kxAjMsg"></div></div>
+    <div class="kx-hpie">${(p.productos||[]).length?'':`<button class="kx-b roja" onclick="kxBorrarProv()">Quitar</button>`}<button class="kx-b osc" onclick="kxGuardarAjustes()">Guardar</button></div>`);
+  const ej=()=>{const c=kxN(document.getElementById('kxCada').value),e=kxN(document.getElementById('kxEnt').value)||0,r=kxN(document.getElementById('kxRes').value);
+    const t=document.getElementById('kxEj');if(!t)return;
+    if(!(c>0)){t.innerHTML='';return;}const dias=c+(e>0?e:0),rr=r>=0?r:25,nec=Math.ceil(10*dias*(1+rr/100)-1e-9);
+    t.innerHTML=`Ejemplo: si vendes <b>10 al día</b> y tienes <b>25</b>, necesitas 10 × ${kxF(dias)} días + ${kxF(rr)} % = ${kxF(kxR(10*dias*(1+rr/100)))} → pides <b>${Math.max(0,nec-25)}</b>.`;};
+  ['kxCada','kxEnt','kxRes'].forEach(i=>document.getElementById(i).addEventListener('input',ej));ej();
+}
+async function kxGuardarAjustes(){
+  const p=kxP(),m=document.getElementById('kxAjMsg');
+  const nom=document.getElementById('kxNom').value.trim(),c=document.getElementById('kxCada').value.trim(),e=document.getElementById('kxEnt').value.trim(),r=document.getElementById('kxRes').value.trim();
+  const cv=kxN(c),ev=e===''?0:kxN(e),rv=r===''?25:kxN(r);
+  if(!nom){m.className='kx-msg mal';m.textContent='Escribe el nombre';return;}
+  if(c!==''&&!(cv>0&&cv<=60)){m.className='kx-msg mal';m.textContent='Días de visita: entre 1 y 60';return;}
+  if(!(ev>=0&&ev<=30)){m.className='kx-msg mal';m.textContent='Días de entrega: entre 0 y 30';return;}
+  if(!(rv>=0&&rv<=200)){m.className='kx-msg mal';m.textContent='Reserva: entre 0 y 200 %';return;}
+  try{await kxGuardarProv(p,{nombre:nom,cada_dias:c===''?null:cv,entrega_dias:ev,reserva:rv});}catch(er){m.className='kx-msg mal';m.textContent=er.message;return;}
+  kxCerrarHoja();kxRender();
+}
+async function kxBorrarProv(){const p=kxP();if(!p||(p.productos||[]).length)return;
+  const r=await sb.from('kardex_proveedores').delete().eq('id',p.id);if(r.error){kxToast('No se pudo quitar');return;}
+  KX.provs=KX.provs.filter(x=>x.id!==p.id);KX.cur=KX.provs[0]&&KX.provs[0].id;kxCerrarHoja();kxRender();}
+function kxNuevoProv(){
+  kxHoja(kxCab('Nuevo proveedor')+`<div class="kx-hcuerpo"><label class="kx-lbl" for="kxNP">Nombre</label><input class="kx-in" id="kxNP" maxlength="40" placeholder="Ej. Pepsi" autocomplete="off"><div class="kx-msg" id="kxNPMsg"></div></div>
+    <div class="kx-hpie"><button class="kx-b osc" onclick="kxCrearProv()">Agregar</button></div>`);
+  setTimeout(()=>{const i=document.getElementById('kxNP');i&&i.focus();},250);
+}
+async function kxCrearProv(){
+  const nom=document.getElementById('kxNP').value.trim(),m=document.getElementById('kxNPMsg');if(!nom){m.className='kx-msg mal';m.textContent='Escribe el nombre';return;}
+  if(KX.provs.some(x=>x.nombre.toLowerCase()===nom.toLowerCase())){m.className='kx-msg mal';m.textContent='Ya existe';return;}
+  let id=nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'prov';
+  while(KX.provs.some(x=>x.id===id))id+='-2';
+  const fila={id,nombre:nom,orden:KX.provs.reduce((a,x)=>Math.max(a,x.orden||0),0)+1,productos:[],reserva:25};
+  const r=await sb.from('kardex_proveedores').insert(fila);if(r.error){m.className='kx-msg mal';m.textContent='No se pudo guardar';return;}
+  KX.provs.push(Object.assign({cada_dias:null,entrega_dias:null,existencia:null},fila));KX.cur=id;try{localStorage.setItem('kxCur',id);}catch(e){}
+  kxCerrarHoja();kxRender();
+}
+
+// Buscar en Monica y agregar
+async function kxCatalogo(forzar){
+  if(!KX.cat){try{KX.cat=JSON.parse(localStorage.getItem('kxCat')||'null');}catch(e){}}
+  const hoy=new Date().toLocaleDateString('en-CA');
+  if(KX.cat&&KX.cat.dia===hoy&&!forzar)return KX.cat.productos;
+  const r=await rpPedir({tipo:'kx_catalogo'});
+  if(!r||!Array.isArray(r.productos))throw new Error('La PC no mandó los productos');
+  KX.cat={dia:hoy,productos:r.productos};try{localStorage.setItem('kxCat',JSON.stringify(KX.cat));}catch(e){}
+  return KX.cat.productos;
+}
+function kxBuscar(){
+  kxHoja(kxCab('Agregar producto','Busca por nombre o código de Monica')+`<div class="kx-hcuerpo" style="min-height:58vh">
+    <input class="kx-in" id="kxQ" placeholder="Ej. pepsi 3lt" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="kx-res" id="kxRes"><div class="kx-msg">Cargando productos de Monica…</div></div></div>`);
+  setTimeout(()=>{const i=document.getElementById('kxQ');if(i){i.focus();i.addEventListener('input',kxFiltrar);}},250);
+  kxCatalogo().then(()=>kxFiltrar()).catch(e=>{const r=document.getElementById('kxRes');if(r)r.innerHTML=`<div class="kx-msg mal">${esc(e.message)}</div>`;});
+}
+function kxFiltrar(){
+  const r=document.getElementById('kxRes'),i=document.getElementById('kxQ');if(!r||!i||!KX.cat)return;
+  const t=i.value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+  if(!t){r.innerHTML=`<div class="kx-msg">${KX.cat.productos.length} productos en Monica</div>`;return;}
+  const pal=t.split(/\s+/),p=kxP(),ya=new Set((p.productos||[]).map(x=>x.c));
+  const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const L=KX.cat.productos.filter(x=>{const s=norm(x.c)+' '+norm(x.n);return pal.every(w=>s.includes(w));})
+    .sort((a,b)=>(norm(a.c)===t?-1:0)-(norm(b.c)===t?-1:0)).slice(0,60);
+  r.innerHTML=L.length?L.map(x=>`<button class="kx-ri" ${ya.has(x.c)?'disabled':''} onclick="kxElegir('${esc(x.c)}')"><code>${esc(x.c)}</code><span>${esc(kxNom(x.n))}</span>${ya.has(x.c)?'<em>Ya está</em>':''}</button>`).join('')
+    :`<div class="kx-msg">No aparece. <button class="kx-b cla" style="height:34px;margin-top:8px" onclick="kxRecargarCat()">Volver a leer Monica</button></div>`;
+}
+function kxRecargarCat(){const r=document.getElementById('kxRes');if(r)r.innerHTML='<div class="kx-msg">Leyendo Monica…</div>';
+  kxCatalogo(true).then(kxFiltrar).catch(e=>{if(r)r.innerHTML=`<div class="kx-msg mal">${esc(e.message)}</div>`;});}
+function kxElegir(c){
+  const x=KX.cat.productos.find(y=>y.c===c);if(!x)return;const p=kxP();
+  const fams=[...new Set((p.productos||[]).map(y=>y.fam||'OTROS'))];
+  KX.nuevo={c:x.c,n:x.n,fam:fams[fams.length-1]||'',k:1};
+  kxHoja(kxCab(esc(kxNom(x.n)),`Código ${esc(x.c)} · ${esc(p.nombre)}`)+`<div class="kx-hcuerpo">
+    <span class="kx-lbl">Familia</span><div class="kx-chips" id="kxFams">${fams.map(f=>`<button class="kx-chip" data-f="${esc(f)}">${esc(f)}</button>`).join('')}<button class="kx-chip" data-f="">Otra…</button></div>
+    <input class="kx-in" id="kxFamN" placeholder="Nombre de la familia" maxlength="30" style="margin-top:8px;display:none">
+    <span class="kx-lbl">Se pide en</span><div class="kx-seg" id="kxUni"><button data-k="1">Cajas</button><button data-k="2">Paquetes</button></div>
+    <div id="kxKz" style="display:none"><label class="kx-lbl" for="kxK">Paquetes que trae una caja</label><input class="kx-in" id="kxK" inputmode="numeric" value="2"></div>
+    <div class="kx-msg" id="kxAgMsg"></div></div>
+    <div class="kx-hpie"><button class="kx-b osc" onclick="kxAgregar()">Agregar</button></div>`);
+  const pintar=()=>{const n=KX.nuevo;document.querySelectorAll('#kxFams .kx-chip').forEach(b=>b.classList.toggle('on',n.otra?b.dataset.f==='':b.dataset.f===n.fam&&!n.otra));
+    document.getElementById('kxFamN').style.display=n.otra||!fams.length?'block':'none';
+    document.querySelectorAll('#kxUni button').forEach(b=>b.classList.toggle('on',(b.dataset.k==='1')===(n.k===1)));
+    document.getElementById('kxKz').style.display=n.k===1?'none':'block';};
+  if(!fams.length)KX.nuevo.otra=true;
+  document.querySelectorAll('#kxFams .kx-chip').forEach(b=>b.onclick=()=>{if(b.dataset.f===''){KX.nuevo.otra=true;setTimeout(()=>document.getElementById('kxFamN').focus(),50);}else{KX.nuevo.otra=false;KX.nuevo.fam=b.dataset.f;}pintar();});
+  document.querySelectorAll('#kxUni button').forEach(b=>b.onclick=()=>{KX.nuevo.k=b.dataset.k==='1'?1:Math.max(2,parseInt(document.getElementById('kxK').value)||2);pintar();});
+  pintar();
+}
+async function kxAgregar(){
+  const p=kxP(),n=KX.nuevo,m=document.getElementById('kxAgMsg');if(!n)return;
+  let fam=n.otra?document.getElementById('kxFamN').value.trim().toUpperCase():n.fam;
+  if(!fam){m.className='kx-msg mal';m.textContent='Escribe la familia';return;}
+  let k=1;if(n.k!==1){k=parseInt(document.getElementById('kxK').value);if(!(k>=2&&k<=100)){m.className='kx-msg mal';m.textContent='Paquetes por caja: de 2 a 100';return;}}
+  const lista=(p.productos||[]).slice();if(lista.some(y=>y.c===n.c)){kxCerrarHoja();return;}
+  // va al final de su familia
+  let pos=-1;lista.forEach((y,i)=>{if((y.fam||'OTROS')===fam)pos=i;});
+  const nuevo={c:n.c,n:n.n,fam,k};if(pos<0)lista.push(nuevo);else lista.splice(pos+1,0,nuevo);
+  try{await kxGuardarProv(p,{productos:lista});}catch(e){m.className='kx-msg mal';m.textContent=e.message;return;}
+  KX.nuevo=null;kxCerrarHoja();kxRender();kxToast(`Agregado ${kxNom(n.n)}`);kxLeerUno(p,n.c);
+}
+// Lee solo el producto nuevo y lo junta con la existencia que ya había
+async function kxLeerUno(p,c){
+  try{const r=await rpPedir({tipo:'kx_existencia',datos:{codigos:[c],dias:28}});const it=r&&r.items&&r.items[c];
+    const e=Object.assign({at:r.at,dias:r.dias||28},p.existencia||{});e.items=Object.assign({},e.items||{});
+    e.items[c]=it?{ex:it.ex==null?null:+it.ex,vend:+(it.vend||0)}:{ex:null,vend:0,falta:true};
+    await kxGuardarProv(p,{existencia:e});if(KX.cur===p.id)kxRender();}catch(e){}
+}
+
+// Cuadrar (cambia la existencia en Monica)
+function kxCuadrar(c){
+  const p=kxP(),x=(p.productos||[]).find(y=>y.c===c);if(!x)return;
+  const it=kxDato(p,x),k=x.k||1,u=kxU(x);
+  if(!it||it.ex==null){kxToast(it&&it.falta?'Ese código no está en Monica':'Toca Actualizar primero');return;}
+  const ant=kxR(it.ex*k);
+  kxHoja(kxCab(esc(kxNom(x.n)),'Cuadrar con lo que hay en bodega')+`<div class="kx-hcuerpo">
+    <div class="kx-cmp"><div><b>${kxF(ant)}</b><span>Monica</span></div><b class="fl">→</b><div><b id="kxCuN">?</b><span>Contaste</span></div></div>
+    <label class="kx-lbl" for="kxCont">${k>1?'¿Cuántos paquetes hay?':'¿Cuántas cajas hay?'}</label><input class="kx-in grande" id="kxCont" inputmode="decimal" placeholder="0">
+    <div class="kx-nota" id="kxCuDif">Monica ${kxHace(p.existencia.at)}. Si hubo ventas después, toca Actualizar antes de contar.</div>
+    <div class="kx-msg" id="kxCuMsg"></div></div>
+    <div class="kx-hpie"><button class="kx-b verde" id="kxCuBtn" onclick="kxCuadrarSi('${esc(c)}',${ant})" disabled>Cuadrar en Monica</button></div>`);
+  const inp=document.getElementById('kxCont');
+  inp.addEventListener('input',()=>{const v=kxN(inp.value),ok=v>=0;document.getElementById('kxCuN').textContent=ok?kxF(v):'?';
+    const b=document.getElementById('kxCuBtn');b.disabled=!ok||kxR(v)===ant;b.dataset.listo='';b.textContent='Cuadrar en Monica';
+    const d=document.getElementById('kxCuDif');if(ok&&kxR(v)!==ant){const df=kxR(v-ant);d.innerHTML=df>0?`Entra <b>${kxF(df)} ${u}</b> a Monica.`:`Sale <b>${kxF(-df)} ${u}</b> de Monica.`;}
+    else if(ok)d.textContent='Es lo mismo que dice Monica. No hay nada que cuadrar.';});
+  setTimeout(()=>inp.focus(),250);
+}
+async function kxCuadrarSi(c,ant){
+  const p=kxP(),x=(p.productos||[]).find(y=>y.c===c),k=x.k||1,u=kxU(x),b=document.getElementById('kxCuBtn'),m=document.getElementById('kxCuMsg');
+  const v=kxN(document.getElementById('kxCont').value);if(!(v>=0))return;
+  if(!b.dataset.listo){b.dataset.listo='1';b.textContent=`Sí, dejar ${kxF(v)} ${u}`;m.className='kx-msg';m.textContent=`Monica ${kxF(ant)} → ${kxF(v)} ${u}. Toca otra vez para confirmar.`;return;}
+  b.disabled=true;b.textContent='Cuadrando…';m.className='kx-msg';m.textContent='La PC está cambiando Monica…';
+  try{
+    const r=await rpPedir({tipo:'kx_ajuste',datos:{motivo:'cuadre de mercaderia',ajustes:[{codigo:c,real:kxR(v/k)}]}});
+    const l=r&&(r.lineas||[]).find(y=>y.codigo===c);
+    if(!l||!l.ok)throw Object.assign(new Error((l&&l.error)||'Monica no aceptó el cuadre'),{seguro:true});
+    const e=Object.assign({},p.existencia);e.items=Object.assign({},e.items);e.items[c]=Object.assign({},e.items[c],{ex:+l.despues});
+    await kxGuardarProv(p,{existencia:e}).catch(()=>{});
+    m.className='kx-msg bien';m.textContent=`Listo · Monica ahora dice ${kxF(kxR(l.despues*k))} ${u}`;b.textContent='Cuadrado';
+    setTimeout(()=>{kxCerrarHoja();kxRender();},1100);
+  }catch(e){
+    m.className='kx-msg mal';
+    m.textContent=e.seguro?e.message:`${e.message||'No se pudo'}. No sé si se cuadró: toca Actualizar antes de intentar otra vez.`;
+    b.disabled=false;b.dataset.listo='';b.textContent='Cuadrar en Monica';
+  }
+}
+
+// Pedido para WhatsApp
+function kxTexto(p){
+  const d=KX.draft[p.id]||{},fams=[],items=[];let cj=0,pq=0;
+  (p.productos||[]).forEach(x=>{const q=kxN(d[x.c]);if(!(q>0))return;const f=x.fam||'OTROS';let g=fams.find(a=>a[0]===f);if(!g)fams.push(g=[f,[]]);g[1].push([x,q]);});
+  const L=[];fams.forEach(([f,xs])=>{L.push('*'+f+'*');xs.forEach(([x,q])=>{const u=kxU(x),s=kxSug(p,x);u==='paq'?pq+=q:cj+=q;
+    L.push(`${kxF(q)} ${u} - ${kxNom(x.n)}`);items.push({c:x.c,n:x.n,q,u,sug:s.t==='ok'?s.q:null});});L.push('');});
+  const hoy=new Date().toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const txt=`*PEDIDO ${p.nombre.toUpperCase()} ${hoy}*\n\n${L.join('\n')}*TOTAL: ${[cj?kxF(cj)+' cja':'',pq?kxF(pq)+' paq':''].filter(Boolean).join(' + ')}*`;
+  return {txt,items};
+}
+function kxPedido(){
+  const p=kxP();if(!p)return;const {txt,items}=kxTexto(p);if(!items.length)return;
+  kxHoja(kxCab(`Pedido ${esc(p.nombre)}`,`${items.length} ${items.length===1?'producto':'productos'}`)+`<div class="kx-hcuerpo"><pre class="kx-txt">${esc(txt)}</pre><div class="kx-msg" id="kxPMsg"></div></div>
+    <div class="kx-hpie"><button class="kx-b cla" onclick="kxVaciar()">Vaciar</button><button class="kx-b cla" onclick="kxEnviar(false)">Copiar</button><button class="kx-b osc" onclick="kxEnviar(true)">Enviar</button></div>`);
+}
+async function kxEnviar(compartir){
+  const p=kxP(),{txt,items}=kxTexto(p),m=document.getElementById('kxPMsg');
+  if(compartir&&navigator.share){try{await navigator.share({text:txt});}catch(e){if(e&&e.name==='AbortError')return;}}
+  else{let ok=true;try{await navigator.clipboard.writeText(txt);}catch(e){ok=false;}
+    if(!ok){m.className='kx-msg mal';m.textContent='No se pudo copiar. Mantén presionado el texto para copiarlo.';return;}}
+  const r=await sb.from('kardex_pedidos').insert({prov:p.id,items,texto:txt,hecho_por:sesion?sesion.nombre:'?'}).select('*').single();
+  if(r.error){m.className='kx-msg mal';m.textContent='Se envió, pero no se guardó en el historial';return;}
+  (KX.ped[p.id]=KX.ped[p.id]||[]).unshift(r.data);delete KX.draft[p.id];kxGuardarDraft();
+  kxCerrarHoja();kxRender();kxToast(compartir&&navigator.share?'Pedido guardado':'Copiado y guardado');
+}
+function kxVaciar(){const p=kxP();delete KX.draft[p.id];kxGuardarDraft();kxCerrarHoja();kxRender();}
+function kxHistorial(){
+  const p=kxP();if(!p)return;const L=(KX.ped[p.id]||[]).slice(0,40);
+  kxHoja(kxCab(`Pedidos de ${esc(p.nombre)}`,L.length?`Últimos ${L.length}`:'')+`<div class="kx-hcuerpo">${L.length?L.map(o=>{
+      const its=o.items||[],cj=its.filter(i=>i.u!=='paq').reduce((a,i)=>a+(+i.q||0),0),pq=its.filter(i=>i.u==='paq').reduce((a,i)=>a+(+i.q||0),0);
+      const f=new Date(o.at).toLocaleDateString('es-GT',{weekday:'short',day:'numeric',month:'short'})+' · '+new Date(o.at).toLocaleTimeString('es-GT',{hour:'numeric',minute:'2-digit'});
+      return `<details class="kx-h"><summary>${esc(f)}<span>${[cj?kxF(cj)+' cja':'',pq?kxF(pq)+' paq':''].filter(Boolean).join(' + ')}</span></summary><pre>${esc(its.map(i=>`${kxF(+i.q)} ${i.u} - ${kxNom(i.n)}`).join('\n'))}</pre></details>`;}).join('')
+    :`<div class="kx-vacio"><b>Sin pedidos</b>Aquí quedan los que envíes.</div>`}</div>`);
+}
+
 // ===== Reportes ⚙️ (2/11/2026) — solo el maestro =====
 // "Ventas del día" y "Mapeo por vendedor", iguales a los de Facturación rápida. El celular deja el pedido en Supabase
 // (reportes_pedidos); la PC lo lee de Monica en pocos segundos y devuelve los datos; aquí se arma el mismo PDF.
@@ -3419,6 +3921,7 @@ function rpAbrir(){
   p.innerHTML=`<div class="al-cab"><div><h2>Reportes</h2><div class="al-sub">Los arma la PC desde Monica</div></div>
     <div class="pe-tbtns"><button class="pe-cerrar" onclick="rpCerrar()" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.4" stroke-linecap="round"/></svg></button></div></div>
     <div class="al-lista">
+      <button class="rp-card rp-kx" onclick="kxAbrir()"><span class="ki">${ICO_KX_CAJAS}</span><span class="kt"><div class="rp-t">Kardex</div><div class="rp-s">Existencias de Monica y pedido sugerido</div></span><svg width="9" height="15" viewBox="0 0 9 15" fill="none"><path d="M1.5 1.5 7.5 7.5l-6 6" stroke="#b3b8c0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="rp-card"><div class="rp-t">Ventas del día</div><div class="rp-s">Todos los vendedores · notas y tickets</div>
         <label class="rp-l">Fecha<input type="date" id="rpDia" value="${h}" max="${h}"></label>
         <button class="pv-btn" id="rpBtnV" onclick="rpVentas()">PDF</button></div>

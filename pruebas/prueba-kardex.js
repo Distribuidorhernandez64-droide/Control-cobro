@@ -13,8 +13,10 @@ window.__DB={reportes_pedidos:[],alertas:[],kardex_pedidos:[],kardex_proveedores
   {c:'090',fam:'BIG / CIFRUT',k:1,n:'---Big 1.3 cola 9ud'},{c:'033',fam:'BIG / CIFRUT',k:1,n:'---Big 1.3lt cifrut 9ud'},
   {c:'035',fam:'BIG / CIFRUT',k:2,n:'---Big cifrut 500ml 24ud'},{c:'091',fam:'DEPORADE',k:2,n:'---deporade 360ml chicle 24 ud'},
   {c:'999',fam:'DEPORADE',k:1,n:'---producto que no existe'}]},
- {id:'coca',nombre:'Coca-Cola',orden:2,cada_dias:8,entrega_dias:0,reserva:25,existencia:null,productos:[{c:'09',fam:'LATA',k:1,n:'---coca cola lata 24ud'}]}]};
-window.__seq=100;window.__pcViva=true;window.__MON={'090':[21,56],'033':[3,84],'035':[5,28],'091':[30,0],'09':[-3.5,40],'336':[12,70]};
+ {id:'coca',nombre:'Coca-Cola',orden:2,cada_dias:8,entrega_dias:0,reserva:25,existencia:null,productos:[{c:'09',fam:'LATA',k:1,n:'---coca cola lata 24ud'}]},
+ {id:'gallo',nombre:'Gallo',orden:4,cada_dias:4,entrega_dias:0,reserva:25,existencia:null,productos:[{c:'346',fam:'SUPER 360ML',k:1,n:'---Super cola 360ml 24ud',surtido:true},
+  {c:'m-nar',fam:'SUPER 360ML',k:1,n:'Super naranjada 360ml',manual:true,de:'346'},{c:'m-uva',fam:'SUPER 360ML',k:1,n:'Super uva 360ml',manual:true,de:'346'}]}]};
+window.__seq=100;window.__pcViva=true;window.__MON={'090':[21,56],'033':[3,84],'035':[5,28],'091':[30,0],'09':[-3.5,40],'336':[12,70],'346':[10,280]};
 function _cp(x){return x==null?x:JSON.parse(JSON.stringify(x));}
 setInterval(()=>{if(!window.__pcViva)return;for(const p of window.__DB.reportes_pedidos){if(p.estado!=='pedido')continue;const d=p.datos||{};
   if(p.tipo==='kx_existencia'){const items={};(d.codigos||[]).forEach(c=>{const m=window.__MON[c];if(m)items[c]={ex:m[0],vend:m[1]};});
@@ -57,7 +59,7 @@ window.supabase={createClient:()=>({
   await p.evaluate(()=>rpAbrir());await p.waitForTimeout(300);
   ok('En ⚙️ aparece la tarjeta Kardex',(await p.textContent('#rpPanel')).includes('Kardex'));
   await p.click('.rp-kx');await p.waitForTimeout(400);
-  ok('Abre Kardex con AJE, Coca-Cola y +',await p.$$eval('#kxPanel .kx-tab',t=>t.map(x=>x.textContent).join('|'))==='AJE|Coca-Cola|+');
+  ok('Abre Kardex con AJE, Coca-Cola, Gallo y +',await p.$$eval('#kxPanel .kx-tab',t=>t.map(x=>x.textContent).join('|'))==='AJE|Coca-Cola|Gallo|+');
   await p.waitForTimeout(1800);
   const ped=await p.evaluate(()=>window.__DB.reportes_pedidos.filter(r=>r.tipo==='kx_existencia').map(r=>r.datos));
   ok('Al abrir sin datos pide la existencia una sola vez, solo de AJE, 28 días',ped.length===1&&ped[0].codigos.join()==='090,033,035,091,999'&&ped[0].dias===28);
@@ -160,6 +162,26 @@ window.supabase={createClient:()=>({
   await p.evaluate(()=>{window.__pcViva=false;const f=Date.now;let base=f();Date.now=()=>base+=20000;});
   await p.click('#kxCuBtn');await p.click('#kxCuBtn');await p.waitForTimeout(6000);
   ok('PC apagada: "No se cambió nada en Monica" y el pedido queda en error',(await p.textContent('#kxCuMsg')).includes('No se cambió nada en Monica')&&await p.evaluate(()=>{const r=window.__DB.reportes_pedidos.filter(r=>r.tipo==='kx_ajuste');return r[r.length-1].estado==='error';}));
+  // Gallo: surtido + a mano
+  await p.evaluate(()=>{kxCerrarHoja();window.__pcViva=true;Date.now=()=>Math.round(performance.timeOrigin+performance.now());});await p.waitForTimeout(400);
+  await p.click('#kxPanel .kx-tab:has-text("Gallo")');await p.waitForTimeout(1800);
+  ok('Gallo: solo pide a la PC el código de Monica (no los de a mano)',await p.evaluate(()=>{const r=window.__DB.reportes_pedidos.filter(r=>r.tipo==='kx_existencia');return r[r.length-1].datos.codigos.join()==='346';}));
+  // 346: 10 al día × 4 × 1.25 = 50 − 10 = 40
+  ok('Surtido: existencia y "Entre sabores: 40 cja", sin casilla',await p.evaluate(()=>{const s=document.querySelector('.kx-sw[data-c="346"]');return s.querySelector('.kx-ex').textContent==='10cja'&&s.textContent.includes('Entre sabores: 40 cja')&&s.textContent.includes('Surtido')&&!s.querySelector('input');}));
+  ok('A mano: dice "A mano · va en el surtido", sin existencia, con casilla',await p.evaluate(()=>{const s=document.querySelector('.kx-sw[data-c="m-uva"]');return s.textContent.includes('A mano · va en el surtido')&&s.querySelector('input')&&!s.querySelector('.kx-sug');}));
+  await p.evaluate(()=>kxUsarSug());await p.waitForTimeout(200);
+  ok('"Sugeridos" no llena el surtido ni los de a mano',await p.evaluate(()=>!KX.draft.gallo||!Object.keys(KX.draft.gallo).length));
+  await p.fill('.kx-q[data-c="m-uva"]','3');await p.dispatchEvent('.kx-q[data-c="m-uva"]','input');
+  await p.fill('.kx-q[data-c="m-nar"]','2');await p.dispatchEvent('.kx-q[data-c="m-nar"]','input');
+  await p.screenshot({path:'/tmp/kx-10-mano.png'});
+  await p.click('#kxOk');await p.waitForTimeout(300);
+  ok('El pedido lleva los sabores a mano',(await p.textContent('.kx-txt')).includes('2 cja - Super naranjada 360ml\n3 cja - Super uva 360ml'));
+  await p.evaluate(()=>kxCerrarHoja());await p.waitForTimeout(300);
+  // agregar a mano desde el buscador
+  await p.click('.kx-fab');await p.waitForTimeout(1200);await p.fill('#kxQ','Super roja lata');await p.click('.kx-hpie .kx-b.cla');await p.waitForTimeout(350);
+  ok('Agregar a mano lleva el nombre escrito',await p.inputValue('#kxManN')==='Super roja lata');
+  await p.click('#kxFams .kx-chip:has-text("Otra")');await p.fill('#kxFamN','latas');await p.click('.kx-hpie .kx-b.osc');await p.waitForTimeout(500);
+  ok('Queda guardado como a mano en LATAS',await p.evaluate(()=>{const x=window.__DB.kardex_proveedores.find(a=>a.id==='gallo').productos.find(y=>y.n==='Super roja lata');return x&&x.manual&&x.fam==='LATAS'&&x.c.startsWith('m-');}));
   ok('Sin errores de la página',errs.length===0);if(errs.length)console.log(errs);
   await b.close();srv.close();
 })().catch(e=>{console.error(e);process.exitCode=1;srv.close();});

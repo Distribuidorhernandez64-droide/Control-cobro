@@ -724,6 +724,10 @@
   .kx-sug{display:inline-flex;align-items:center;gap:4px;margin-top:6px;height:24px;padding:0 9px;border-radius:8px;border:none;background:var(--yellow);color:var(--ink);font-family:inherit;font-size:12px;font-weight:900;cursor:pointer}
   .kx-sug.puesto{background:var(--green2);color:var(--green)}
   .kx-sug.cero{background:#f2f1ed;color:var(--mut);cursor:default}
+  .kx-sug.info{background:transparent;border:1px dashed #e2c458;color:#8a6d12;cursor:default}
+  .kx-ex.mano{display:flex;justify-content:flex-end;align-items:center;color:#c3c7ce;cursor:default}
+  .kx-ex.mano svg{width:20px;height:20px}
+  .kx-q.vacio{display:block;border:none;background:none}
   .kx-sug.rev{background:#fbe9e4;color:var(--bad);cursor:default}
   .kx-ex{all:unset;cursor:pointer;text-align:right;font-variant-numeric:tabular-nums;font-size:19px;font-weight:900;letter-spacing:-.3px;line-height:1.1;-webkit-tap-highlight-color:transparent}
   .kx-ex small{display:block;font-size:10.5px;font-weight:800;color:var(--mut);letter-spacing:0}
@@ -3543,6 +3547,7 @@ const ICO_KX_X=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 const ICO_KX_MAS=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
 const ICO_KX_CAL=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>`;
 const ICO_KX_BASURA=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/></svg>`;
+const ICO_KX_MANO=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>`;
 const ICO_KX_CAJAS=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1c2433" stroke-width="2" stroke-linejoin="round"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg>`;
 
 function kxGuardarDraft(){try{localStorage.setItem('kxDraft',JSON.stringify(KX.draft));}catch(e){}}
@@ -3579,6 +3584,7 @@ function kxHace(iso){const m=Math.round((Date.now()-Date.parse(iso))/60000);
 // ---------- cálculo ----------
 function kxDato(p,x){const e=p.existencia;return e&&e.items?e.items[x.c]:undefined;}
 function kxSug(p,x){
+  if(x.manual)return {t:'mano'};
   const it=kxDato(p,x),k=x.k||1;
   if(!it||it.ex==null)return {t:'sin'};
   if(it.ex<0)return {t:'rev'};
@@ -3619,21 +3625,29 @@ function kxCuerpo(p){
   const fams=[];prods.forEach(x=>{const f=x.fam||'OTROS';let g=fams.find(a=>a[0]===f);if(!g)fams.push(g=[f,[]]);g[1].push(x);});
   const d=KX.draft[p.id]||{};
   h+=fams.map(([f,xs],i)=>`<div class="kx-fam"><span>${esc(f)}</span>${i===0?'<span class="kx-col"><em>Existencia</em><em>Pedido</em></span>':''}</div><div class="kx-grupo">`+xs.map(x=>{
+    if(x.manual){const v=d[x.c]||'',jun=x.de&&prods.find(y=>y.c===x.de);
+      const det=[jun?'A mano · va en el surtido':'A mano'];const ul=kxUlt(x.c);
+      if(ul)det.push(`pediste ${kxF(ul.q)} el ${new Date(ul.at).toLocaleDateString('es-GT',{weekday:'short',day:'numeric'})}`);
+      return `<div class="kx-sw" data-c="${esc(x.c)}"><button class="kx-quitar" onclick="kxQuitar('${esc(x.c)}')">${ICO_KX_BASURA}Quitar</button>
+      <div class="kx-fila mano"><div><div class="kx-n">${esc(kxNom(x.n))}</div><div class="kx-d">${esc(det.join(' · '))}</div></div>
+      <span class="kx-ex nada mano" aria-hidden="true">${ICO_KX_MANO}</span>
+      <input class="kx-q${kxN(v)>0?' lleno':''}" data-c="${esc(x.c)}" inputmode="decimal" enterkeyhint="next" value="${esc(v)}" aria-label="Pedido ${esc(kxNom(x.n))}" oninput="kxEscribe(this)"></div></div>`;}
     const it=kxDato(p,x),k=x.k||1,s=kxSug(p,x),u=kxU(x),v=d[x.c]||'';
     let ex,cls='';
     if(!it||it.ex==null){ex='—';cls='nada';}else{const n=it.ex*k;ex=kxF(n);if(n<=0)cls='bajo';}
-    const det=[k>1?`Paquete · ${k} por caja`:'Caja'];
+    const det=[x.surtido?'Surtido · todos los sabores':k>1?`Paquete · ${k} por caja`:'Caja'];
     if(s.t==='ok'&&s.diario>0)det.push(`vende ${kxF(Math.round(s.diario*10)/10)} al día`);
     else if(s.t==='ok')det.push('sin ventas en 4 semanas');
     if(it&&it.falta)det.push('no está en Monica');
     const ul=kxUlt(x.c);if(ul)det.push(`pediste ${kxF(ul.q)} el ${new Date(ul.at).toLocaleDateString('es-GT',{weekday:'short',day:'numeric'})}`);
     let sug='';
-    if(s.t==='ok'&&s.q>0){const puesto=kxN(v)===s.q;sug=`<button class="kx-sug${puesto?' puesto':''}" data-q="${s.q}" data-u="${u}" onclick="kxPoner('${esc(x.c)}',${s.q})">${puesto?'✓ ':''}Pedir ${s.q} ${u}${puesto?'<span class="x">✕</span>':''}</button>`;}
+    if(x.surtido&&s.t==='ok'&&s.q>0)sug=`<span class="kx-sug info">Entre sabores: ${s.q} ${u}</span>`;
+    else if(s.t==='ok'&&s.q>0){const puesto=kxN(v)===s.q;sug=`<button class="kx-sug${puesto?' puesto':''}" data-q="${s.q}" data-u="${u}" onclick="kxPoner('${esc(x.c)}',${s.q})">${puesto?'✓ ':''}Pedir ${s.q} ${u}${puesto?'<span class="x">✕</span>':''}</button>`;}
     else if(s.t==='rev')sug=`<span class="kx-sug rev">Existencia negativa · revisar</span>`;
     return `<div class="kx-sw" data-c="${esc(x.c)}"><button class="kx-quitar" onclick="kxQuitar('${esc(x.c)}')">${ICO_KX_BASURA}Quitar</button>
       <div class="kx-fila"><div><div class="kx-n">${esc(kxNom(x.n))}</div><div class="kx-d">${esc(det.join(' · '))}</div>${sug}</div>
       <button class="kx-ex ${cls}" onclick="kxCuadrar('${esc(x.c)}')" aria-label="Contar ${esc(kxNom(x.n))}">${ex}<small>${it&&it.ex!=null?u:'&nbsp;'}</small></button>
-      <input class="kx-q${kxN(v)>0?' lleno':''}" data-c="${esc(x.c)}" inputmode="decimal" enterkeyhint="next" value="${esc(v)}" aria-label="Pedido ${esc(kxNom(x.n))}" oninput="kxEscribe(this)"></div></div>`;
+      ${x.surtido?'<span class="kx-q vacio" aria-hidden="true"></span>':`<input class="kx-q${kxN(v)>0?' lleno':''}" data-c="${esc(x.c)}" inputmode="decimal" enterkeyhint="next" value="${esc(v)}" aria-label="Pedido ${esc(kxNom(x.n))}" oninput="kxEscribe(this)">`}</div></div>`;
   }).join('')+`</div>`).join('');
   h+=`<div class="kx-ayuda">Toca la existencia para cuadrar · desliza a la izquierda para quitar</div>`;
   return h;
@@ -3655,7 +3669,7 @@ function kxBarra(){
   (p.productos||[]).forEach(x=>{const q=kxN(d[x.c]);if(q>0){n++;kxU(x)==='paq'?pq+=q:cj+=q;}});
   const tot=[cj?kxF(cj)+' cja':'',pq?kxF(pq)+' paq':''].filter(Boolean).join(' + ');
   el.innerHTML=n?`<b>${tot}</b>${n} ${n===1?'producto':'productos'}`:`<b>Sin pedido</b>Escribe o usa sugeridos`;
-  const sugs=(p.productos||[]).filter(x=>{const s=kxSug(p,x);return s.t==='ok'&&s.q>0;});
+  const sugs=(p.productos||[]).filter(x=>{if(x.surtido)return false;const s=kxSug(p,x);return s.t==='ok'&&s.q>0;});
   const u=document.getElementById('kxUsar');if(u)u.disabled=!sugs.length;
   const o=document.getElementById('kxOk');if(o)o.disabled=!n;
   const br=document.getElementById('kxBorrar');if(br)br.style.display=n?'':'none';
@@ -3665,7 +3679,7 @@ function kxBorrar(){const p=kxP();if(!p)return;const antes=KX.draft[p.id];if(!an
   delete KX.draft[p.id];kxGuardarDraft();kxRender();
   kxToast('Pedido borrado','Deshacer',()=>{KX.draft[p.id]=antes;kxGuardarDraft();if(KX.cur===p.id)kxRender();});}
 function kxUsarSug(){const p=kxP();if(!p)return;const d=KX.draft[p.id]=KX.draft[p.id]||{};let n=0;
-  (p.productos||[]).forEach(x=>{const s=kxSug(p,x);if(s.t==='ok'&&s.q>0&&!(kxN(d[x.c])>0)){d[x.c]=String(s.q);n++;}});
+  (p.productos||[]).forEach(x=>{if(x.surtido)return;const s=kxSug(p,x);if(s.t==='ok'&&s.q>0&&!(kxN(d[x.c])>0)){d[x.c]=String(s.q);n++;}});
   kxGuardarDraft();kxRender();kxToast(n?(n===1?'1 sugerido puesto':`${n} sugeridos puestos`):'Ya estaban puestos');}
 
 // deslizar a la izquierda para quitar
@@ -3705,7 +3719,7 @@ function kxToast(t,acc,fn){let el=document.getElementById('kxToast');if(!el){el=
 // ---------- leer Monica ----------
 async function kxActualizar(auto){
   const p=kxP();if(!p||KX.leyendo)return;
-  const codigos=(p.productos||[]).map(x=>x.c);if(!codigos.length){if(!auto)kxToast('Agrega productos primero');return;}
+  const codigos=(p.productos||[]).filter(x=>!x.manual).map(x=>x.c);if(!codigos.length){if(!auto)kxToast('Agrega productos primero');return;}
   KX.leyendo=true;kxRender();
   try{
     const r=await rpPedir({tipo:'kx_existencia',datos:{codigos,dias:28}});
@@ -3784,7 +3798,8 @@ async function kxCatalogo(forzar){
 function kxBuscar(){
   kxHoja(kxCab('Agregar producto','Busca por nombre o código de Monica')+`<div class="kx-hcuerpo" style="min-height:58vh">
     <input class="kx-in" id="kxQ" placeholder="Ej. pepsi 3lt" autocomplete="off" autocorrect="off" spellcheck="false">
-    <div class="kx-res" id="kxRes"><div class="kx-msg">Cargando productos de Monica…</div></div></div>`);
+    <div class="kx-res" id="kxRes"><div class="kx-msg">Cargando productos de Monica…</div></div></div>
+    <div class="kx-hpie"><button class="kx-b cla anch" onclick="kxManual()">Agregar a mano (sin Monica)</button></div>`);
   setTimeout(()=>{const i=document.getElementById('kxQ');if(i){i.focus();i.addEventListener('input',kxFiltrar);}},250);
   kxCatalogo().then(()=>kxFiltrar()).catch(e=>{const r=document.getElementById('kxRes');if(r)r.innerHTML=`<div class="kx-msg mal">${esc(e.message)}</div>`;});
 }
@@ -3801,11 +3816,12 @@ function kxFiltrar(){
 }
 function kxRecargarCat(){const r=document.getElementById('kxRes');if(r)r.innerHTML='<div class="kx-msg">Leyendo Monica…</div>';
   kxCatalogo(true).then(kxFiltrar).catch(e=>{if(r)r.innerHTML=`<div class="kx-msg mal">${esc(e.message)}</div>`;});}
-function kxElegir(c){
-  const x=KX.cat.productos.find(y=>y.c===c);if(!x)return;const p=kxP();
+function kxElegir(c,man){
+  const x=man||KX.cat.productos.find(y=>y.c===c);if(!x)return;const p=kxP();
   const fams=[...new Set((p.productos||[]).map(y=>y.fam||'OTROS'))];
-  KX.nuevo={c:x.c,n:x.n,fam:fams[fams.length-1]||'',k:1};
-  kxHoja(kxCab(esc(kxNom(x.n)),`Código ${esc(x.c)} · ${esc(p.nombre)}`)+`<div class="kx-hcuerpo">
+  KX.nuevo={c:x.c,n:x.n,fam:fams[fams.length-1]||'',k:1,manual:!!x.manual};
+  kxHoja(kxCab(x.manual?'Producto a mano':esc(kxNom(x.n)),x.manual?`Sin existencia ni sugerido · ${esc(p.nombre)}`:`Código ${esc(x.c)} · ${esc(p.nombre)}`)+`<div class="kx-hcuerpo">
+    ${x.manual?`<label class="kx-lbl" for="kxManN">Nombre</label><input class="kx-in" id="kxManN" maxlength="50" placeholder="Ej. Super uva lata" value="${esc(x.n)}" autocomplete="off">`:''}
     <span class="kx-lbl">Familia</span><div class="kx-chips" id="kxFams">${fams.map(f=>`<button class="kx-chip" data-f="${esc(f)}">${esc(f)}</button>`).join('')}<button class="kx-chip" data-f="">Otra…</button></div>
     <input class="kx-in" id="kxFamN" placeholder="Nombre de la familia" maxlength="30" style="margin-top:8px;display:none">
     <span class="kx-lbl">Se pide en</span><div class="kx-seg" id="kxUni"><button data-k="1">Cajas</button><button data-k="2">Paquetes</button></div>
@@ -3821,17 +3837,23 @@ function kxElegir(c){
   document.querySelectorAll('#kxUni button').forEach(b=>b.onclick=()=>{KX.nuevo.k=b.dataset.k==='1'?1:Math.max(2,parseInt(document.getElementById('kxK').value)||2);pintar();});
   pintar();
 }
+// Producto a mano: sabores que Monica lleva juntos (surtido) o cosas que no están en Monica. Sin existencia ni sugerido.
+function kxManual(){
+  const q=(document.getElementById('kxQ')||{}).value||'';
+  kxElegir(null,{c:'m-'+Date.now().toString(36),n:q.trim(),manual:true});
+}
 async function kxAgregar(){
   const p=kxP(),n=KX.nuevo,m=document.getElementById('kxAgMsg');if(!n)return;
+  if(n.manual){const nom=(document.getElementById('kxManN').value||'').trim();if(!nom){m.className='kx-msg mal';m.textContent='Escribe el nombre';return;}n.n=nom;}
   let fam=n.otra?document.getElementById('kxFamN').value.trim().toUpperCase():n.fam;
   if(!fam){m.className='kx-msg mal';m.textContent='Escribe la familia';return;}
   let k=1;if(n.k!==1){k=parseInt(document.getElementById('kxK').value);if(!(k>=2&&k<=100)){m.className='kx-msg mal';m.textContent='Paquetes por caja: de 2 a 100';return;}}
   const lista=(p.productos||[]).slice();if(lista.some(y=>y.c===n.c)){kxCerrarHoja();return;}
   // va al final de su familia
   let pos=-1;lista.forEach((y,i)=>{if((y.fam||'OTROS')===fam)pos=i;});
-  const nuevo={c:n.c,n:n.n,fam,k};if(pos<0)lista.push(nuevo);else lista.splice(pos+1,0,nuevo);
+  const nuevo={c:n.c,n:n.n,fam,k};if(n.manual)nuevo.manual=true;if(pos<0)lista.push(nuevo);else lista.splice(pos+1,0,nuevo);
   try{await kxGuardarProv(p,{productos:lista});}catch(e){m.className='kx-msg mal';m.textContent=e.message;return;}
-  KX.nuevo=null;kxCerrarHoja();kxRender();kxToast(`Agregado ${kxNom(n.n)}`);kxLeerUno(p,n.c);
+  KX.nuevo=null;kxCerrarHoja();kxRender();kxToast(`Agregado ${kxNom(n.n)}`);if(!n.manual)kxLeerUno(p,n.c);
 }
 // Lee solo el producto nuevo y lo junta con la existencia que ya había
 async function kxLeerUno(p,c){
@@ -3859,7 +3881,7 @@ async function kxPedirCuadre(datos){
   throw new Error('La PC tardó en responder');
 }
 function kxCuadrar(c){
-  const p=kxP(),x=(p.productos||[]).find(y=>y.c===c);if(!x)return;
+  const p=kxP(),x=(p.productos||[]).find(y=>y.c===c);if(!x||x.manual)return;
   const it=kxDato(p,x),k=x.k||1,u=kxU(x);
   if(!it||it.ex==null){kxToast(it&&it.falta?'Ese código no está en Monica':'Toca Actualizar primero');return;}
   const ant=kxR(it.ex*k);
@@ -5212,7 +5234,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-25.2';
+const VERSION='2026-11-25.3';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

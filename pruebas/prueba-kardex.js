@@ -14,9 +14,9 @@ window.__DB={reportes_pedidos:[],alertas:[],kardex_pedidos:[],kardex_proveedores
   {c:'035',fam:'BIG / CIFRUT',k:2,n:'---Big cifrut 500ml 24ud'},{c:'091',fam:'DEPORADE',k:2,n:'---deporade 360ml chicle 24 ud'},
   {c:'999',fam:'DEPORADE',k:1,n:'---producto que no existe'}]},
  {id:'coca',nombre:'Coca-Cola',orden:2,cada_dias:8,entrega_dias:0,reserva:25,existencia:null,productos:[{c:'09',fam:'LATA',k:1,n:'---coca cola lata 24ud'}]}]};
-window.__seq=100;window.__MON={'090':[21,56],'033':[3,84],'035':[5,28],'091':[30,0],'09':[-3.5,40],'336':[12,70]};
+window.__seq=100;window.__pcViva=true;window.__MON={'090':[21,56],'033':[3,84],'035':[5,28],'091':[30,0],'09':[-3.5,40],'336':[12,70]};
 function _cp(x){return x==null?x:JSON.parse(JSON.stringify(x));}
-setInterval(()=>{for(const p of window.__DB.reportes_pedidos){if(p.estado!=='pedido')continue;const d=p.datos||{};
+setInterval(()=>{if(!window.__pcViva)return;for(const p of window.__DB.reportes_pedidos){if(p.estado!=='pedido')continue;const d=p.datos||{};
   if(p.tipo==='kx_existencia'){const items={};(d.codigos||[]).forEach(c=>{const m=window.__MON[c];if(m)items[c]={ex:m[0],vend:m[1]};});
     p.resultado={ok:true,at:new Date().toISOString(),dias:d.dias,items};}
   else if(p.tipo==='kx_catalogo')p.resultado={ok:true,productos:[{c:'336',n:'----pepsi retornable 2lt 8ud'},{c:'337',n:'---pepsi 3lt 6ud'},{c:'090',n:'---Big 1.3 cola 9ud'}]};
@@ -147,6 +147,12 @@ window.supabase={createClient:()=>({
   await p.click('#kxPanel .kx-tab:has-text("AJE")');await p.waitForTimeout(300);
   await p.evaluate(()=>kxHistorial());await p.waitForTimeout(300);
   ok('Historial muestra el pedido de AJE',(await p.textContent('#kxOv')).includes('18 cja + 3 paq'));
+  // PC apagada al cuadrar: el celular marca el pedido como error y dice que no se tocó Monica
+  await p.evaluate(()=>kxCerrarHoja());await p.waitForTimeout(300);
+  await p.click('.kx-sw[data-c="033"] .kx-ex');await p.waitForTimeout(350);await p.fill('#kxCont','9');await p.dispatchEvent('#kxCont','input');
+  await p.evaluate(()=>{window.__pcViva=false;const f=Date.now;let base=f();Date.now=()=>base+=20000;});
+  await p.click('#kxCuBtn');await p.click('#kxCuBtn');await p.waitForTimeout(6000);
+  ok('PC apagada: "No se cambió nada en Monica" y el pedido queda en error',(await p.textContent('#kxCuMsg')).includes('No se cambió nada en Monica')&&await p.evaluate(()=>{const r=window.__DB.reportes_pedidos.filter(r=>r.tipo==='kx_ajuste');return r[r.length-1].estado==='error';}));
   ok('Sin errores de la página',errs.length===0);if(errs.length)console.log(errs);
   await b.close();srv.close();
 })().catch(e=>{console.error(e);process.exitCode=1;srv.close();});

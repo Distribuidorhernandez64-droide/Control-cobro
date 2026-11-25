@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "jspdf": "^4.2.1",
+    "playwright-core": "1.56"
+  }
+}

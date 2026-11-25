@@ -8,6 +8,10 @@ alter table public.reportes_pedidos drop constraint if exists reportes_pedidos_t
 alter table public.reportes_pedidos add constraint reportes_pedidos_tipo_check
   check (tipo in ('ventas','mapa','vendedores','kx_existencia','kx_catalogo','kx_ajuste'));
 alter table public.reportes_pedidos add column if not exists datos jsonb;
+-- "tomado": la PC ya empezó el cuadre (así, si el celular se rinde, sabe si se hizo o no)
+alter table public.reportes_pedidos drop constraint if exists reportes_pedidos_estado_check;
+alter table public.reportes_pedidos add constraint reportes_pedidos_estado_check
+  check (estado in ('pedido','tomado','listo','error'));
 
 -- Cuadrar cambia la existencia en Monica: solo lo puede pedir César (maestro)
 drop policy if exists rp_agregar on public.reportes_pedidos;

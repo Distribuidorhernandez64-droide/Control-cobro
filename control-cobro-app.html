@@ -3834,6 +3834,22 @@ async function kxLeerUno(p,c){
 }
 
 // Cuadrar (cambia la existencia en Monica)
+// La PC primero "toma" el pedido (pedido → tomado). Si en 45 s no contesta, el celular lo marca error solo si sigue
+// en "pedido": así sabe con certeza que no se tocó Monica. Si ya estaba tomado, no se sabe y se dice.
+async function kxPedirCuadre(datos){
+  const ins=await sb.from('reportes_pedidos').insert({pedido_por:sesion?sesion.nombre:'?',tipo:'kx_ajuste',datos}).select('id').single();
+  if(ins.error||!ins.data)throw Object.assign(new Error('No se pudo pedir el cuadre. Revisa internet'),{seguro:true});
+  const id=ins.data.id,fin=Date.now()+45000;
+  while(Date.now()<fin){
+    await new Promise(r=>setTimeout(r,1500));
+    const r=await sb.from('reportes_pedidos').select('estado,resultado,error').eq('id',id).maybeSingle();
+    if(r.data&&r.data.estado==='listo')return r.data.resultado;
+    if(r.data&&r.data.estado==='error')throw Object.assign(new Error(r.data.error||'La PC no pudo cuadrar'),{seguro:true});
+  }
+  const u=await sb.from('reportes_pedidos').update({estado:'error',error:'El celular dejó de esperar'}).eq('id',id).eq('estado','pedido').select('id');
+  if(u&&!u.error&&u.data&&u.data.length)throw Object.assign(new Error('La PC no respondió. No se cambió nada en Monica'),{seguro:true});
+  throw new Error('La PC tardó en responder');
+}
 function kxCuadrar(c){
   const p=kxP(),x=(p.productos||[]).find(y=>y.c===c);if(!x)return;
   const it=kxDato(p,x),k=x.k||1,u=kxU(x);
@@ -3858,7 +3874,7 @@ async function kxCuadrarSi(c,ant){
   if(!b.dataset.listo){b.dataset.listo='1';b.textContent=`Sí, dejar ${kxF(v)} ${u}`;m.className='kx-msg';m.textContent=`Monica ${kxF(ant)} → ${kxF(v)} ${u}. Toca otra vez para confirmar.`;return;}
   b.disabled=true;b.textContent='Cuadrando…';m.className='kx-msg';m.textContent='La PC está cambiando Monica…';
   try{
-    const r=await rpPedir({tipo:'kx_ajuste',datos:{motivo:'cuadre de mercaderia',ajustes:[{codigo:c,real:kxR(v/k)}]}});
+    const r=await kxPedirCuadre({motivo:'cuadre de mercaderia',ajustes:[{codigo:c,real:kxR(v/k)}]});
     const l=r&&(r.lineas||[]).find(y=>y.codigo===c);
     if(!l||!l.ok)throw Object.assign(new Error((l&&l.error)||'Monica no aceptó el cuadre'),{seguro:true});
     const e=Object.assign({},p.existencia);e.items=Object.assign({},e.items);e.items[c]=Object.assign({},e.items[c],{ex:+l.despues});

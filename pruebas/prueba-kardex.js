@@ -86,6 +86,13 @@ window.supabase={createClient:()=>({
   ok('"Sugeridos" llena los que faltan sin borrar lo escrito (090=2, 033=16, 035=3)',await p.inputValue('.kx-q[data-c="090"]')==='2'&&await p.inputValue('.kx-q[data-c="033"]')==='16'&&await p.inputValue('.kx-q[data-c="035"]')==='3');
   ok('Barra: 18 cja + 3 paq · 3 productos',(await p.textContent('#kxCnt')).replace(/\s+/g,' ').includes('18 cja + 3 paq3 productos'));
   ok('La pestaña AJE muestra cuántos productos lleva el pedido',(await p.textContent('#kxPanel .kx-tab.on b'))==='3');
+  ok('Tocar otra vez el sugerido puesto lo quita',await (async()=>{await p.click('.kx-sw[data-c="033"] .kx-sug');const v=await p.inputValue('.kx-q[data-c="033"]');await p.click('.kx-sw[data-c="033"] .kx-sug');return v==='';})()&&await p.inputValue('.kx-q[data-c="033"]')==='16');
+  ok('Encabezado dice Existencia y Pedido',(await p.textContent('.kx-col')).replace(/\s+/g,'')==='ExistenciaPedido');
+  await p.click('#kxBorrar');await p.waitForTimeout(200);
+  ok('Borrar deja todo en 0 (sin pedido) y se esconde',await p.evaluate(()=>!KX.draft.aje&&[...document.querySelectorAll('.kx-q')].every(i=>!i.value)&&document.getElementById('kxBorrar').style.display==='none'));
+  await p.click('#kxToast button');await p.waitForTimeout(200);
+  ok('Deshacer regresa lo que había',await p.inputValue('.kx-q[data-c="033"]')==='16'&&await p.inputValue('.kx-q[data-c="090"]')==='2');
+  await p.screenshot({path:'/tmp/kx-9-barra.png'});
   // pedido
   await p.click('#kxOk');await p.waitForTimeout(350);
   const txt=await p.textContent('.kx-txt');

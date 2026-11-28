@@ -527,6 +527,54 @@
   .pe-consb svg{width:16px;height:16px;flex-shrink:0}
   /* Consolidado de las notas escogidas (mismas reglas que el de Facturación rápida) */
   .pv-hoja.alta{max-height:94%}
+  /* 28/11/2026: Consolidado y Recuento desde el viaje */
+  .vc-der{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+  .vc-b{position:relative;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 11px 0 8px;border-radius:14px;border:none;background:rgba(255,255,255,.2);color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+  .vc-b svg{width:14px;height:14px;flex-shrink:0}.vc-b:active{transform:scale(.95)}
+  .vc-b.aviso::after{content:"";position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px #fff}
+  .vc-tabs{display:flex;gap:4px;margin:0 16px 10px;padding:3px;border-radius:12px;background:#f1f0ec}
+  .vc-tabs button{flex:1;position:relative;height:34px;border:none;border-radius:9px;background:transparent;font-family:inherit;font-size:13.5px;font-weight:800;color:#5b6472;cursor:pointer}
+  .vc-tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .vc-tabs button i{position:absolute;top:8px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--bad)}
+  .vc-av{margin:0 16px 8px;font-size:12px;font-weight:700;color:#8a6a3a;line-height:1.4}
+  .vc-cam{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:calc(100% - 32px);margin:0 16px 10px;padding:9px 12px;border-radius:12px;border:1px solid #f3d2cc;background:#fdf3f1;font-family:inherit;text-align:left;cursor:pointer}
+  .vc-cam b{font-size:12.5px;font-weight:900;color:var(--bad)}.vc-cam span{font-size:12px;font-weight:700;color:#7a4a44;line-height:1.3}
+  .vc-cam em{font-style:normal;font-size:12px;font-weight:900;color:var(--bad);margin-top:2px}
+  .vc-tabs,.vc-av,.vc-cam,.rc-chips,.rc-info{flex-shrink:0}
+  .rc-chips{display:flex;gap:6px;overflow-x:auto;padding:0 16px 8px;scrollbar-width:none}.rc-chips::-webkit-scrollbar{display:none}
+  .rc-chip{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-start;height:auto;min-height:40px;line-height:1.25;padding:5px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-family:inherit;cursor:pointer}
+  .rc-chip b{font-size:12px;font-weight:900;color:var(--ink)}.rc-chip span{font-size:10.5px;font-weight:700;color:var(--mut)}
+  .rc-chip.on{background:#1c2433;border-color:#1c2433}.rc-chip.on b,.rc-chip.on span{color:#fff}
+  .rc-chip.borr{border-style:dashed;border-color:#e6b3aa}.rc-chip.borr span{color:var(--bad)}
+  .rc-chip.borr.on{background:#fdf3f1;border-color:var(--bad);border-style:solid}.rc-chip.borr.on b{color:var(--ink)}.rc-chip.borr.on span{color:var(--bad)}
+  .rc-info{padding:0 16px 10px;font-size:12px;font-weight:700;color:#5b6472;line-height:1.4;border-bottom:1px solid #f0eee9}
+  .rc-hay{color:var(--bad);font-weight:900}
+  .rc-lista{padding:4px 16px 18px}
+  .rc-card{padding:12px 0 14px;border-bottom:1px solid #ecebe6}.rc-card:last-child{border-bottom:none}
+  .rc-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+  .rc-h>div{display:flex;flex-direction:column;min-width:0}.rc-h b{font-size:15px;font-weight:900}.rc-h span{font-size:11.5px;font-weight:700;color:var(--mut)}
+  .rc-bts{display:flex;gap:6px;flex-shrink:0}
+  .rc-bts button{height:32px;padding:0 13px;border-radius:16px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:12.5px;font-weight:800;color:var(--ink);cursor:pointer}
+  .rc-bts button.osc{background:#1c2433;border-color:#1c2433;color:#fff}
+  .rc-m{margin-left:auto;padding-left:8px;font-size:13px;font-weight:800;color:#3f4652;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cs-s.rc-ds span,.cs-s.rc-ds b{color:#a0641c}
+  .rc-tot{margin-top:12px;padding-top:8px;border-top:1.5px solid #1c2433;display:flex;flex-direction:column;gap:4px}
+  .rc-tot>div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;font-weight:900}
+  .rc-tot b{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .rc-tot .rc-sub{font-size:12.5px;font-weight:700;color:#5b6472}
+  .rc-tot .rc-venta{margin-top:4px;padding-top:7px;border-top:1px solid #e6e3dc;font-size:14px}
+  .rc-sec{display:flex;align-items:center;gap:7px;margin:12px 0 2px;font-size:11.5px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:#5b6472}
+  .rc-sec i{width:8px;height:8px;border-radius:50%;background:#9aa1ad}
+  .rc-sec.mas{color:#1f8a52}.rc-sec.mas i{background:#1f8a52}.rc-sec.menos{color:var(--bad)}.rc-sec.menos i{background:var(--bad)}
+  .cs-q.rc-mas{color:#1f8a52}.cs-q.rc-menos{color:var(--bad)}.cs-q.rc-igual{color:#5b6472}
+  .rc-nt{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:6px 0}
+  .rc-nt b{font-size:12px;font-weight:900;margin-right:2px}
+  .rc-nt span{font-size:11.5px;font-weight:700;color:#5b6472;background:#f4f3ef;border-radius:7px;padding:3px 8px}
+  .rc-nt span i{font-style:normal;font-weight:900;color:var(--ink);margin-right:4px}.rc-nt em{font-style:normal;color:var(--mut)}
+  .rc-ntx{font-size:11.5px;font-weight:700;color:var(--mut);font-style:normal}
+  .rc-prev{margin-top:14px;padding-top:10px;border-top:1px dashed #cfccc4;opacity:.85}
+  .rc-prevt{font-size:12px;font-weight:900;color:#5b6472}
+  .rc-nada{padding:14px 0!important}
   .cs-docs{display:flex;flex-wrap:wrap;gap:5px;padding:0 16px 10px}
   .cs-doc{font-size:11.5px;font-weight:700;color:#5b6472;background:#f4f3ef;border-radius:7px;padding:3px 8px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cs-doc b{color:var(--ink);font-weight:900;margin-right:4px}
@@ -1074,12 +1122,12 @@ function combinarViajes(mios, nube){
     // REGLA 1 (candado del dinero): si en la nube el viaje ya está RECIBIDO y
     // mi copia no lo tiene recibido, gana la nube. Un viaje cobrado sólo se
     // "des-cobra" con el botón Reabrir, que marca 'modificado'.
-    if(ex.cerrado && !v.cerrado && !v.modificado){mapa[v.uid]=ex;return;}
+    if(ex.cerrado && !v.cerrado && !v.modificado){vcUnirRcs(ex,v);mapa[v.uid]=ex;return;}
     // REGLA 1b (el mismo candado, al revés): si ESTE aparato recibió el dinero
     // y en la nube sigue en la calle, gana el recibido. Antes decidía el reloj:
     // con otro aparato adelantado, el "recibido" se perdía en silencio.
     // Sólo si en la nube lo reabrieron a propósito ('modificado') decide la marca.
-    if(v.cerrado && !ex.cerrado && !ex.modificado){mapa[v.uid]=rescatarPedidos(v,ex);return;}
+    if(v.cerrado && !ex.cerrado && !ex.modificado){vcUnirRcs(v,ex);mapa[v.uid]=rescatarPedidos(v,ex);return;}
     // REGLA 2: gana la marca de tiempo más reciente. En EMPATE gana la nube
     // (antes ganaba lo local, aunque estuviera desactualizado).
     const tm=v.mod||0, te=ex.mod||0;
@@ -1088,6 +1136,7 @@ function combinarViajes(mios, nube){
     // rescata los que el otro tenía y él no. Así ningún pedido se pierde por
     // culpa de un reloj adelantado o de una copia vieja. Los borrados a
     // propósito quedan anotados en 'pedBorrados' y no se rescatan.
+    vcUnirRcs(gana,pierde);   // 28/11/2026: los recuentos del viaje nunca se pierden (se juntan)
     mapa[v.uid]=rescatarPedidos(gana,pierde);
   });
   if(typeof borrados!=='undefined')borrados.forEach(u=>{delete mapa[u];});
@@ -1540,6 +1589,7 @@ async function terminarPedidos(vid,confirmado){if(modoLectura)return;const v=via
   }
   const elE=document.getElementById('env-'+vid);if(elE)v.envases=elE.value;
   let desdeCons=[];try{desdeCons=peHistCambiosDeRuta(v);}catch(e){}
+  const desdeRc=vcCambiosAlEnviar(v);
   v.pedidos.forEach(p=>{if(p&&p.fac)p.facEnv=true;}); // ya no cambian
   // Si la ruta ya había salido hace más de 5 minutos y se volvió a enviar tras
   // una corrección, el rutero ya iba en camino: se respeta su hora de salida.
@@ -1551,7 +1601,8 @@ async function terminarPedidos(vid,confirmado){if(modoLectura)return;const v=via
   const ok=await guardarAhora('ruta enviada');
   toast(ok?'Ruta enviada y guardada ✓':'⚠ No se pudo guardar. Revisá internet',!ok);
   // Aviso corto si desde el consolidado quitaron/agregaron algo en estas notas (no detiene el envío)
-  if(ok&&desdeCons.length)setTimeout(()=>{const t=document.getElementById('toast');if(!t)return;
+  if(ok&&desdeRc&&desdeRc.tx.length)setTimeout(()=>vcToast(`Cambió después del Recuento ${desdeRc.n}: ${desdeRc.tx[0]}${desdeRc.tx.length>1?' y '+(desdeRc.tx.length-1)+' más':''}`),1700);
+  else if(ok&&desdeCons.length)setTimeout(()=>{const t=document.getElementById('toast');if(!t)return;
     t.textContent='Desde el consolidado: '+csCambioTxt(desdeCons[0])+(desdeCons.length>1?' y '+(desdeCons.length-1)+' más':'');
     t.className='toast show err';clearTimeout(_toastT);_toastT=setTimeout(()=>t.className='toast',5000);},1700);
   _enviando=false;
@@ -2200,7 +2251,7 @@ function renderZona(){
         <span style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" stroke="#fff" stroke-width="1.8"/></svg></span>
         <div><div class="t">Viaje ${i+1}</div><div class="s">${enRuta?'En ruta · '+v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · salió '+hhmm(v.horaSalida):v.pedidos.length+' pedido'+(v.pedidos.length===1?'':'s')+' · preparando'}</div>${credChip([v])?'<div>'+credChip([v])+'</div>':''}${peModViaje(v)?`<div class="s pe-modh">${esc(peAvisoTxt(peAvisosDe([v])))}</div>`:''}${peAvisosDe([v]).abiertas?`<div class="s pe-abh">${ICO_OJO_S}${esc(peAbiertasTxt(peAvisosDe([v])))}</div>`:''}</div>
       </div>
-      <span class="badge">${enRuta?'En ruta':'Preparando'}</span></div>`;
+      <div class="vc-der"><span class="badge">${enRuta?'En ruta':'Preparando'}</span>${vcBoton(v)}</div></div>`;
     html+=renderPedidos(v,true);
     if(!v.entradaLista){
       if(!v.pedidosListos){
@@ -2802,6 +2853,7 @@ async function peCargar(){
   peAplicarDevoluciones();
   peReintentarEnviadas();
   peSincRegresos();
+  vcVigilar();
   peRenderCampana();
   if(PE.abierto)peRenderPanel();
   if(PE.vista)peRenderVista();
@@ -3167,8 +3219,8 @@ function peRenderHist(hoja){
     <div class="pv-lista ch-lista">${filas||'<div class="pv-vacio">Cuando saques un consolidado, queda aquí para verlo otra vez o escoger esas notas.</div>'}</div>`;
 }
 function peConsSolo(){PE.consSolo=!PE.consSolo;peRenderVista();}
-function peRenderCons(hoja){
-  const notas=peConsNotas(), sin=notas.filter(n=>!Array.isArray(n.detalle)), con=notas.filter(n=>Array.isArray(n.detalle));
+function peRenderCons(hoja,o){o=o||{};
+  const notas=o.notas||peConsNotas(), sin=notas.filter(n=>!Array.isArray(n.detalle)), con=notas.filter(n=>Array.isArray(n.detalle));
   const {principal,bonif}=csArmar(con,PE.consSolo);
   const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   const fila=x=>`<div class="cs-l"><span class="cs-q">${csF2(x.cantidad)}</span><span class="cs-n">${esc(x.nombre)}</span></div>`
@@ -3176,19 +3228,22 @@ function peRenderCons(hoja){
   let g=null,cuerpo='';
   principal.forEach(x=>{const gap=g!==null&&x.grupo!==g;g=x.grupo;cuerpo+=gap?fila(x).replace('class="cs-l"','class="cs-l gap"'):fila(x);});
   if(bonif.length)cuerpo+=`<div class="cs-sec">Bonificaciones</div>`+bonif.map(fila).join('');
-  if(!principal.length&&!bonif.length)cuerpo=`<div class="pv-vacio">${notas.length?(PE.consSolo?'Estas notas no llevan productos con guiones (cajas).':'No hay productos para el consolidado.'):'Ya no hay notas escogidas.'}</div>`;
+  if(!principal.length&&!bonif.length)cuerpo=`<div class="pv-vacio">${notas.length?(PE.consSolo?'Estas notas no llevan productos con guiones (cajas).':'No hay productos para el consolidado.'):(o.vacio||'Ya no hay notas escogidas.')}</div>`;
   const nprod=principal.length+bonif.length;
   hoja.innerHTML=`<div class="pv-asa"></div>
-    <div class="pv-cab"><div class="pv-tit"><b>Consolidado de carga</b><span>${con.length} nota${con.length===1?'':'s'} · ${nprod} producto${nprod===1?'':'s'}</span></div>${cerrar}</div>
-    <div class="cs-docs">${notas.map(n=>`<span class="cs-doc"${Array.isArray(n.detalle)?'':' style="opacity:.45;text-decoration:line-through"'}><b>${n.nro}</b>${esc(csNombre(n.cliente))}</span>`).join('')}</div>
+    <div class="pv-cab"><div class="pv-tit"><b>${o.titulo?esc(o.titulo):'Consolidado de carga'}</b><span>${con.length} nota${con.length===1?'':'s'} · ${nprod} producto${nprod===1?'':'s'}</span></div>${cerrar}</div>
+    ${o.tabs||''}${o.aviso||''}<div class="cs-docs">${notas.map(n=>`<span class="cs-doc"${Array.isArray(n.detalle)?'':' style="opacity:.45;text-decoration:line-through"'}><b>${n.nro}</b>${esc(csNombre(n.cliente))}</span>`).join('')}</div>
     <div class="cs-solo"><span>Solo cajas (con guiones)</span><button class="cs-sw${PE.consSolo?' on':''}" onclick="peConsSolo()" aria-label="Solo cajas" aria-pressed="${!!PE.consSolo}"></button></div>
     <div class="pv-lista cs-lista">${cuerpo}</div>
-    <div class="pv-pie">${sin.length?`<div class="cs-av">Sin productos todavía: ${sin.map(n=>n.nro).join(', ')} (no se cuentan).</div>`:''}
+    <div class="pv-pie">${sin.length?`<div class="cs-av">Sin productos todavía: ${sin.map(n=>n.nro).join(', ')} (no se cuentan).</div>`:''}${o.pie||''}
       <div class="cs-btns"><button class="pv-btn quitar" id="csTxt" onclick="peConsCopiar()">Copiar texto</button><button class="pv-btn" onclick="peConsPdf()">PDF</button></div></div>`;
 }
+// De dónde salen las notas: Por entregar o el viaje abierto (28/11/2026)
+function peConsFuente(){return PE.vista==='vc'?vcNotasCons():peConsNotas();}
 function peConsTexto(){
-  const notas=peConsNotas().filter(n=>Array.isArray(n.detalle)),{principal,bonif}=csArmar(notas,PE.consSolo),ah=new Date(),out=[];
-  out.push('*CONSOLIDADO DE CARGA*',ah.toLocaleDateString('es-GT')+' '+ah.toTimeString().slice(0,5),
+  const notas=peConsFuente().filter(n=>Array.isArray(n.detalle)),{principal,bonif}=csArmar(notas,PE.consSolo),ah=new Date(),out=[];
+  out.push('*CONSOLIDADO DE CARGA*');if(PE.vista==='vc'&&vcViaje())out.push(vcRutaTxt(vcViaje()));
+  out.push(ah.toLocaleDateString('es-GT')+' '+ah.toTimeString().slice(0,5),
     `${notas.length} ${notas.length===1?'nota':'notas'}: ${notas.map(n=>csCorto(n.cliente)).join(', ')}`,'');
   const fila=x=>{out.push(`${csF2(x.cantidad)}  ${x.nombre}`);x.lista.forEach(([c,qq])=>out.push(`      ${c}  Cant. = ${csF2(qq)}`));};
   let g=null;for(const x of principal){if(g!==null&&x.grupo!==g)out.push('');g=x.grupo;fila(x);}
@@ -3217,7 +3272,7 @@ function csCargarPdf(){
   return _csPdfLib;
 }
 async function peConsPdf(){
-  const notas=peConsNotas().filter(n=>Array.isArray(n.detalle));
+  const notas=peConsFuente().filter(n=>Array.isArray(n.detalle));
   if(!notas.length){toast('No hay notas con productos',true);return;}
   try{await csCargarPdf();}catch(e){toast('No se pudo cargar el PDF. Revisá internet',true);return;}
   const {principal,bonif}=csArmar(notas,PE.consSolo);
@@ -3226,8 +3281,9 @@ async function peConsPdf(){
   const T=(s,x,y,o={})=>{doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9.5);const c=o.c||[20,20,20];doc.setTextColor(c[0],c[1],c[2]);doc.text(String(s),x,y,o.r?{align:'right'}:undefined);};
   const corta=(s,w,sz)=>{doc.setFont('helvetica','normal');doc.setFontSize(sz||9.5);let t=String(s);while(t.length>3&&doc.getTextWidth(t)>w)t=t.slice(0,-1);return t===String(s)?t:t.trimEnd()+'…';};
   const gris=[105,105,105],QX=L+32,NX=L+40,LH=11.1;let y;
-  const ah=new Date(),cuando=ah.toLocaleDateString('es-GT')+'  '+ah.toTimeString().slice(0,5),cuenta=`${notas.length} ${notas.length===1?'nota':'notas'}`;
-  const nombres=notas.map(n=>`${n.nro} ${csNombre(n.cliente)}`).join('  ·  ');
+  const ah=new Date(),cuando=ah.toLocaleDateString('es-GT')+'  '+ah.toTimeString().slice(0,5),vv=PE.vista==='vc'?vcViaje():null;
+  const cuenta=vv?vcRutaTxt(vv):`${notas.length} ${notas.length===1?'nota':'notas'}`;
+  const nombres=(vv?`${notas.length} ${notas.length===1?'nota':'notas'}:  `:'')+notas.map(n=>`${n.nro} ${csNombre(n.cliente)}`).join('  ·  ');
   const cab=primera=>{y=TOP+10;
     T('DISTRIBUIDORA HERNANDEZ',L,y,{b:1,s:8.6,c:[70,70,70]});T(cuando,R,y,{s:8.5,c:gris,r:1});y+=primera?16:13;
     T(primera?'Consolidado de carga':'Consolidado de carga  (continuación)',L,y,{b:1,s:primera?13:10});T(cuenta,R,y,{b:1,s:primera?10.5:9,r:1});
@@ -3245,13 +3301,443 @@ async function peConsPdf(){
   if(bonif.length){titulo('BONIFICACIONES');bonif.forEach(fila);}
   const np=doc.getNumberOfPages();
   if(np>1)for(let i=1;i<=np;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7.4);doc.setTextColor(120);doc.text(`Consolidado de carga  ·  Página ${i} de ${np}`,W/2,BOT+16,{align:'center'});}
-  const nombre=`Consolidado ${notas.map(n=>n.nro).join(' ')}`.slice(0,90)+'.pdf';
+  const nombre=(vv?`Consolidado ${vv.rutero} viaje ${vcNum(vv)} ${vcDiaTxt(new Date())}`:`Consolidado ${notas.map(n=>n.nro).join(' ')}`).slice(0,90)+'.pdf';
+  await csEntregarPdf(doc,nombre,'Consolidado de carga');
+}
+// En el celular: menú de compartir (WhatsApp, guardar en Archivos, imprimir…); si no se puede, se descarga
+async function csEntregarPdf(doc,nombre,titulo){
   const blob=doc.output('blob');
   // En el celular: menú de compartir (WhatsApp, guardar en Archivos, imprimir…); si no se puede, se descarga
   try{const file=new File([blob],nombre,{type:'application/pdf'});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Consolidado de carga'});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:titulo});return;}}catch(e){if(e&&e.name==='AbortError')return;}
   doc.save(nombre);
 }
+
+// ===== 28/11/2026: Consolidado y Recuento DESDE EL VIAJE =====
+// En la tarjeta del viaje (preparando o en ruta) el botón "Consolidado" abre una hoja con dos pestañas:
+//  · Consolidado: el mismo de Por entregar (Copiar texto y PDF) con las notas de Monica del viaje, como están AHORA.
+//  · Recuento: como el Recuento de Facturación rápida. Recuento N completo (cantidad, monto, sabores, descuento,
+//    neto y venta total de la ruta) y, desde el 2, Cambios contra el anterior: Agregar al carro / Bajar del carro /
+//    Mismo total, cambió el sabor; notas nuevas / modificadas / ya no están; y los pasos de antes.
+// Al sacar el consolidado la primera vez queda guardado como Recuento 1. Si después cambian (en Monica) los productos
+// con guiones de esas notas, o entra o sale una nota del viaje, el botón del viaje lleva puntito rojo y sale un aviso.
+// Al sacar el Recuento (PDF o texto) se guarda el siguiente. Si nada cambió no se crea otro.
+// Los recuentos van dentro del viaje (los ven los dos aparatos). Se guardan SIN marcar el viaje como cambiado y al
+// combinar copias se juntan (nunca se pierden): así un recuento no pisa cobros que el otro aparato esté anotando.
+const VC={vid:null,tab:'cons',det:{},cargando:false,error:'',ver:null,vig:false};
+const vcCaja=l=>{const d=String(l&&l.d||'');return d.trimStart().startsWith('-')&&!CS_EXCLUIR.some(rx=>rx.test(csN(d)));};
+const vcRcCaja=l=>vcCaja(l)&&!/huevo/.test(csN(l.d));   // el Recuento no lleva huevos (igual que Facturación rápida)
+function vcViaje(){return viajes.find(x=>x&&x.id===VC.vid)||null;}
+function vcNum(v){return viajes.filter(x=>x&&x.rutero===v.rutero).findIndex(x=>x===v||(v.uid&&x.uid===v.uid))+1;}
+const vcRutaTxt=v=>`Ruta: ${v.rutero} · Viaje ${vcNum(v)}`;
+const VC_MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const vcDiaTxt=d=>`${d.getDate()} ${VC_MES[d.getMonth()]}`;
+const vcQ=n=>Number.isInteger(csR2(n))?String(csR2(n)):csF2(csR2(n));   // 4 · 0.50
+const vcHH=t=>t?new Date(t).toLocaleTimeString('es-GT',{hour:'numeric',minute:'2-digit'}):'';
+function vcPeds(v){return ((v&&v.pedidos)||[]).filter(p=>p&&p.fac&&!p.facReg);}
+function vcRcs(v){return ((v&&v.rcs)||[]).filter(r=>r&&r.id&&r.t).slice().sort((a,b)=>a.t<b.t?-1:a.t>b.t?1:0);}
+// Recuentos de dos copias del mismo viaje: se juntan (por id), nunca se pierde uno
+function vcUnirRcs(a,b){if(!a||!b||a===b||!((a.rcs&&a.rcs.length)||(b.rcs&&b.rcs.length)))return;
+  const m=new Map();[...(a.rcs||[]),...(b.rcs||[])].forEach(r=>{if(r&&r.id&&!m.has(r.id))m.set(r.id,r);});
+  a.rcs=[...m.values()].sort((x,y)=>x.t<y.t?-1:x.t>y.t?1:0);}
+// Cómo está cada nota AHORA: si sigue en Por entregar (viaje preparando), la de ahí (va al día con Monica);
+// si ya salió, la que salió o, si la cambiaron en Monica después, cómo quedó en Monica.
+function vcDocDe(p){
+  const nro=p.fac,f=PE.filas.find(x=>x.nro===nro);
+  if(f)return {nro,cliente:f.cliente||p.nombre||'',total:Number(f.total)||0,detalle:Array.isArray(f.detalle)?f.detalle:null,anulada:!!f.anulada};
+  const c=PE.cambios[nro],r=VC.det[nro],cli=(r&&r.cliente)||p.nombre||'';
+  if(c&&c.monica_anulada)return {nro,cliente:cli,anulada:true};
+  if(c&&Array.isArray(c.monica_detalle))return {nro,cliente:cli,total:Number(c.monica_total!=null?c.monica_total:c.total)||0,detalle:c.monica_detalle};
+  return r||null;
+}
+function vcDocs(v){const docs=[],faltan=[];vcPeds(v).forEach(p=>{const d=vcDocDe(p);if(d)docs.push(d);else faltan.push(p.fac);});return {docs,faltan};}
+// Notas que ya no están en Por entregar: se leen de la nube (lo que salió y, si cambió, cómo está en Monica)
+async function vcTraer(v,fresco){
+  const nros=vcPeds(v).map(p=>p.fac).filter(n=>!PE.filas.some(f=>f.nro===n)&&(fresco||!VC.det[n]));
+  if(!nros.length)return true;
+  try{
+    const base='nro,cliente,total,detalle,anulada';
+    let r=PE.sinDev?null:await sb.from('pendientes_entrega').select(base+',monica_cambio,monica_total,monica_anulada,monica_detalle').in('nro',nros);
+    if(!r||r.error)r=await sb.from('pendientes_entrega').select(base).in('nro',nros);
+    if(!r||r.error)return false;
+    (r.data||[]).forEach(x=>{const mc=!!x.monica_cambio;
+      VC.det[x.nro]={nro:x.nro,cliente:x.cliente||'',anulada:!!(x.anulada||(mc&&x.monica_anulada)),
+        total:Number(mc&&x.monica_total!=null?x.monica_total:x.total)||0,
+        detalle:mc&&Array.isArray(x.monica_detalle)?x.monica_detalle:(Array.isArray(x.detalle)?x.detalle:null)};});
+    return true;
+  }catch(e){return false;}
+}
+// Copia que se guarda: solo los productos con guiones (cajas) de cada nota, en corto
+const vcLin=a=>({c:a[0],d:a[1],q:a[2],p:a[3],x:a[4],m:a[5]});
+function vcFoto(docs){return docs.filter(d=>d&&!d.anulada).map(d=>({nro:d.nro,cliente:csCli(d.cliente),total:peR2(d.total),
+  l:(Array.isArray(d.detalle)?d.detalle:[]).filter(vcCaja).map(l=>[String(l.c||''),String(l.d||''),+l.q||0,+l.p||0,+l.x||0,String(l.m||'')])}));}
+const vcDocsDeFoto=f=>(f||[]).map(n=>({nro:n.nro,cliente:n.cliente,total:n.total,detalle:(n.l||[]).map(vcLin)}));
+// Armado del Recuento (igual que rcArmar de Facturación rápida): total, monto, sabores uno por renglón, descuento por caja
+function vcArmar(docs){
+  const m=new Map();
+  for(const n of docs)for(const l of (n.detalle||[])){
+    if(!vcRcCaja(l))continue;
+    const key=l.c||l.d;let x=m.get(key);
+    if(!x){x={codigo:key,nombre:csNombre(l.d),k:csN(l.d),cantidad:0,monto:0,desc:0,coms:new Map(),lista:[],dsc:new Map()};
+      const i=CS_ORDEN.findIndex(([,f])=>f(x.k));x.rank=i<0?99:i;x.grupo=i<0?3:CS_ORDEN[i][0];m.set(key,x);}
+    const qq=+l.q||0,ds=+l.x||0,c=csNombre(l.m||'');
+    x.cantidad+=qq;x.monto+=qq*(+l.p||0);x.desc+=ds;
+    if(c){x.coms.set(c,(x.coms.get(c)||0)+qq);x.lista.push([c,qq]);}
+    if(ds>0.004&&qq){const u=csR2(ds/qq),d=x.dsc.get(u)||{q:0,total:0};d.q+=qq;d.total+=ds;x.dsc.set(u,d);}
+  }
+  const todos=[...m.values()].filter(x=>csR2(x.cantidad));
+  todos.forEach(x=>{x.cantidad=csR2(x.cantidad);x.monto=csR2(x.monto);x.desc=csR2(x.desc);x.coms.forEach((qq,c)=>x.coms.set(c,csR2(qq)));x.dsc.forEach(d=>{d.q=csR2(d.q);d.total=csR2(d.total);});});
+  const alfa=(a,b)=>a.k.localeCompare(b.k,'es'),bon=x=>/bonificacion/.test(x.k);
+  return {principal:csJuntar(todos.filter(x=>!bon(x)).sort((a,b)=>a.rank-b.rank||alfa(a,b))),bonif:todos.filter(bon).sort(alfa),
+    monto:csR2(todos.reduce((s,x)=>s+x.monto,0)),desc:csR2(todos.reduce((s,x)=>s+x.desc,0)),productos:todos.length};
+}
+const vcDescTxt=x=>[...x.dsc].map(([u,d])=>`${vcQ(d.q)} ${d.q===1?'caja':'cajas'} × Q${csF2(u)} c/u`).join('  +  ');
+const vcVenta=docs=>csR2(docs.reduce((s,n)=>s+(+n.total||0),0));
+// Diferencia entre dos recuentos por producto y, debajo, por sabor (igual que rcDiff)
+function vcDiff(antDocs,actDocs){
+  const A=new Map(),B=new Map(),a=vcArmar(antDocs),b=vcArmar(actDocs);
+  [...a.principal,...a.bonif].forEach(x=>A.set(x.codigo,x));[...b.principal,...b.bonif].forEach(x=>B.set(x.codigo,x));
+  const mas=[],menos=[],sabor=[];
+  for(const cod of new Set([...A.keys(),...B.keys()])){
+    const x=A.get(cod),y=B.get(cod),base=y||x,dt=csR2((y?y.cantidad:0)-(x?x.cantidad:0)),coms=new Map();
+    for(const c of new Set([...(x?x.coms.keys():[]),...(y?y.coms.keys():[])])){const dq=csR2((y&&y.coms.get(c)||0)-(x&&x.coms.get(c)||0));if(dq)coms.set(c,dq);}
+    if(!dt&&!coms.size)continue;
+    const it={codigo:cod,nombre:base.nombre,k:base.k,rank:base.rank,grupo:base.grupo,cantidad:Math.abs(dt),coms};
+    (dt>0?mas:dt<0?menos:sabor).push(it);
+  }
+  const alfa=(p,q2)=>p.k.localeCompare(q2.k,'es'),bon=x=>/bonificacion/.test(x.k);
+  const forma=t=>({principal:csJuntar(t.filter(x=>!bon(x)).sort((p,q2)=>p.rank-q2.rank||alfa(p,q2))),bonif:t.filter(bon).sort(alfa),vacio:!t.length});
+  const firma=n=>JSON.stringify((n.detalle||[]).filter(vcRcCaja).map(l=>[l.c,csR2(+l.q),csNombre(l.m||'')]).sort());
+  const cajas=n=>(n.detalle||[]).filter(vcRcCaja).length;
+  const pa=new Map(antDocs.map(n=>[String(n.nro),n])),pb=new Map(actDocs.map(n=>[String(n.nro),n]));
+  return {mas:forma(mas),menos:forma(menos),sabor:forma(sabor),
+    nuevas:actDocs.filter(n=>!pa.has(String(n.nro))).map(n=>({...n,cajas:cajas(n)})),
+    modif:actDocs.filter(n=>pa.has(String(n.nro))&&firma(pa.get(String(n.nro)))!==firma(n)),
+    fuera:antDocs.filter(n=>!pb.has(String(n.nro)))};
+}
+const vcSinCambio=df=>df.mas.vacio&&df.menos.vacio&&df.sabor.vacio;
+// Texto corto de los cambios: "+2 coca cola 1lt 12ud" · "−0.50 jugo de la granja 500ml 12ud"
+function vcDiffTxt(df){const o=[];
+  [...df.mas.principal,...df.mas.bonif].forEach(x=>o.push('+'+vcQ(x.cantidad)+' '+x.nombre));
+  [...df.menos.principal,...df.menos.bonif].forEach(x=>o.push('−'+vcQ(x.cantidad)+' '+x.nombre));
+  [...df.sabor.principal,...df.sabor.bonif].forEach(x=>o.push('Sabor: '+x.nombre));
+  return o;}
+// Estado del viaje: último recuento guardado, cómo está ahora y si cambió algo desde entonces
+function vcEstado(v){
+  const rcs=vcRcs(v),{docs,faltan}=vcDocs(v),ult=rcs[rcs.length-1];
+  const e={rcs,ult,docs,faltan,df:null,cambio:false};
+  if(!ult||faltan.length)return e;
+  e.df=vcDiff(vcDocsDeFoto(ult.docs),vcDocsDeFoto(vcFoto(docs)));e.cambio=!vcSinCambio(e.df);
+  return e;
+}
+const vcR=(rcs,i)=>({n:i+1,t:rcs[i].t,docs:vcDocsDeFoto(rcs[i].docs)});
+// Qué recuento se ve: uno guardado (VC.ver) o el de ahora (sin guardar si hay cambios o todavía no hay ninguno)
+function vcDatos(v,e){
+  const rcs=e.rcs,n=rcs.length;
+  if(VC.ver){const i=rcs.findIndex(r=>r.id===VC.ver);
+    if(i>=0)return {a:vcR(rcs,i),an:i>0?vcR(rcs,i-1):null,antes:rcs.slice(0,Math.max(0,i-1)).map((r,j)=>vcR(rcs,j)),hist:true,borr:false};}
+  const ahora=vcDocsDeFoto(vcFoto(e.docs));
+  if(!n||e.cambio)return {a:{n:n+1,t:null,docs:ahora},an:n?vcR(rcs,n-1):null,antes:rcs.slice(0,Math.max(0,n-1)).map((r,j)=>vcR(rcs,j)),hist:false,borr:true};
+  return {a:{n,t:rcs[n-1].t,docs:ahora},an:n>1?vcR(rcs,n-2):null,antes:rcs.slice(0,Math.max(0,n-2)).map((r,j)=>vcR(rcs,j)),hist:false,borr:false};
+}
+function vcPasos(antes,an){const ch=[...(antes||[]),an],out=[];for(let i=ch.length-1;i>0;i--)out.push({de:ch[i-1],a:ch[i],dp:vcDiff(ch[i-1].docs,ch[i].docs)});return out;}
+// Guarda el recuento de ahora (si cambió algo o si es el primero). No marca el viaje como cambiado.
+async function vcGuardar(v){
+  const e=vcEstado(v);if(e.faltan.length)return {ok:false,error:'Faltan notas por leer de Monica'};
+  const foto=vcFoto(e.docs);if(!foto.length)return {ok:false,error:'El viaje no tiene notas de Monica'};
+  if(e.ult&&!e.cambio)return {ok:true,nuevo:false,n:e.rcs.length};
+  const rc={id:'rc'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),t:new Date().toISOString(),por:(sesion&&sesion.nombre)||'',docs:foto};
+  v.rcs=vcRcs(v).concat(rc);VC.ver=null;
+  logAudit('RECUENTO DEL VIAJE',`${vcRutaTxt(v)}: Recuento ${v.rcs.length} · ${foto.length} nota${foto.length===1?'':'s'}`);
+  let ok=await guardarAhora('recuento del viaje');
+  // Si el otro aparato guardó en el mismo momento, el recuento pudo quedar fuera: se revisa la nube y se sube otra vez
+  for(let i=0;ok&&i<3;i++){
+    let esta=false;
+    try{const r=await sb.from('dias').select('estado').eq('fecha',HOY).maybeSingle();
+      const vn=r&&r.data&&r.data.estado&&(r.data.estado.viajes||[]).find(x=>x&&x.uid===v.uid);esta=!!(vn&&(vn.rcs||[]).some(x=>x&&x.id===rc.id));}catch(er){break;}
+    if(esta)break;
+    await new Promise(res=>setTimeout(res,400+Math.random()*500));
+    ok=await guardarAhora('recuento del viaje (otra vez)');
+  }
+  return {ok:true,nuevo:true,n:vcRcs(vcViaje()||v).length,nube:ok};
+}
+// ---- Abrir la hoja ----
+async function vcAbrir(vid,tab){
+  VC.vid=vid;VC.tab=tab||'cons';VC.ver=null;VC.error='';VC.cargando=true;
+  if(PE.consSolo===undefined)PE.consSolo=true;
+  peVer('vc');
+  const v=vcViaje();const ok=v?await vcTraer(v,true):false;
+  VC.cargando=false;VC.error=ok?'':'No se pudo leer Monica. Revisá el internet.';
+  // Al sacar el consolidado la primera vez queda como Recuento 1: desde ahí se avisa cualquier cambio
+  if(v&&ok&&VC.tab==='cons'&&!vcRcs(v).length){const g=await vcGuardar(v);if(g.ok&&g.nuevo)renderZonaQuieta();}
+  if(PE.vista==='vc')peRenderVista();
+}
+function vcTab(t){VC.tab=t;VC.ver=null;peRenderVista();}
+function vcVerRc(id){VC.ver=VC.ver===id?null:id;peRenderVista();}
+function renderZonaQuieta(){if(!escribiendoAhora()){const sy=window.scrollY;renderZona();window.scrollTo(0,sy);}}
+// Notas para la pestaña Consolidado (las anuladas no van)
+function vcNotasCons(){const v=vcViaje();if(!v)return [];return vcDocs(v).docs.filter(d=>!d.anulada);}
+// ---- Pintar ----
+const VC_X=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
+function vcRender(hoja){
+  const v=vcViaje();
+  const lst=hoja.querySelector('.pv-lista'),sy=lst?lst.scrollTop:0,clave=VC.tab+'|'+(VC.ver||''),misma=hoja.dataset.vc===clave;
+  if(!v){hoja.innerHTML=`<div class="pv-asa"></div><div class="pv-cab"><div class="pv-tit"><b>Viaje</b></div>${VC_X}</div><div class="pv-vacio">Este viaje ya no está.</div>`;return;}
+  const e=vcEstado(v),tit=`Viaje ${vcNum(v)} · ${v.rutero}`;
+  const tabs=`<div class="vc-tabs"><button class="${VC.tab==='cons'?'on':''}" onclick="vcTab('cons')">Consolidado</button><button class="${VC.tab==='rec'?'on':''}" onclick="vcTab('rec')">Recuento${e.cambio?'<i></i>':''}</button></div>`;
+  const manual=(v.pedidos||[]).filter(p=>p&&!p.fac).length,anul=e.docs.filter(d=>d.anulada);
+  const notas=[];
+  if(VC.cargando&&e.faltan.length)notas.push('Leyendo Monica…');
+  else if(e.faltan.length)notas.push((VC.error||'No se pudieron leer')+' · '+e.faltan.join(', '));
+  if(anul.length)notas.push('Anulada'+(anul.length===1?'':'s')+' en Monica (no se cuenta'+(anul.length===1?'':'n')+'): '+anul.map(d=>d.nro).join(', '));
+  if(manual)notas.push(manual+(manual===1?' pedido anotado a mano no entra':' pedidos anotados a mano no entran')+' (sin nota de Monica)');
+  const avTxt=notas.length?`<div class="vc-av">${notas.map(esc).join('<br>')}</div>`:'';
+  if(VC.tab==='cons'){
+    const tx=e.cambio?vcDiffTxt(e.df):[];
+    const cam=e.cambio?`<button class="vc-cam" onclick="vcTab('rec')"><b>Cambió después del Recuento ${e.rcs.length}</b><span>${esc(tx.slice(0,2).join(' · '))}${tx.length>2?' · …':''}</span><em>Ver recuento ›</em></button>`:'';
+    peRenderCons(hoja,{notas:vcNotasCons(),titulo:tit,tabs,aviso:cam+avTxt,vacio:VC.cargando?'Leyendo Monica…':'El viaje no tiene notas de Monica.'});
+  }else vcRenderRec(hoja,v,e,tit,tabs,avTxt);
+  hoja.dataset.vc=clave;
+  if(misma&&sy){const l2=hoja.querySelector('.pv-lista');if(l2)l2.scrollTop=sy;}
+}
+function vcFilaCompleto(x){
+  return `<div class="cs-l"><span class="cs-q">${vcQ(x.cantidad)}</span><span class="cs-n">${esc(x.nombre)}</span><span class="rc-m">${csF2(x.monto)}</span></div>`
+    +x.lista.map(([c,qq])=>`<div class="cs-s"><span>${esc(c)}</span><b>Cantidad = ${csF2(qq)}</b></div>`).join('')
+    +(x.desc?`<div class="cs-s rc-ds"><span>Descuento: ${esc(vcDescTxt(x))}</span><b>−${csF2(x.desc)}</b></div>`:'');
+}
+function vcHtmlCompleto(t,docs){
+  let g=null,h='';
+  t.principal.forEach(x=>{const f=vcFilaCompleto(x);h+=g!==null&&x.grupo!==g?f.replace('class="cs-l"','class="cs-l gap"'):f;g=x.grupo;});
+  if(t.bonif.length)h+=`<div class="cs-sec">Bonificaciones</div>`+t.bonif.map(vcFilaCompleto).join('');
+  h+=`<div class="rc-tot"><div><span>Total de estos productos · ${t.productos}</span><b>${csF2(t.monto)}</b></div>`
+    +(t.desc?`<div class="rc-sub"><span>Descuentos</span><b>−${csF2(t.desc)}</b></div><div><span>Neto</span><b>${csF2(csR2(t.monto-t.desc))}</b></div>`:'')
+    +`<div class="rc-venta"><span>Venta total de la ruta · ${docs.length} ${docs.length===1?'nota':'notas'}</span><b>Q${csF2(vcVenta(docs))}</b></div></div>`;
+  return h;
+}
+function vcHtmlDiff(f,signo){
+  const sg=qq=>(qq>0?'+':'−')+csF2(Math.abs(qq));
+  const fila=x=>`<div class="cs-l"><span class="cs-q rc-${signo==='+'?'mas':signo==='−'?'menos':'igual'}">${signo===''?'=':signo+vcQ(x.cantidad)}</span><span class="cs-n">${esc(x.nombre)}</span></div>`
+    +[...x.coms].map(([c,qq])=>`<div class="cs-s"><span>${esc(c)}</span><b>Cantidad = ${sg(qq)}</b></div>`).join('');
+  let g=null,o='';
+  f.principal.forEach(x=>{const h=fila(x);o+=g!==null&&x.grupo!==g?h.replace('class="cs-l"','class="cs-l gap"'):h;g=x.grupo;});
+  if(f.bonif.length)o+=`<div class="cs-sec">Bonificaciones</div>`+f.bonif.map(fila).join('');
+  return o;
+}
+function vcHtmlNotas(df){
+  const lst=(ns,extra)=>ns.map(n=>`<span><i>${n.nro}</i>${esc(csNombre(n.cliente))}${extra&&!n.cajas?' <em>(sin cajas)</em>':''}</span>`).join('');
+  const o=[];
+  if(df.nuevas.length)o.push(`<div class="rc-nt"><b>Nuevas (${df.nuevas.length})</b>${lst(df.nuevas,true)}</div>`);
+  if(df.modif.length)o.push(`<div class="rc-nt"><b>Modificadas (${df.modif.length})</b>${lst(df.modif)}</div>`);
+  if(df.fuera.length)o.push(`<div class="rc-nt"><b>Ya no están (${df.fuera.length})</b>${lst(df.fuera)}<em class="rc-ntx">anuladas, quitadas del viaje o regresadas</em></div>`);
+  return o.length?`<div class="cs-sec">Notas</div>`+o.join(''):'';
+}
+function vcRenderRec(hoja,v,e,tit,tabs,avTxt){
+  const D=vcDatos(v,e),{a,an,antes,borr,hist}=D,rcs=e.rcs,n=rcs.length;
+  const chips=rcs.map((r,i)=>{const on=hist?VC.ver===r.id:(!borr&&i===n-1);
+    return `<button class="rc-chip${on?' on':''}" onclick="vcVerRc('${r.id}')"><b>Recuento ${i+1}</b><span>${vcHH(r.t)}</span></button>`;}).join('')
+    +(e.cambio||!n?`<button class="rc-chip borr${!hist&&borr?' on':''}" onclick="vcVerRc(null)"><b>Recuento ${n+1}</b><span>${n?'hay cambios':'sin guardar'}</span></button>`:'');
+  const listo=!e.faltan.length&&!VC.cargando;
+  const info=hist?`Recuento ${a.n} de las ${vcHH(a.t)}${an?` · comparado con el Recuento ${an.n} (${vcHH(an.t)})`:''}`
+    :borr?(an?`<span class="rc-hay">Hay cambios</span> desde el Recuento ${an.n} (${vcHH(an.t)}). Al sacar el PDF o el texto se guarda como <b>Recuento ${a.n}</b>.`
+              :`Al sacar el PDF o el texto se guarda como <b>Recuento 1</b>.`)
+    :`Recuento ${a.n} de las ${vcHH(a.t)} · sin cambios desde entonces`;
+  const t=vcArmar(a.docs);
+  const btns=tipo=>listo||hist?`<span class="rc-bts"><button onclick="vcSacar('${tipo}','txt',this)">Texto</button><button class="osc" onclick="vcSacar('${tipo}','pdf',this)">PDF</button></span>`:'';
+  let cuerpo='';
+  if(an){
+    const df=vcDiff(an.docs,a.docs),pasos=vcPasos(antes,an),nv=pasos.length?'Nuevo · ':'';
+    let c='';
+    if(vcSinCambio(df))c+=`<div class="pv-vacio rc-nada">No hay cambios en los productos con guiones.</div>`;
+    if(!df.mas.vacio)c+=`<div class="rc-sec mas"><i></i>${nv}Agregar al carro</div>`+vcHtmlDiff(df.mas,'+');
+    if(!df.menos.vacio)c+=`<div class="rc-sec menos"><i></i>${nv}Bajar del carro</div>`+vcHtmlDiff(df.menos,'−');
+    if(!df.sabor.vacio)c+=`<div class="rc-sec"><i></i>${nv}Mismo total, cambió el sabor</div>`+vcHtmlDiff(df.sabor,'');
+    c+=vcHtmlNotas(df);
+    pasos.forEach(({de,a:ha,dp})=>{
+      c+=`<div class="rc-prev"><div class="rc-prevt">Antes · Recuento ${de.n} → ${ha.n} (${vcHH(ha.t)})</div>`
+        +(vcSinCambio(dp)?`<div class="rc-ntx">Sin cambios en productos con guiones.</div>`:'')
+        +(!dp.mas.vacio?`<div class="cs-sec">Se agregó</div>`+vcHtmlDiff(dp.mas,'+'):'')
+        +(!dp.menos.vacio?`<div class="cs-sec">Se bajó</div>`+vcHtmlDiff(dp.menos,'−'):'')
+        +(!dp.sabor.vacio?`<div class="cs-sec">Mismo total, cambió el sabor</div>`+vcHtmlDiff(dp.sabor,''):'')+`</div>`;});
+    cuerpo+=`<div class="rc-card"><div class="rc-h"><div><b>Cambios</b><span>Recuento ${an.n} (${vcHH(an.t)}) → ${a.n}${borr?' (sin guardar)':` (${vcHH(a.t)})`}</span></div>${btns('cambios')}</div>${c}</div>`;
+  }
+  cuerpo+=`<div class="rc-card"><div class="rc-h"><div><b>Recuento ${a.n} completo</b><span>${borr?'sin guardar':vcHH(a.t)} · ${a.docs.length} ${a.docs.length===1?'nota':'notas'}</span></div>${btns('completo')}</div>
+    ${t.productos?vcHtmlCompleto(t,a.docs):`<div class="pv-vacio rc-nada">${a.docs.length?'Estas notas no llevan productos con guiones (cajas).':'El viaje todavía no tiene notas de Monica.'}</div>`}</div>`;
+  hoja.innerHTML=`<div class="pv-asa"></div>
+    <div class="pv-cab"><div class="pv-tit"><b>${esc(tit)}</b><span>${n?n+(n===1?' recuento guardado':' recuentos guardados'):'Todavía sin recuento'}</span></div>${VC_X}</div>
+    ${tabs}${avTxt}<div class="rc-chips">${chips}</div><div class="rc-info">${info}</div>
+    <div class="pv-lista rc-lista">${cuerpo}</div>`;
+}
+// ---- Sacar (texto o PDF). Si hay cambios sin guardar, primero se guarda el recuento y sale de lo guardado ----
+async function vcSacar(tipo,como,btn){
+  let v=vcViaje();if(!v)return;
+  let e=vcEstado(v),D=vcDatos(v,e);
+  if(D.borr){
+    if(e.faltan.length){toast('Todavía faltan notas por leer de Monica',true);return;}
+    const g=await vcGuardar(v);if(!g.ok){toast(g.error,true);return;}
+    if(g.nuevo)toast(`Recuento ${g.n} guardado`+(g.nube===false?' en este teléfono (sin internet)':''),g.nube===false);
+    v=vcViaje()||v;   // al guardar, el viaje se combina con la nube y puede ser otra copia
+    e=vcEstado(v);D=vcDatos(v,e);renderZonaQuieta();peRenderVista();
+    if(tipo==='cambios'&&!D.an)tipo='completo';
+  }
+  if(como==='txt'){
+    const t=tipo==='cambios'?vcTxtCambios(v,D):vcTxtCompleto(v,D);let ok=false;
+    try{await navigator.clipboard.writeText(t);ok=true;}catch(er){ok=csCopiarViejo(t);}
+    if(!ok){toast('No se pudo copiar',true);return;}
+    const b=document.querySelector(`.rc-bts button[onclick^="vcSacar('${tipo}','txt'"]`);
+    if(b){b.textContent='✓ Copiado';setTimeout(()=>{if(b.isConnected)b.textContent='Texto';},2000);}else toast('Texto copiado');
+    return;
+  }
+  try{await csCargarPdf();}catch(er){toast('No se pudo cargar el PDF. Revisá internet',true);return;}
+  const doc=tipo==='cambios'?vcPdfCambios(v,D):vcPdfCompleto(v,D);
+  const dia=vcDiaTxt(D.a.t?new Date(D.a.t):new Date());
+  await csEntregarPdf(doc,`Rec. ${D.a.n}${tipo==='cambios'?' cambios':''} ${v.rutero} viaje ${vcNum(v)} ${dia}.pdf`,`Recuento ${D.a.n}`);
+}
+function vcTxtCompleto(v,D){
+  const {a}=D,t=vcArmar(a.docs),o=[],d=a.t?new Date(a.t):new Date();
+  o.push(`*RECUENTO ${a.n}*`,vcRutaTxt(v),`${d.toLocaleDateString('es-GT')} ${d.toTimeString().slice(0,5)} · ${a.docs.length} ${a.docs.length===1?'nota':'notas'}`,'');
+  const fila=x=>{o.push(`${vcQ(x.cantidad)}  ${x.nombre}  Q${csF2(x.monto)}`);x.lista.forEach(([c,qq])=>o.push(`      ${c}  Cant. = ${csF2(qq)}`));
+    if(x.desc)o.push(`      Descuento: ${vcDescTxt(x)}  −${csF2(x.desc)}`);};
+  let g=null;for(const x of t.principal){if(g!==null&&x.grupo!==g)o.push('');g=x.grupo;fila(x);}
+  if(t.bonif.length){o.push('','*BONIFICACIONES*');t.bonif.forEach(fila);}
+  o.push('',`Total de estos productos (${t.productos}): Q${csF2(t.monto)}`);
+  if(t.desc)o.push(`Descuentos: −Q${csF2(t.desc)}`,`*Neto: Q${csF2(csR2(t.monto-t.desc))}*`);
+  o.push(`*Venta total de la ruta (${a.docs.length} ${a.docs.length===1?'nota':'notas'}): Q${csF2(vcVenta(a.docs))}*`);
+  return o.join('\n');
+}
+function vcTxtCambios(v,D){
+  const {a,an}=D,df=vcDiff(an.docs,a.docs),o=[];
+  o.push(`*CAMBIOS · RECUENTO ${a.n}*`,vcRutaTxt(v),`Contra el Recuento ${an.n} de las ${vcHH(an.t)}`,'');
+  const sg=qq=>(qq>0?'+':'−')+csF2(Math.abs(qq));
+  const bloque=(f,signo)=>{let g=null;const fila=x=>{o.push(`${signo===''?'=':signo+vcQ(x.cantidad)}  ${x.nombre}`);x.coms.forEach((qq,c)=>o.push(`      ${c}  Cant. = ${sg(qq)}`));};
+    for(const x of f.principal){if(g!==null&&x.grupo!==g)o.push('');g=x.grupo;fila(x);}
+    if(f.bonif.length){o.push('_Bonificaciones_');f.bonif.forEach(fila);}};
+  if(vcSinCambio(df))o.push('No hay cambios en los productos con guiones.');
+  if(!df.mas.vacio){o.push('*AGREGAR AL CARRO*');bloque(df.mas,'+');o.push('');}
+  if(!df.menos.vacio){o.push('*BAJAR DEL CARRO*');bloque(df.menos,'−');o.push('');}
+  if(!df.sabor.vacio){o.push('*MISMO TOTAL, CAMBIÓ EL SABOR*');bloque(df.sabor,'');o.push('');}
+  const ns=(tt,l)=>{if(l.length)o.push(`${tt} (${l.length}): `+l.map(n=>`${n.nro} ${csCorto(n.cliente)}`).join(', '));};
+  ns('Notas nuevas',df.nuevas);ns('Modificadas',df.modif);ns('Ya no están',df.fuera);
+  return o.join('\n').replace(/\n+$/,'');
+}
+// ---- PDF (carta; márgenes del Recuento: izq. 4.5, der. 5.5, arriba 1, abajo 6.5 cm) — igual que Facturación rápida ----
+function vcUnaHoja(hacer){let doc=hacer(11.1);
+  for(const lh of [10.6,10.2,9.8,9.6]){if(doc.getNumberOfPages()===1)break;const d2=hacer(lh);if(d2.getNumberOfPages()<doc.getNumberOfPages())doc=d2;}
+  return doc;}
+function vcPdfBase(titulo,v,a,sub,LH){
+  const cm=x=>x*72/2.54;
+  const doc=new jspdf.jsPDF({unit:'pt',format:'letter'});const W=612,H=792,L=cm(4.5),R=W-cm(5.5),TOP=cm(1),BOT=H-cm(6.5);
+  const P={doc,L,R,TOP,BOT,W,y:0,LH:LH||11.1,QX:L+32,NX:L+40,MX:R};
+  P.T=(s,x,y,o={})=>{doc.setFont('helvetica',o.b?'bold':o.i?'italic':'normal');doc.setFontSize(o.s||9.5);const c=o.c||[22,22,22];doc.setTextColor(c[0],c[1],c[2]);doc.text(String(s),x,y,o.r?{align:'right'}:undefined);};
+  P.corta=(s,w,size)=>{doc.setFont('helvetica','normal');doc.setFontSize(size||9.5);let t=String(s);while(t.length>3&&doc.getTextWidth(t)>w)t=t.slice(0,-1);return t===String(s)?t:t.trimEnd()+'…';};
+  P.gris=[110,110,110];
+  const d=a.t?new Date(a.t):new Date(),ruta=vcRutaTxt(v),cuando=`${d.toLocaleDateString('es-GT')}  ${d.toTimeString().slice(0,5)}`;
+  P.cab=primera=>{P.y=TOP+10;
+    P.T('DISTRIBUIDORA HERNANDEZ',L,P.y,{b:1,s:8.6,c:[70,70,70]});P.T(cuando,R,P.y,{s:8.5,c:P.gris,r:1});
+    P.y+=primera?16:13;
+    P.T(primera?titulo:titulo+'  (continuación)',L,P.y,{b:1,s:primera?13:10});P.T(ruta,R,P.y,{b:1,s:primera?10.5:9,r:1});
+    if(primera&&sub)for(const [iz,de] of (Array.isArray(sub)?sub:[[sub,'']])){P.y+=11.5;P.T(iz,L,P.y,{s:8,c:P.gris});if(de)P.T(de,R,P.y,{b:1,s:8.4,c:[40,40,40],r:1});}
+    P.y+=7;doc.setDrawColor(40);doc.setLineWidth(.9);doc.line(L,P.y,R,P.y);P.y+=12;if(P.colHead)P.colHead();};
+  P.nueva=h=>{if(P.y+h>BOT){doc.addPage();P.cab(false);}};
+  P.sep=()=>{doc.setDrawColor(150);doc.setLineWidth(.4);doc.line(L,P.y-8.2,R,P.y-8.2);P.y+=2.5;};
+  P.titulo=(t,sb2)=>{P.nueva(P.LH*2+10);P.y+=sb2?3:6;P.T(t,L,P.y,{b:1,s:sb2?7.6:8.6,c:sb2?P.gris:[22,22,22]});P.y+=3.5;
+    doc.setDrawColor(sb2?205:60);doc.setLineWidth(sb2?.4:.7);doc.line(L,P.y,R,P.y);P.y+=9.5;};
+  P.sublinea=(txt,der,c)=>{doc.setFont('helvetica','normal');doc.setFontSize(8.6);const dw=der?doc.getTextWidth(der)+10:0;
+    P.T(P.corta(txt,R-P.NX-12-dw,8.6),P.NX+12,P.y-1,{s:8.6,c:c||[85,85,85]});if(der)P.T(der,R,P.y-1,{s:8.6,c:c||[85,85,85],r:1});P.y+=P.LH-1.2;};
+  P.pie=pref=>{const np=doc.getNumberOfPages();
+    if(np>1)for(let i=1;i<=np;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7.4);doc.setTextColor(120);doc.text(`${pref}  ·  Página ${i} de ${np}`,W/2,BOT+16,{align:'center'});}};
+  return P;
+}
+function vcPdfCompleto(v,D){return vcUnaHoja(lh=>vcPdfCompleto1(v,D,lh));}
+function vcPdfCompleto1(v,D,lhBase){
+  const {a}=D,t=vcArmar(a.docs),nn=`${a.docs.length} ${a.docs.length===1?'nota':'notas'}`;
+  const P=vcPdfBase(`Recuento ${a.n}`,v,a,[[`Notas del viaje  ·  ${nn}`,`Venta total de la ruta: Q${csF2(vcVenta(a.docs))}`],
+    ['',`Estos productos: Q${csF2(t.monto)}`+(t.desc?`  -  desc. ${csF2(t.desc)}  =  Q${csF2(csR2(t.monto-t.desc))}`:'')]],lhBase);
+  const {doc,L,R,QX,NX,MX,LH}=P;
+  P.colHead=()=>{P.T('CANT.',QX,P.y,{b:1,s:6.8,c:P.gris,r:1});P.T('PRODUCTO',NX,P.y,{b:1,s:6.8,c:P.gris});P.T('MONTO',MX,P.y,{b:1,s:6.8,c:P.gris,r:1});
+    P.y+=4;doc.setDrawColor(200);doc.setLineWidth(.4);doc.line(L,P.y,R,P.y);P.y+=10;};
+  P.cab(true);
+  if(!t.productos){P.T('No hay productos con guiones en estas notas.',L,P.y,{i:1,s:9.5,c:P.gris});P.pie(`Recuento ${a.n} · ${v.rutero}`);return doc;}
+  const fila=x=>{P.nueva(LH*(1+x.lista.length+(x.desc?1:0)));
+    P.T(vcQ(x.cantidad),QX,P.y,{b:1,s:9.5,r:1});P.T(P.corta(x.nombre,MX-60-NX),NX,P.y);P.T(csF2(x.monto),MX,P.y,{s:9,r:1});P.y+=LH;
+    x.lista.forEach(([c,qq])=>P.sublinea(`${c}   Cantidad = ${csF2(qq)}`));
+    if(x.desc)P.sublinea(`Descuento: ${vcDescTxt(x)}`,'-'+csF2(x.desc),[150,90,20]);};
+  let g=null;
+  for(const x of t.principal){if(g!==null&&x.grupo!==g)P.sep();g=x.grupo;fila(x);}
+  if(t.bonif.length){P.titulo('BONIFICACIONES',true);t.bonif.forEach(fila);}
+  P.nueva(LH*(t.desc?6:4)+8);P.y+=2;doc.setDrawColor(40);doc.setLineWidth(.8);doc.line(L,P.y-8,R,P.y-8);P.y+=3;
+  P.T(`Total de estos productos  ·  ${t.productos}`,NX,P.y,{b:1,s:9.5});P.T(csF2(t.monto),MX,P.y,{b:1,s:9.5,r:1});
+  if(t.desc){P.y+=LH;P.T('Descuentos',NX,P.y,{s:9,c:[80,80,80]});P.T('-'+csF2(t.desc),MX,P.y,{s:9,c:[80,80,80],r:1});
+    P.y+=LH+1;P.T('Neto',NX,P.y,{b:1,s:10});P.T(csF2(csR2(t.monto-t.desc)),MX,P.y,{b:1,s:10,r:1});}
+  P.y+=LH+4;doc.setDrawColor(200);doc.setLineWidth(.4);doc.line(NX,P.y-9,R,P.y-9);
+  P.T(`Venta total de la ruta  ·  ${nn}`,NX,P.y,{b:1,s:10});P.T('Q'+csF2(vcVenta(a.docs)),MX,P.y,{b:1,s:10,r:1});
+  P.pie(`Recuento ${a.n} · ${v.rutero}`);
+  return doc;
+}
+function vcPdfCambios(v,D){return vcUnaHoja(lh=>vcPdfCambios1(v,D,lh));}
+function vcPdfCambios1(v,D,lhBase){
+  const {a,an,antes}=D,df=vcDiff(an.docs,a.docs);
+  const P=vcPdfBase(`Cambios  ·  Recuento ${a.n}`,v,a,`Contra el Recuento ${an.n} de las ${vcHH(an.t)}`,lhBase);
+  const {doc,L,R,QX,NX,LH}=P;
+  P.cab(true);
+  const sg=qq=>(qq>0?'+':'-')+csF2(Math.abs(qq));
+  const bloque=(f,signo)=>{let g=null;
+    const fila=x=>{P.nueva(LH*(1+x.coms.size));P.T(signo===''?'=':signo+vcQ(x.cantidad),QX,P.y,{b:1,s:10,r:1});P.T(P.corta(x.nombre,R-NX),NX,P.y,{s:9.5});P.y+=LH;
+      x.coms.forEach((qq,c)=>P.sublinea(`${c}   Cantidad = ${sg(qq)}`));};
+    for(const x of f.principal){if(g!==null&&x.grupo!==g)P.sep();g=x.grupo;fila(x);}
+    if(f.bonif.length){P.titulo('Bonificaciones',true);f.bonif.forEach(fila);}};
+  if(vcSinCambio(df)){P.T('No hay cambios en los productos con guiones.',L,P.y,{i:1,s:9.5,c:P.gris});P.y+=LH;}
+  const pasos=vcPasos(antes,an),nv=pasos.length?'NUEVO  ·  ':'';
+  if(!df.mas.vacio){P.titulo(nv+'AGREGAR AL CARRO');bloque(df.mas,'+');}
+  if(!df.menos.vacio){P.y+=4;P.titulo(nv+'BAJAR DEL CARRO');bloque(df.menos,'-');}
+  if(!df.sabor.vacio){P.y+=4;P.titulo(nv+'MISMO TOTAL, CAMBIÓ EL SABOR');bloque(df.sabor,'');}
+  for(const {de,a:ha,dp} of pasos){
+    P.nueva(LH*4);P.y+=10;doc.setDrawColor(40);doc.setLineWidth(.4);doc.setLineDashPattern([3,2],0);doc.line(L,P.y-9,R,P.y-9);doc.setLineDashPattern([],0);
+    P.T(`ANTES  ·  Recuento ${de.n} a ${ha.n} (${vcHH(ha.t)})`,L,P.y+2,{b:1,s:8.6,c:[60,60,60]});P.y+=12;
+    if(vcSinCambio(dp)){P.y+=8;P.T('Sin cambios en los productos con guiones.',L,P.y,{i:1,s:9,c:P.gris});P.y+=LH;}
+    if(!dp.mas.vacio){P.titulo('Se agregó',true);bloque(dp.mas,'+');}
+    if(!dp.menos.vacio){P.titulo('Se bajó',true);bloque(dp.menos,'-');}
+    if(!dp.sabor.vacio){P.titulo('Mismo total, cambió el sabor',true);bloque(dp.sabor,'');}}
+  const notas=(tit,ns,extra,nota)=>{if(!ns.length)return;
+    const txt=ns.map(n=>`${n.nro} ${csNombre(n.cliente)}${extra&&!n.cajas?' (sin cajas)':''}`).join('  ·  ')+(nota?'  —  '+nota:'');
+    doc.setFont('helvetica','normal');doc.setFontSize(8.4);const lin=doc.splitTextToSize(txt,R-L-4);
+    P.nueva(12+lin.length*10);P.T(`${tit} (${ns.length})`,L,P.y,{b:1,s:8,c:[60,60,60]});P.y+=10.5;
+    doc.setFont('helvetica','normal');doc.setFontSize(8.4);doc.setTextColor(40);doc.text(lin,L,P.y);P.y+=lin.length*10+4;};
+  if(df.nuevas.length||df.modif.length||df.fuera.length){P.y+=4;P.titulo(`NOTAS  ·  Recuento ${an.n} a ${a.n}`,true);
+    notas('Nuevas',df.nuevas,true);notas('Modificadas',df.modif);notas('Ya no están',df.fuera,false,'anuladas, quitadas del viaje o regresadas');}
+  P.pie(`Cambios Recuento ${a.n} · ${v.rutero}`);
+  return doc;
+}
+// ---- Botón en la tarjeta del viaje (puntito rojo si cambió algo después del último recuento) ----
+function vcBoton(v){
+  if(!v||!vcPeds(v).length)return '';
+  const e=vcRcs(v).length?vcEstado(v):null;
+  return `<button class="vc-b${e&&e.cambio?' aviso':''}" onclick="event.stopPropagation();vcAbrir(${v.id})" aria-label="Consolidado y recuento del viaje">${ICO_CONS}Consolidado</button>`;
+}
+// ---- Aviso: cada vez que llegan datos de Monica se revisan los viajes con recuento ----
+const VC_AV_K='cc_vc_avisos';
+async function vcVigilar(){
+  if(VC.vig||modoLectura)return;VC.vig=true;
+  try{
+    const vs=viajes.filter(v=>v&&!v.cerrado&&vcRcs(v).length&&vcPeds(v).length);
+    let nuevosDet=false;
+    for(const v of vs){const antes=vcDocs(v).faltan.length;await vcTraer(v,false);if(antes&&vcDocs(v).faltan.length<antes)nuevosDet=true;}
+    let vistos;try{vistos=JSON.parse(localStorage.getItem(VC_AV_K)||'[]');}catch(er){vistos=[];}
+    const avisos=[];
+    vs.forEach(v=>{const e=vcEstado(v);if(!e.cambio)return;
+      const k=(v.uid||v.id)+'|'+e.ult.id+'|'+vcDiffTxt(e.df).join('|');
+      if(!vistos.includes(k)){vistos.push(k);avisos.push({v,e});}});
+    if(avisos.length){
+      try{localStorage.setItem(VC_AV_K,JSON.stringify(vistos.slice(-80)));}catch(er){}
+      const {v,e}=avisos[0];
+      vcToast(`Viaje ${vcNum(v)} · ${v.rutero}: cambió después del Recuento ${e.rcs.length}`);
+      try{navigator.vibrate&&navigator.vibrate([40,60,40]);}catch(er){}
+    }
+    if(avisos.length||nuevosDet){if(PE.vista==='vc')peRenderVista();else if(!PE.vista)renderZonaQuieta();}
+  }catch(er){}finally{VC.vig=false;}
+}
+function vcToast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.className='toast show err';clearTimeout(_toastT);_toastT=setTimeout(()=>t.className='toast',5500);}
+// Al enviar la ruta: si cambió algo después del último recuento, aviso corto (no detiene el envío)
+function vcCambiosAlEnviar(v){try{const e=vcEstado(v);return e.cambio?{n:e.rcs.length,tx:vcDiffTxt(e.df)}:null;}catch(er){return null;}}
 
 // ---- No se entregó: la nota regresa a "Por entregar" ----
 // El otro usuario (no maestro) también puede marcarlo, solo en notas de Monica de una ruta que salió y no se ha recibido.
@@ -4312,6 +4798,7 @@ function peRenderVista(){
   PE.vistaPend=false;
   const hoja=el.querySelector('.pv-hoja');if(!hoja)return;
   if(PE.vista==='cons'){hoja.classList.add('alta');return peRenderCons(hoja);}
+  if(PE.vista==='vc'){hoja.classList.add('alta');return vcRender(hoja);}
   if(PE.vista==='hist'){hoja.classList.add('alta');peRenderHist(hoja);peHistMarcarVistos();return;}
   const nro=PE.vista, rf=PE.rutaFila&&PE.rutaFila.nro===nro?PE.rutaFila:null, f=rf?(rf.cliente!==undefined?rf:null):PE.filas.find(x=>x.nro===nro);
   const cerrar=`<button class="pv-x" onclick="peVerCerrar()" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#1c2433" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
@@ -5234,7 +5721,7 @@ async function peSellar(v){
 // la publicada: si hay una nueva, se actualiza sola al volver a abrirla (si
 // no hay nada a medias) o muestra un aviso para tocar y actualizar.
 // Importante con varios aparatos: todos deben correr la misma versión.
-const VERSION='2026-11-25.3';
+const VERSION='2026-11-28.1';
 async function versionPublicada(){
   try{
     const r=await fetch(location.pathname+'?nv='+Date.now(),{cache:'no-store'});

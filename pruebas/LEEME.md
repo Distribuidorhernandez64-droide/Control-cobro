@@ -95,3 +95,23 @@ Tocar fuera cierra la tarjeta; cerrar regresa a "Ruta de…". Base falsa en la p
 v=1 con los puntos en orden y con nombre), el .kml se baja a Descargas con aviso. Base falsa en la página.
   (23/11, v2026-11-23.2) Ahora el botón extra en Android es "Enviar por WhatsApp": sube el .kml a Supabase Storage
   (bucket público 'rutas', supabase/rutas.sql, corrido por César 23/11 19:27) y comparte el enlace.
+
+## Consolidado y Recuento desde el viaje (28/11/2026, v2026-11-28.1)
+
+En la tarjeta del viaje (preparando o en ruta) el botón **Consolidado** abre dos pestañas: Consolidado (el mismo
+de Por entregar, con Copiar texto y PDF) y Recuento (como el de Facturación rápida: completo con monto, sabores,
+descuento, neto y venta total de la ruta; y Cambios contra el anterior: Agregar / Bajar / cambió el sabor, notas
+nuevas/modificadas/ya no están, y los pasos de antes). Sacar el consolidado la primera vez guarda el Recuento 1;
+si después cambian los productos con guiones (o entra/sale una nota del viaje) el botón lleva puntito rojo y sale
+un aviso; sacar el PDF o el texto del Recuento guarda el siguiente. Los recuentos van dentro del viaje (`v.rcs`),
+se guardan sin `tocar(v)` y `combinarViajes` los junta (`vcUnirRcs`), así no pisan cobros del otro aparato.
+
+`nube-simulada.js` — nube en memoria que contesta como Supabase (auth + rest con eq/in/gte/is/order, upsert,
+update). No necesita Postgres. `npm i playwright-core @supabase/supabase-js@2.119.0 jspdf@2.5.1` y `pdftotext`.
+
+`prueba-recuento-viaje.js` — todo el recorrido: botón, consolidado, Recuento 1 en la nube, totales exactos,
+cambios en Monica (preparando y después de salir), puntito y aviso, PDF/texto, ver recuentos viejos, y que el
+Consolidado de Por entregar siga igual.
+
+`prueba-recuento-dos-aparatos.js` — dos teléfonos: un recuento no pisa un crédito/devolución del otro, un cobro
+no borra el recuento, y dos recuentos al mismo tiempo se guardan los dos.
